@@ -86,33 +86,15 @@ Canonical references the course author should cite when drafting lessons:
 
 All 32 SLTs are now backed by at least one of the above sources. No SLT requires content to be reconstructed by the lesson author.
 
-## Pending dependencies
+## Dependencies (resolved)
 
-The following external work needs to land before the corresponding modules can be drafted. Lessons in earlier modules (M100, M200, M300) have no pending dependencies and can be drafted now.
+All external dependencies have been resolved as of 2026-04-06:
 
-### TX loops enumeration + `tx-loops.yaml`
+- **`tx-loops.yaml`** — landed 2026-04-06. 16 canonical loops with dotted names, steps, roles, costs. Lives at `reference/tx-loops.yaml`.
+- **Cohort-scale cost math** — confirmed linear per student (~1.32 ADA × N). Reflected in `tx-loops.yaml` loop 13 (`course.credential.cohort`).
+- **Cost-registry key rename** — `single-credential` → `course.credential`, `multi-assignment-credential` → `course.credential.with-updates`. Keys now match tx-loop names.
+- **DB API PENDING_TX** — resolved in `andamio-db-api-go#181`. Module status can now be set to PENDING_TX via API.
 
-**Status:** Pending. Scheduled 2026-04-06 (Monday).
-**Source task:** `~/projects/02-areas/andamio/000-task-notes/Tasks/andamio-dev - add each Tx Loop and build cost estimation into each.md`
-**What it produces:** A canonical list of every TX loop a developer can run, with dotted names (e.g., `course.credential.single`, `project.credential.refused-then-accepted`), step lists, participant roles, cost estimates, and cross-references to runnable examples. Will live at `andamio-dev/reference/tx-loops.yaml`.
+**All 7 modules are unblocked for drafting.**
 
-**Which course lessons depend on it:**
-
-| Module | Lessons affected | Why |
-|---|---|---|
-| M400 Transaction State Machine | All 5 lessons | Introduces "loop" as a meta-concept built from individual TXs. Can't define the term without the enumerated list. |
-| M500 Courses End-to-End | 500.5 directly; others indirectly | 500.5 IS `course.credential.single`. Lesson should cite the loop by name and point at the runnable script. |
-| M600 Projects End-to-End | 600.4 directly; others indirectly | 600.4 IS `project.credential.single`. Same pattern. |
-| M700 Build Something Real | 700.2 directly; 700.3 and 700.4 indirectly | 700.2 ("estimate ADA cost of a user flow") is loop-level estimation. Without loops, the SLT is hand-wavy; with loops, it's precise. |
-
-**Two open questions from the task note that affect course content:**
-
-1. **Cohort-scale cost math** — does `course.credential.cohort` with N students have linear or sublinear cost per student? M700.2 teaches the estimation model; that model needs to be right before the lesson gets written.
-2. **Rename `multi-assignment-credential` → `course.credential.single` with `updates: N` parameter** — if cost-registry.json keys get renamed, M700.2's lesson citations need the new names. Draft after the rename lands.
-
-**Recommended drafting sequence (revised):**
-
-- Now → M100 (4 lessons), M200 (5 lessons), M300 (4 lessons). No loop dependency. 13 lessons.
-- After `tx-loops.yaml` lands → M400 (5), M500 (5), M600 (4), M700 (5). 19 lessons.
-
-M100.1 is already drafted as the format template for the first batch.
+M100–M400 lessons are drafted. M500–M700 are now unblocked and ready for drafting.
