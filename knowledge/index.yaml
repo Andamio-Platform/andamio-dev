@@ -1,0 +1,29 @@
+# Knowledge Index
+# Master index for andamio-dev compound knowledge
+# Updated by /compound skill
+
+version: 1
+last_updated: "2026-04-03"
+
+# Aggregate statistics (seed data)
+stats:
+  sessions_processed: 0
+  gotchas_captured: 9
+  faqs_captured: 6
+  endpoint_patterns: 0
+  cost_scenarios: 0
+
+# About this seed data
+#
+# This knowledge base ships with common gotchas and FAQs from real
+# developer experience integrating with the Andamio Protocol and API.
+#
+# Run /compound after working sessions to add your own patterns on top.
+# Your data accumulates alongside the seed data — nothing is overwritten.
+
+# Cross-references to knowledge files
+files:
+  gotchas: gotchas.yaml
+  faq: faq.yaml
+  endpoint_usage: endpoint-usage.yaml
+  cost_scenarios: cost-scenarios.yaml

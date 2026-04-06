@@ -1,0 +1,42 @@
+{
+  "name": "@andamio/dev",
+  "version": "0.1.0",
+  "description": "Build on the Andamio Protocol and API — interactive developer onboarding, API exploration, cost estimation, and operations guidance",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Andamio-Platform/andamio-dev.git"
+  },
+  "homepage": "https://github.com/Andamio-Platform/andamio-dev",
+  "author": "Andamio <dev@andamio.io> (https://andamio.io)",
+  "keywords": [
+    "agent-skill",
+    "agent-skills",
+    "pi-package",
+    "pi-skill",
+    "developer-onboarding",
+    "api-integration",
+    "cardano",
+    "blockchain",
+    "andamio",
+    "cost-estimation",
+    "credentials"
+  ],
+  "files": [
+    "skills/**",
+    "knowledge/**",
+    "specs/**",
+    "reference/**",
+    "examples/**",
+    ".claude-plugin/**",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  }
+}

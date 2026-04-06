@@ -1,0 +1,43 @@
+# FAQ — Frequently asked questions from developer sessions
+# Updated by /compound skill
+# Schema: id, question, answer, category, frequency
+
+version: 1
+last_updated: "2026-03-23"
+
+entries:
+  - id: faq-001
+    question: "How do I get test ADA for preprod?"
+    answer: "Use the Cardano testnet faucet at https://docs.cardano.org/cardano-testnets/tools/faucet/ — you'll need a preprod wallet address."
+    category: getting-started
+    frequency: 0
+
+  - id: faq-002
+    question: "What's the difference between API key and wallet JWT?"
+    answer: "API key (X-API-Key header) gives read-only access — list courses, view content, check status. Wallet JWT (Authorization: Bearer header) gives read+write access — create courses, submit assignments, build transactions. You need both for full functionality."
+    category: auth
+    frequency: 0
+
+  - id: faq-003
+    question: "How much does it cost to create a course?"
+    answer: "About 130 ADA for a course with 1 teacher: 100 ADA service fee + ~20 ADA min UTXO deposits + ~0.55 ADA tx fee. Add 10 ADA per additional teacher. Modules are ~1.86 ADA each (no service fee). Use /cost-estimator for precise calculations."
+    category: costs
+    frequency: 0
+
+  - id: faq-004
+    question: "What's the difference between Gateway API and Andamioscan?"
+    answer: "Gateway API is the main API for building applications — read and write operations, auth, transactions. Andamioscan is a read-only observer that indexes on-chain events — use it for verification, analytics, and audit trails. They return different data shapes for overlapping resources."
+    category: architecture
+    frequency: 0
+
+  - id: faq-005
+    question: "Can I switch between preprod and mainnet?"
+    answer: "Yes: `andamio config set-url https://mainnet.api.andamio.io`. API keys are environment-specific — you'll need a separate key for each environment. Always develop on preprod first."
+    category: environments
+    frequency: 0
+
+  - id: faq-006
+    question: "How do I build transactions with the CLI?"
+    answer: "Full lifecycle: `andamio tx build <endpoint> --body <json>` → `andamio tx sign --tx <hex> --skey <path>` → `andamio tx submit --tx <hex>` → `andamio tx register --tx-hash <hash> --tx-type <type>`. For common operations, course-ops and project-ops skills guide you through the specific endpoints."
+    category: transactions
+    frequency: 0

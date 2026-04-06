@@ -1,0 +1,485 @@
+# Andamio Transaction Loops — Canonical Reference
+# Every developer workflow on Andamio, named and structured.
+#
+# Naming: {domain}.{subject}.{variant}
+# Status: validated (tested against live stack) | stubbed (defined, not yet tested)
+# Dependencies reference loop numbers, not names.
+#
+# Created: 2026-04-06
+# Source: orch task "andamio-dev - add each Tx Loop and build cost estimation into each.md"
+
+version: 2
+last_updated: 2026-04-06
+
+# Dependency graph:
+#   (1) course.setup
+#    ├──→ (2) project.setup  [project requires course module as prerequisite]
+#    └──→ (3) course.credential
+#                └──→ (4) project.credential ←── (2)
+
+loops:
+
+  # ===========================================================================
+  # HAPPY PATH — Setup
+  # ===========================================================================
+
+  - id: 1
+    name: course.setup
+    type: setup
+    description: Create and publish a course with modules. Confirms all db-side operations (lesson content, etc).
+    roles: [owner, teacher]
+    prereqs: [general.access-token]
+    steps:
+      - tx: course_create
+        role: owner
+        endpoint: /v2/tx/instance/owner/course/create
+        tx_type: course_create
+        note: Response includes course_id (minted LocalStateNFT policy ID)
+      - action: create_module_draft
+        role: teacher
+        note: >
+          REQUIRED before modules_manage TX. Create module in DB with SLTs.
+          CLI: andamio course create-module --course-id <id> --code 100 --title "..." --slt "SLT 1" --slt "SLT 2" --approve
+          This creates DRAFT, adds SLTs, and approves (APPROVED) with computed slt_hash in one step.
+      - action: set_pending_tx
+        role: teacher
+        note: >
+          REQUIRED: advance module from APPROVED → PENDING_TX before minting.
+          CLI: andamio course teacher update-module-status --course-id <id> --module-code 100 --status PENDING_TX
+          BLOCKED: DB API does not yet allow PENDING_TX (see andamio-db-api-go#180).
+          Workaround: direct DB update until fix lands.
+      - tx: modules_manage
+        role: teacher
+        endpoint: /v2/tx/course/teacher/modules/manage
+        tx_type: modules_manage
+        note: Gateway batch-confirms modules from PENDING_TX → ON_CHAIN. Fails if module is not in PENDING_TX.
+      - action: publish_content
+        role: teacher
+        note: >
+          Off-chain — save lesson content, introduction, and assignment via API.
+          CLI: andamio course import <path> --course-id <id>
+          IMPORTANT: assignment content MUST exist before students can create commitments.
+    cost_estimate: "~111 ADA total (course_create: 110 service + 0.52 fee; modules_manage: 0.27 fee)"
+    validated_fees:
+      course_create: { fee_ada: 0.522, service_ada: 110.0 }
+      modules_manage: { fee_ada: 0.268 }
+    script: examples/course-lifecycle.sh (partial — also covers loop 3)
+    status: validated
+    validated_date: 2026-04-06
+    known_gotchas:
+      - "DB API does not allow PENDING_TX via update-module-status (andamio-db-api-go#180)"
+      - "Module must have assignment content before students can enroll"
+      - "Service fee is 100 ADA base + 10 ADA per teacher, not ~50 ADA"
+
+  - id: 2
+    name: project.setup
+    type: setup
+    description: Create a project with funded treasury and published tasks. Requires a course module as prerequisite.
+    roles: [owner, manager]
+    prereqs: [general.access-token, course.setup]
+    prereq_note: Project requires a course module credential as prerequisite.
+    steps:
+      - tx: project_create
+        role: owner
+        endpoint: /v2/tx/instance/owner/project/create
+        tx_type: project_create
+        note: >
+          Body: {"alias":"<owner>","managers":["<mgr>"],"course_prereqs":[["<course_id>",["<slt_hash>"]]]}
+          Response includes project_id. Treasury UTxO created but NOT funded for task rewards.
+      - action: create_draft_tasks
+        role: manager
+        note: >
+          REQUIRED before tasks_manage TX. Create task records in DB (DRAFT status).
+          CLI: andamio project task create <project-id> --title "..." --lovelace 5000000 --expiration 2026-12-31
+          Tasks are confirmed by index fallback — no PENDING_TX issue like modules.
+      - tx: treasury_fund
+        role: owner
+        endpoint: /v2/tx/project/user/treasury/add-funds
+        tx_type: treasury_fund
+        note: >
+          REQUIRED: fund treasury with enough ADA to cover all task rewards.
+          Body: {"alias":"<owner>","project_id":"<id>","deposit_value":[["lovelace",<total_rewards>]]}
+          Without this, contributor join fails with INSUFFICIENT_FUNDS_TREASURY.
+      - tx: tasks_manage
+        role: manager
+        endpoint: /v2/tx/project/manager/tasks/manage
+        tx_type: tasks_manage
+        note: >
+          Body includes tasks_to_add, tasks_to_remove, deposit_value.
+          Requires contributor_state_id (from project get response).
+          Gateway confirms tasks via (project_state_id, task_index) fallback.
+    cost_estimate: "~112 ADA total (project_create: 110 service + 1.30 fee; treasury_fund: 0.18 fee + deposit; tasks_manage: 0.32 fee)"
+    validated_fees:
+      project_create: { fee_ada: 1.303, service_ada: 110.0 }
+      treasury_fund: { fee_ada: 0.175, note: "plus deposit amount" }
+      tasks_manage: { fee_ada: 0.322 }
+    script: examples/project-lifecycle.sh (partial — also covers loop 4)
+    status: validated
+    validated_date: 2026-04-06
+    known_gotchas:
+      - "Treasury is NOT funded at project creation — explicit treasury_fund TX required"
+      - "contributor_state_id must be discovered via project get response (not documented in SYSTEM_REFERENCE §6.2)"
+      - "Service fee is 100 ADA base + 10 ADA per manager, not ~50 ADA"
+
+  # ===========================================================================
+  # HAPPY PATH — Credentials
+  # ===========================================================================
+
+  - id: 3
+    name: course.credential
+    type: credential
+    description: Student earns a single course credential. Commit, teacher assesses, student claims.
+    roles: [student, teacher]
+    prereqs: [course.setup]
+    steps:
+      - action: create_commitment
+        role: student
+        note: >
+          REQUIRED before enrollment TX. Create off-chain commitment record.
+          CLI: andamio course student create --course-id <id> --module-code 100
+          Creates AWAITING_SUBMISSION record. Fails if module has no assignment content.
+      - tx: assignment_submit
+        role: student
+        endpoint: /v2/tx/course/student/assignment/commit
+        tx_type: assignment_submit
+        note: >
+          Body: {"alias":"<student>","course_id":"<id>","slt_hash":"<hash>","assignment_info":"<evidence>"}
+          Transitions: AWAITING_SUBMISSION → SUBMITTED. assignment_info becomes evidence_hash on-chain.
+      - tx: assessment_assess
+        role: teacher
+        endpoint: /v2/tx/course/teacher/assignments/assess
+        tx_type: assessment_assess
+        note: >
+          Body: {"alias":"<teacher>","course_id":"<id>","assignment_decisions":[{"alias":"<student>","outcome":"accept"}]}
+          Transitions: SUBMITTED → ACCEPTED.
+      - tx: credential_claim
+        role: student
+        endpoint: /v2/tx/course/student/credential/claim
+        tx_type: credential_claim
+        note: >
+          Body: {"alias":"<student>","course_id":"<id>"}
+          On-chain NFT minted. No DB status change (credential is on-chain only).
+    cost_estimate: "~1.00 ADA total (student: 0.37 + 0.36 = 0.73; teacher: 0.27)"
+    validated_fees:
+      assignment_submit: { fee_ada: 0.372, paid_by: student }
+      assessment_assess: { fee_ada: 0.274, paid_by: teacher }
+      credential_claim: { fee_ada: 0.356, paid_by: student }
+    script: examples/course-lifecycle.sh (partial — also covers loop 1)
+    status: validated
+    validated_date: 2026-04-06
+    known_gotchas:
+      - "Off-chain commitment MUST be created before enrollment TX — gateway confirm returns 404 without it"
+      - "Module MUST have assignment content before student can create commitment"
+
+  - id: 4
+    name: project.credential
+    type: credential
+    description: Contributor earns a project credential and ADA rewards. Requires both a project and the prerequisite course credential.
+    roles: [contributor, manager]
+    prereqs: [project.setup, course.credential]
+    prereq_note: Contributor must hold course credential (prerequisite) and project must exist with funded tasks.
+    steps:
+      - tx: project_join
+        role: contributor
+        endpoint: /v2/tx/project/contributor/task/commit
+        tx_type: project_join
+        note: >
+          Body: {"alias":"<contributor>","project_id":"<id>","contributor_state_id":"<csid>","task_hash":"<hash>","task_info":"<evidence>"}
+          CLI auto-injects task_hash into registration metadata from the request body.
+          Requires contributor to hold prerequisite course credential — Atlas returns 422 without it.
+      - tx: task_assess
+        role: manager
+        endpoint: /v2/tx/project/manager/tasks/assess
+        tx_type: task_assess
+        note: >
+          Body: {"alias":"<manager>","project_id":"<id>","contributor_state_id":"<csid>","task_decisions":[{"alias":"<contributor>","outcome":"accept"}]}
+          Transitions: COMMITTED → ACCEPTED.
+      - tx: project_credential_claim
+        role: contributor
+        endpoint: /v2/tx/project/contributor/credential/claim
+        tx_type: project_credential_claim
+        note: >
+          Body: {"alias":"<contributor>","project_id":"<id>","contributor_state_id":"<csid>"}
+          CLI auto-looks up task_hash from contributor's ACCEPTED commitment for registration metadata.
+          Reward: task lovelace from escrow minus 5% commission. State deposit (~14.5 ADA) refunded.
+    cost_estimate: "~1.27 ADA in fees (contributor: 0.56 + 0.36 = 0.92; manager: 0.36). Contributor deposits ~14.5 ADA at join (refunded at claim)."
+    validated_fees:
+      project_join: { fee_ada: 0.555, paid_by: contributor, note: "plus ~14.5 ADA state deposit (refunded at claim)" }
+      task_assess: { fee_ada: 0.357, paid_by: manager }
+      project_credential_claim: { fee_ada: 0.361, paid_by: contributor, note: "net positive: deposit refund + task reward - fee - 5% commission" }
+    reward: ADA from treasury (minus 5% commission)
+    script: examples/project-lifecycle.sh (partial — also covers loop 2)
+    status: validated
+    validated_date: 2026-04-06
+    known_gotchas:
+      - "task_hash must be in registration metadata — CLI auto-injects it since andamio-cli commit after 4ccd87e"
+      - "contributor_state_id discovered via project get response"
+      - "Treasury must be funded (loop 2 treasury_fund step) before contributor can join"
+
+  # ===========================================================================
+  # HAPPY PATH — Variants
+  # ===========================================================================
+
+  - id: 5
+    name: project.credential.native-assets
+    type: credential
+    description: Same as project.credential but treasury is funded with native assets (tokens), not just ADA/lovelace. Tests multi-asset treasury and reward distribution.
+    roles: [contributor, manager, owner]
+    prereqs: [project.setup, course.credential]
+    prereq_note: Project treasury must be funded with native assets. Contributor must hold prerequisite credential.
+    steps:
+      - tx: project_create
+        role: owner
+        note: Treasury funded with native asset + ADA
+      - tx: tasks_manage
+        role: manager
+        note: Task rewards denominated in native asset
+      - tx: project_join
+        role: contributor
+      - tx: task_assess
+        role: manager
+      - tx: project_credential_claim
+        role: contributor
+        note: Receives native asset reward from treasury
+    cost_estimate: TBD — native asset handling may differ
+    script: null
+    status: stubbed
+
+  - id: 6
+    name: course.credential.sequential
+    type: credential
+    description: Multi-module course where each module is a prerequisite for the next. Student must earn module N before starting module N+1.
+    roles: [student, teacher]
+    prereqs: [course.setup]
+    prereq_note: Course must have modules configured with sequential prerequisites.
+    steps:
+      - tx: assignment_submit
+        role: student
+        note: Module 1 commit
+      - tx: assessment_assess
+        role: teacher
+        note: Module 1 accept
+      - tx: credential_claim
+        role: student
+        note: Module 1 credential — unlocks Module 2
+      - tx: assignment_submit
+        role: student
+        note: Module 2 commit (requires Module 1 credential)
+      - tx: assessment_assess
+        role: teacher
+      - tx: credential_claim
+        role: student
+        note: Module 2 credential — repeat for N modules
+    cost_estimate: ~1.32 ADA × N modules
+    script: null
+    status: stubbed
+    notes: This is the real-world course experience. Tests prerequisite gating at the module level.
+
+  # ===========================================================================
+  # ALTERNATE OUTCOMES
+  # ===========================================================================
+
+  - id: 7
+    name: course.credential.refused
+    type: variant
+    variant_of: course.credential
+    description: Teacher refuses submission. Student resubmits. Teacher accepts. Student claims.
+    roles: [student, teacher]
+    prereqs: [course.setup]
+    steps:
+      - tx: assignment_submit
+        role: student
+        note: commit
+      - tx: assessment_assess
+        role: teacher
+        note: refuse — evidence cleared, student can resubmit
+      - tx: assignment_submit
+        role: student
+        note: new commit
+      - tx: assessment_assess
+        role: teacher
+        note: accept
+      - tx: credential_claim
+        role: student
+    protocol_note: "Refuse means 'try again' — distinct from project deny which is terminal."
+    script: null
+    status: stubbed
+
+  - id: 8
+    name: project.credential.refused
+    type: variant
+    variant_of: project.credential
+    description: Manager refuses contribution. Contributor recommits. Manager accepts. Contributor claims.
+    roles: [contributor, manager]
+    prereqs: [project.setup, course.credential]
+    steps:
+      - tx: project_join
+        role: contributor
+      - tx: task_assess
+        role: manager
+        note: refuse
+      - tx: project_join
+        role: contributor
+        note: new commit — creates a new commit tx, not a datum update
+      - tx: task_assess
+        role: manager
+        note: accept
+      - tx: project_credential_claim
+        role: contributor
+    script: null
+    status: stubbed
+
+  - id: 9
+    name: project.credential.denied
+    type: variant
+    variant_of: project.credential
+    description: Terminal expulsion. Manager denies contributor. Contributor removed, treasury assets clawed back.
+    roles: [contributor, manager]
+    prereqs: [project.setup, course.credential]
+    steps:
+      - tx: project_join
+        role: contributor
+      - tx: task_assess
+        role: manager
+        note: deny — terminal, contributor permanently removed
+    outcome: Contributor removed. Treasury clawback.
+    known_gotchas:
+      - "Indexer gap: as of 2026-04-04, andamioscan only indexes Accept (constructor 0) and Refuse (constructor 1). Deny lands on-chain but is silently ignored."
+    script: null
+    status: stubbed
+
+  # ===========================================================================
+  # SETUP VARIANTS
+  # ===========================================================================
+
+  - id: 10
+    name: project.tasks.replace
+    type: variant
+    variant_of: project.setup
+    description: Manager removes a task and adds a replacement. Only possible before any contributor commits.
+    roles: [manager]
+    prereqs: [project.setup]
+    steps:
+      - tx: tasks_manage
+        role: manager
+        note: remove task + add new task in same tx
+    protocol_note: Reward returns to treasury on remove. Only possible pre-commit.
+    script: null
+    status: stubbed
+
+  - id: 11
+    name: course.modules.ongoing
+    type: variant
+    variant_of: course.setup
+    description: Add, update, or remove modules after initial setup.
+    roles: [teacher]
+    prereqs: [course.setup]
+    steps:
+      - tx: modules_manage
+        role: teacher
+        note: "modules_to_add / modules_to_update / modules_to_remove — one tx handles all three"
+    known_gotchas:
+      - "Updating SLTs changes slt_hash (on-chain identity). 'Update' is really burn + mint."
+    script: null
+    status: stubbed
+
+  - id: 12
+    name: course.teachers.rotate
+    type: variant
+    variant_of: course.setup
+    description: Add and/or remove teachers from a course.
+    roles: [owner]
+    prereqs: [course.setup]
+    steps:
+      - tx: teachers_manage
+        role: owner
+        note: add + remove in same tx
+    script: null
+    status: stubbed
+
+  # ===========================================================================
+  # MULTI-PARTY
+  # ===========================================================================
+
+  - id: 13
+    name: course.credential.cohort
+    type: multi-party
+    description: N students earn credentials from the same course. Batch assessment.
+    roles: [students, teacher]
+    prereqs: [course.setup]
+    steps:
+      - tx: assignment_submit
+        role: student
+        note: "× N students"
+      - tx: assessment_assess
+        role: teacher
+        note: "batch assignment_decisions for N students"
+      - tx: credential_claim
+        role: student
+        note: "× N students"
+    cost_estimate: ~1.32 ADA × N
+    notes: "This is the real-world teaching scenario. course.credential is pedagogy; course.credential.cohort is production."
+    script: null
+    status: stubbed
+
+  - id: 14
+    name: project.treasury.drawdown
+    type: multi-party
+    description: End-of-project treasury recovery after final payouts.
+    roles: [owner]
+    prereqs: [project.setup]
+    steps:
+      - action: final_payouts
+        note: All task assessments complete, credentials claimed
+      - tx: treasury_drawdown
+        role: owner
+        note: "Open question: is this a protocol tx or implicit via last UTxO?"
+    script: null
+    status: stubbed
+
+  # ===========================================================================
+  # META — Non-TX or prerequisite flows
+  # ===========================================================================
+
+  - id: 15
+    name: general.access-token
+    type: meta
+    description: Mint an access token, then use it in a protected transaction. Every course/project creator runs this first.
+    roles: [any]
+    prereqs: []
+    steps:
+      - tx: access_token_mint
+        endpoint: /v2/tx/global/user/access-token/mint
+        tx_type: access_token_mint
+        note: >
+          Body: {"alias":"<chosen-alias>","initiator_data":"<bech32-address>"}
+          initiator_data is a plain bech32 address string (NOT a JSON object).
+          This is the only TX where alias doesn't need to exist yet.
+      - action: use_in_protected_tx
+        note: "e.g. course_create, project_create"
+    cost_estimate: "~5.36 ADA (5 ADA service fee + 0.36 ADA network fee)"
+    validated_fees:
+      access_token_mint: { fee_ada: 0.362, service_ada: 5.0 }
+    docs: state-machine/general/mint-access-token.mdx
+    script: null
+    status: validated
+    validated_date: 2026-04-06
+    known_gotchas:
+      - "initiator_data is a plain bech32 address string, not a JSON object with sponsor_address"
+
+  - id: 16
+    name: general.auth.headless
+    type: meta
+    description: Headless wallet auth lifecycle. Not a TX loop but every other loop presupposes it.
+    roles: [any]
+    prereqs: []
+    steps:
+      - action: andamio_auth_login
+      - action: andamio_user_login
+      - action: jwt_refresh
+      - action: session_expire
+      - action: re_login
+    cost_estimate: null  # no on-chain cost
+    docs: guides/developers/cli/transaction-signing.mdx
+    script: null
+    status: stubbed

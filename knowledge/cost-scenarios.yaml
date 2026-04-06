@@ -1,0 +1,8 @@
+# Cost Scenarios — Real-world cost calculations from developer sessions
+# Updated by /compound skill
+# Schema: id, scenario, inputs, breakdown, total_ada, timestamp
+
+version: 1
+last_updated: "2026-03-23"
+
+entries: []

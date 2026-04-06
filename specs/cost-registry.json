@@ -1,0 +1,551 @@
+{
+  "version": "0.3.0",
+  "lastUpdated": "2025-12-09",
+  "network": "preprod",
+  "notes": [
+    "Costs extracted from decoded transaction CBORs in /drafts/example-txs/v2/",
+    "Values are in lovelace unless noted",
+    "Min UTxO depends on datum/token size - these are observed values",
+    "Tx fees depend on script execution units - will vary",
+    "walletDelta = actual change to wallet balance (positive = cost, negative = gain)",
+    "See /docs/protocol/v2/cost-estimation for user-facing documentation"
+  ],
+  "treasuries": {
+    "protocol-treasury": {
+      "address": "addr_test1qz02cdjmf04d9dc2dk3s50y98zkm99yjgt7hyygykdfh3347uqpl75w90lk96ht83c2t4w7zrwrmr7z924q822svc3hstlm4js",
+      "description": "Receives fees from access token minting"
+    },
+    "instance-treasury": {
+      "address": "addr_test1qpuptlg3kgtcq0rq8rq0z7w8pp0j7p98whvsg4wp6c0mngu7nalltfu076ak2qfw0p2ghn5svge4pm78gpfr6rl8rtrszh0nq3",
+      "description": "Receives fees from course operations"
+    }
+  },
+  "serviceFees": {
+    "mint-access-token": {
+      "amount": 5000000,
+      "ada": "5 ADA",
+      "recipient": "protocol-treasury"
+    },
+    "course-create": {
+      "formula": "100 ADA base + 10 ADA × number of teachers",
+      "example": { "1-teacher": "110 ADA", "3-teachers": "130 ADA" },
+      "recipient": "instance-treasury",
+      "upcoming": {
+        "note": "First teacher will be free in upcoming update",
+        "newFormula": "100 ADA base + 10 ADA × (teachers - 1)",
+        "newExample": { "1-teacher": "100 ADA", "3-teachers": "120 ADA" }
+      }
+    },
+    "course-teachers-update": {
+      "amount": 10000000,
+      "ada": "10 ADA",
+      "recipient": "instance-treasury"
+    },
+    "course-modules-manage": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for module management"
+    },
+    "student-enroll": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for enrollment"
+    },
+    "assignment-update": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for assignment updates"
+    },
+    "assignments-assess": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for assessments"
+    },
+    "credential-claim": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for credential claims"
+    },
+    "project-create": {
+      "formula": "100 ADA base + 10 ADA × number of managers",
+      "example": { "1-manager": "110 ADA", "2-managers": "120 ADA" },
+      "recipient": "instance-treasury",
+      "upcoming": {
+        "note": "First manager will be free in upcoming update",
+        "newFormula": "100 ADA base + 10 ADA × (managers - 1)",
+        "newExample": { "1-manager": "100 ADA", "2-managers": "110 ADA" }
+      }
+    },
+    "project-managers-update": {
+      "amount": 10000000,
+      "ada": "10 ADA",
+      "recipient": "instance-treasury",
+      "note": "Same fee structure as course-teachers-update"
+    },
+    "project-blacklist-manage": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for blacklist management"
+    },
+    "project-tasks-manage": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for task management"
+    },
+    "project-task-commit": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for task commitment"
+    },
+    "project-tasks-assess": {
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "No service fee for task assessment"
+    },
+    "project-credential-claim": {
+      "amount": 1000000,
+      "ada": "1 ADA",
+      "recipient": "instance-treasury",
+      "note": "Protocol fee for project credential claim"
+    }
+  },
+  "transactionCosts": {
+    "general.mint-access-token": {
+      "txFee": 360000,
+      "txFeeAda": "~0.36 ADA",
+      "serviceFee": 5000000,
+      "serviceFeeAda": "5 ADA",
+      "serviceFeeRecipient": "protocol-treasury",
+      "utxoFlow": {
+        "spent": {
+          "existing-index-node": 13710000,
+          "notes": "Existing index node recycled - ADA returned to transaction"
+        },
+        "created": {
+          "index-node-1": 1250000,
+          "index-node-2": 1250000,
+          "global-state-v2": 1260000,
+          "total": 3760000
+        },
+        "netChange": 2510000,
+        "netChangeAda": "~2.51 ADA",
+        "notes": "Net = created - spent portion used for new UTxOs"
+      },
+      "walletDelta": {
+        "lovelace": 7870000,
+        "ada": "~7.9 ADA",
+        "breakdown": "txFee (0.36) + serviceFee (5.0) + netUtxoChange (2.51)",
+        "verified": "Confirmed against actual wallet delta from preprod tx"
+      },
+      "executionUnits": {
+        "spend": { "mem": 87883, "steps": 29307972 },
+        "mint": { "mem": 523328, "steps": 181451724 },
+        "reward": { "mem": 86251, "steps": 34714727 }
+      },
+      "collateral": 535863
+    },
+    "course.admin.create": {
+      "txFee": 527195,
+      "txFeeAda": "~0.53 ADA",
+      "serviceFeeFormula": "100 ADA base + 10 ADA × teachers",
+      "serviceFeeExample": "1 teacher = 110 ADA",
+      "serviceFeeRecipient": "instance-treasury",
+      "utxoDeposits": {
+        "local-state-nft-validator": 1236970,
+        "local-state-token-validator": 16584880,
+        "course-governance-validator": 1331790,
+        "total": 19153640,
+        "notes": "LocalStateToken includes embedded script_ref (~16.5 ADA)"
+      },
+      "totalCost": {
+        "formula": "txFee + serviceFee + utxoDeposits",
+        "example": "1 teacher: ~0.53 + 110 + 19.15 = ~130 ADA",
+        "note": "Total scales with number of teachers (+10 ADA each)"
+      },
+      "executionUnits": {
+        "mint_0_local_state_nft": { "mem": 27223, "steps": 10486084 },
+        "mint_1_local_state_token": { "mem": 140680, "steps": 50525266 },
+        "mint_2_governance": { "mem": 256248, "steps": 79073308 },
+        "reward_0_course_observer": { "mem": 252894, "steps": 81944948 }
+      },
+      "collateral": 790793
+    },
+    "course.admin.teachers-update": {
+      "txFee": 300669,
+      "txFeeAda": "~0.30 ADA",
+      "serviceFee": 10000000,
+      "serviceFeeAda": "10 ADA",
+      "serviceFeeRecipient": "instance-treasury",
+      "utxoDeposits": {
+        "total": 0,
+        "notes": "Spend-and-recreate pattern - no new UTxOs"
+      },
+      "totalCost": {
+        "lovelace": 10300669,
+        "ada": "~10.3 ADA",
+        "breakdown": "txFee (0.30) + serviceFee (10.0)"
+      },
+      "executionUnits": {
+        "spend_0_local_state_nft": { "mem": 327793, "steps": 104422332 },
+        "spend_1_governance": { "mem": 266153, "steps": 88243753 }
+      },
+      "collateral": 451004
+    },
+    "course.teacher.modules-manage": {
+      "txFee": 271720,
+      "txFeeAda": "~0.27 ADA",
+      "serviceFee": 0,
+      "serviceFeeAda": "0 ADA",
+      "serviceFeeRecipient": null,
+      "utxoDeposits": {
+        "module-validator": 1590390,
+        "total": 1590390,
+        "notes": "Per module - scales with number of modules minted"
+      },
+      "totalCost": {
+        "lovelace": 1862110,
+        "ada": "~1.86 ADA",
+        "breakdown": "txFee (0.27) + utxoDeposit (1.59) - for 1 module"
+      },
+      "executionUnits": {
+        "mint": { "mem": 330098, "steps": 109408204 }
+      },
+      "collateral": 407580,
+      "scalingEstimates": {
+        "5-modules": { "txFee": "~0.35 ADA", "deposits": "~8.0 ADA", "total": "~8.4 ADA" },
+        "10-modules": { "txFee": "~0.45 ADA", "deposits": "~16.0 ADA", "total": "~16.5 ADA" }
+      }
+    },
+    "course.student.enroll": {
+      "txFee": 402798,
+      "txFeeAda": "~0.40 ADA",
+      "serviceFee": 0,
+      "walletDelta": {
+        "lovelace": 2140000,
+        "ada": "~2.14 ADA",
+        "breakdown": "txFee (~0.40) + courseStateDeposit (~1.45) + globalStateDelta (~0.29)",
+        "verified": true
+      },
+      "notes": "With single assignment commitment. Deposit recoverable on credential-claim."
+    },
+    "course.student.assignment-update": {
+      "txFee": 277568,
+      "txFeeAda": "~0.28 ADA",
+      "serviceFee": 0,
+      "walletDelta": {
+        "lovelace": 330000,
+        "ada": "~0.33 ADA",
+        "breakdown": "txFee (~0.28) + minUtxoDelta (~0.05)",
+        "verified": true
+      },
+      "notes": "MinUTxO increases when datum grows (longer assignment_info)"
+    },
+    "course.teacher.assignments-assess": {
+      "txFee": 281358,
+      "txFeeAda": "~0.28 ADA",
+      "serviceFee": 0,
+      "walletDelta": {
+        "lovelace": 210000,
+        "ada": "~0.21 ADA",
+        "breakdown": "txFee (~0.28) - minUtxoRefund (~0.07)",
+        "verified": true
+      },
+      "notes": "Datum shrinks (pending→completed), so teacher gets partial refund"
+    },
+    "course.student.credential-claim": {
+      "txFee": 346896,
+      "txFeeAda": "~0.35 ADA",
+      "serviceFee": 0,
+      "walletDelta": {
+        "lovelace": -1030000,
+        "ada": "-1.03 ADA",
+        "breakdown": "txFee (~0.35) - depositRefund (~1.38)",
+        "verified": true
+      },
+      "notes": "NEGATIVE = student gains ADA. Burned course state UTxO releases enrollment deposit."
+    },
+    "instance.owner.project.create": {
+      "txFee": 1300865,
+      "txFeeAda": "~1.30 ADA",
+      "serviceFeeFormula": "100 ADA base + 10 ADA × managers",
+      "serviceFeeExample": "2 managers = 120 ADA",
+      "serviceFeeRecipient": "instance-treasury",
+      "stakeRegistration": 2000000,
+      "stakeRegistrationAda": "2 ADA",
+      "utxoDeposits": {
+        "local-state-nft-validator": 1236970,
+        "local-state-token-validator": 15447040,
+        "governance-validator": 1357650,
+        "treasury-script-validator": 20162180,
+        "project-state-validator": 1439540,
+        "treasury-validator": 5000000,
+        "treasury-validator-note": "5 ADA minimum + deposit_value",
+        "total": "~45 ADA + deposit_value",
+        "notes": "LocalStateToken includes embedded script_ref (~15 ADA), TreasuryScript includes embedded script_ref (~20 ADA)"
+      },
+      "totalCost": {
+        "formula": "txFee + serviceFee + stakeReg + utxoDeposits + deposit_value",
+        "example": "2 managers: ~1.3 + 120 + 2 + 45 + deposit = ~168 ADA + deposit",
+        "note": "Total scales with number of managers (+10 ADA each)"
+      },
+      "executionUnits": {
+        "mint_0_treasury_script": { "mem": 587159, "steps": 188113819, "policyId": "0d93b85fd1975e409be7c6308060ecc7623498474c4e43da4c83a5ad" },
+        "mint_1_project_state": { "mem": 223828, "steps": 74368575, "policyId": "31cc37c36b2e07b686d60c7f1b79ba35ff73effb7d01f0faf9c0f8a3" },
+        "mint_2_local_state_nft": { "mem": 47457, "steps": 20978121, "note": "parameterized projectId policy" },
+        "mint_3_treasury_token": { "mem": 150132, "steps": 53428872, "policyId": "b3c8215adf6d521fca3ec5c1f82e2cfd92bcf1fc5ae921a4f3cd5c82" },
+        "mint_4_governance": { "mem": 875713, "steps": 262559223, "policyId": "ba4a7babce6f840e817faf82cb8094aecdca1920909d4b6386832236" },
+        "mint_5_local_state_token": { "mem": 358218, "steps": 109781507, "policyId": "91ea0e185f399b8bbb2b5d94c397d4122b090d6fdc571d4a054dc8f1" },
+        "cert_0": { "mem": 20513, "steps": 5189996 },
+        "withdraw_0_project_observer": { "mem": 409830, "steps": 129547187 },
+        "withdraw_1_prereq_observer": { "mem": 532338, "steps": 178296764 }
+      },
+      "notes": "Complex transaction with 6 mints, 2 observers, stake registration. Includes treasury system with embedded script references. Service fee uses same formula as course-create (100 + 10×participants). Last updated 2026-01-09."
+    },
+    "project.owner.managers.manage": {
+      "txFee": 298863,
+      "txFeeAda": "~0.30 ADA",
+      "serviceFee": 10000000,
+      "serviceFeeAda": "10 ADA",
+      "serviceFeeRecipient": "instance-treasury",
+      "utxoDeposits": {
+        "total": 0,
+        "notes": "Spend-and-recreate pattern - no new UTxOs"
+      },
+      "totalCost": {
+        "lovelace": 10298863,
+        "ada": "~10.3 ADA",
+        "breakdown": "txFee (0.30) + serviceFee (10.0)"
+      },
+      "executionUnits": {
+        "spend_2_local_state_nft": { "mem": 311977, "steps": 102604429 },
+        "spend_3_governance": { "mem": 273941, "steps": 93398707 }
+      },
+      "collateral": 448295,
+      "notes": "Identical pattern to course.owner.teachers.manage - same validators, same fee structure."
+    },
+    "project.owner.contributor-blacklist.manage": {
+      "txFee": 344679,
+      "txFeeAda": "~0.34 ADA",
+      "serviceFee": 0,
+      "serviceFeeAda": "0 ADA",
+      "serviceFeeRecipient": null,
+      "utxoDeposits": {
+        "total": 0,
+        "notes": "Spend-and-recreate with observer pattern - no new UTxOs"
+      },
+      "totalCost": {
+        "lovelace": 344679,
+        "ada": "~0.34 ADA",
+        "breakdown": "txFee only (no service fee)"
+      },
+      "executionUnits": {
+        "spend_1_local_state_nft": { "mem": 265885, "steps": 87614845 },
+        "spend_2_project_state": { "mem": 81041, "steps": 39799780 },
+        "reward_0_project_state_observer": { "mem": 360969, "steps": 112494489 }
+      },
+      "collateral": 517019,
+      "notes": "No protocol fee for blacklist management. Uses project-state-observer for validation."
+    },
+    "project.manager.tasks.manage": {
+      "txFee": 430739,
+      "txFeeAda": "~0.43 ADA",
+      "serviceFee": 0,
+      "serviceFeeAda": "0 ADA",
+      "serviceFeeRecipient": null,
+      "utxoDeposits": {
+        "task-escrow": "varies with lovelace_amount",
+        "notes": "Task escrow holds the reward amount; no fixed deposit"
+      },
+      "totalCost": {
+        "formula": "txFee + deposit_value (optional)",
+        "ada": "~0.43 ADA + optional deposit",
+        "breakdown": "txFee only - deposit goes to treasury/escrow"
+      },
+      "executionUnits": {
+        "spend_5_task_escrow": { "mem": 61128, "steps": 27602412 },
+        "reward_0_task_escrow_observer": { "mem": 599713, "steps": 217647277 }
+      },
+      "collateral": 646109,
+      "notes": "No minting - uses existing treasury-tokens. Execution units scale with number of tasks."
+    },
+    "project.contributor.task.commit": {
+      "txFee": 512467,
+      "txFeeAda": "~0.51 ADA",
+      "serviceFee": 0,
+      "serviceFeeAda": "0 ADA",
+      "serviceFeeRecipient": null,
+      "utxoDeposits": {
+        "contributor-state-output": 14500000,
+        "task-escrow-output": 5000000,
+        "global-state-output": 2111900,
+        "user-token-output": 1172320,
+        "total": "~22.8 ADA",
+        "notes": "Contributor-state deposit is largest - holds enrollment data. Some deposits may come from task-escrow UTxOs."
+      },
+      "walletDelta": {
+        "estimate": "~22 ADA",
+        "notes": "Actual cost depends on existing UTxOs consumed from task escrow. First enrollment has higher cost due to contributor-state token mint."
+      },
+      "totalCost": {
+        "formula": "txFee + utxoDeposits (some from escrow)",
+        "ada": "~0.51 ADA + ~14.5 ADA contributor-state deposit",
+        "breakdown": "Most deposit comes from task escrow deposit UTxO"
+      },
+      "executionUnits": {
+        "spend_1_global_state": { "mem": 227336, "steps": 79871977 },
+        "spend_3_task_escrow": { "mem": 52740, "steps": 22351458 },
+        "spend_4_task_escrow_deposit": { "mem": 56934, "steps": 24976935 },
+        "mint_0_contributor_state": { "mem": 239239, "steps": 89832851 },
+        "reward_0_task_commit_observer": { "mem": 595449, "steps": 225026770 }
+      },
+      "collateral": 768701,
+      "notes": "MINTS contributor-state token on first enrollment. Complex transaction with global-state update, task-escrow spending, and observer validation. Includes prerequisite verification in mint redeemer."
+    },
+    "project.manager.tasks.assess": {
+      "txFee": 350026,
+      "txFeeAda": "~0.35 ADA",
+      "serviceFee": 0,
+      "serviceFeeAda": "0 ADA",
+      "serviceFeeRecipient": null,
+      "walletDelta": {
+        "lovelace": 350026,
+        "ada": "~0.35 ADA",
+        "breakdown": "txFee only - no protocol fee",
+        "verified": true
+      },
+      "totalCost": {
+        "lovelace": 350026,
+        "ada": "~0.35 ADA",
+        "breakdown": "txFee only"
+      },
+      "executionUnits": {
+        "spend_0_contributor_state": { "mem": 108572, "steps": 36341379 },
+        "reward_0_task_assess_observer": { "mem": 351341, "steps": 121839683 }
+      },
+      "collateral": 525039,
+      "notes": "No minting - spend and recreate pattern. Analogous to course.teacher.assignments.assess. Execution units scale with number of decisions."
+    },
+    "project.contributor.credential.claim": {
+      "txFee": 348287,
+      "txFeeAda": "~0.35 ADA",
+      "serviceFee": 1000000,
+      "serviceFeeAda": "1 ADA",
+      "serviceFeeRecipient": "instance-treasury",
+      "walletDelta": {
+        "lovelace": -13000000,
+        "ada": "~-13 ADA (NET GAIN)",
+        "breakdown": "depositRefund (~14.5) - txFee (~0.35) - protocolFee (1.0)",
+        "verified": true
+      },
+      "totalCost": {
+        "lovelace": "NET GAIN",
+        "ada": "~13+ ADA back to wallet",
+        "breakdown": "Contributor state deposit released minus fees"
+      },
+      "executionUnits": {
+        "spend_1_global_state": { "mem": 189650, "steps": 66014459 },
+        "spend_2_contributor_state": { "mem": 163708, "steps": 62989923 },
+        "mint_0_burn": { "mem": 134261, "steps": 47189915 }
+      },
+      "collateral": 522431,
+      "notes": "BURNS contributor-state token. Contributor gets NET GAIN from released deposit. 1 ADA protocol fee to instance-treasury."
+    }
+  },
+  "minUtxoByType": {
+    "index-node": {
+      "observed": [1249900, 1245590],
+      "average": 1247745,
+      "description": "Index linked list node with datum + space token"
+    },
+    "global-state-v2": {
+      "observed": [1262830],
+      "average": 1262830,
+      "description": "Global state UTxO with datum + g-token"
+    },
+    "local-state-nft": {
+      "observed": [1236970],
+      "average": 1236970,
+      "description": "LocalStateNFT UTxO with alias datum"
+    },
+    "local-state-token": {
+      "observed": [17127940],
+      "average": 17127940,
+      "description": "LocalStateToken UTxO with courseId datum + embedded script_ref"
+    },
+    "course-governance": {
+      "observed": [1370580, 1344720],
+      "average": 1357650,
+      "description": "Course governance UTxO with teachers list datum"
+    },
+    "module": {
+      "observed": [1590390],
+      "average": 1590390,
+      "description": "Module UTxO with course/teachers datum + module token"
+    },
+    "access-token-wallet": {
+      "observed": [1146460],
+      "average": 1146460,
+      "description": "User wallet UTxO holding access token"
+    },
+    "course-state-pending": {
+      "observed": [1452470, 1504190],
+      "average": 1478330,
+      "description": "Course state UTxO with pending assignment datum (constructor 1)"
+    },
+    "course-state-completed": {
+      "observed": [1379200],
+      "average": 1379200,
+      "description": "Course state UTxO with completed assignment datum (constructor 0)"
+    },
+    "contributor-state-active": {
+      "observed": [14500000],
+      "average": 14500000,
+      "description": "Contributor state UTxO with active task commitment datum (constructor 1)"
+    }
+  },
+  "loops": {
+    "single-credential": {
+      "description": "Complete loop: enroll → commit assignment → assess → claim credential",
+      "participants": {
+        "student": {
+          "transactions": ["enroll", "credential-claim"],
+          "costs": {
+            "enroll": "~2.14 ADA",
+            "credential-claim": "-1.03 ADA (refund)"
+          },
+          "netCost": "~1.11 ADA",
+          "notes": "Enrollment deposit partially recovered on credential claim"
+        },
+        "teacher": {
+          "transactions": ["assignments-assess"],
+          "costs": {
+            "assignments-assess": "~0.21 ADA"
+          },
+          "netCost": "~0.21 ADA",
+          "notes": "Datum compression gives small refund vs raw tx fee"
+        }
+      },
+      "totalLoopCost": "~1.32 ADA",
+      "breakdown": "student (~1.11) + teacher (~0.21)",
+      "notes": "Assumes single assignment commitment at enrollment. Additional assignment-updates add ~0.33 ADA each."
+    },
+    "multi-assignment-credential": {
+      "description": "Loop with assignment updates: enroll → update → update → assess → claim",
+      "formula": "student: ~1.11 + (N × ~0.33) where N = number of assignment updates",
+      "examples": {
+        "0-updates": { "student": "~1.11 ADA", "teacher": "~0.21 ADA", "total": "~1.32 ADA" },
+        "2-updates": { "student": "~1.77 ADA", "teacher": "~0.21 ADA", "total": "~1.98 ADA" },
+        "5-updates": { "student": "~2.76 ADA", "teacher": "~0.21 ADA", "total": "~2.97 ADA" }
+      }
+    }
+  }
+}

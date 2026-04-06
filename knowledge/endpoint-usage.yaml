@@ -1,0 +1,8 @@
+# Endpoint Usage — Patterns discovered during developer sessions
+# Updated by /compound skill
+# Schema: id, endpoint, method, context, gotchas, frequency
+
+version: 1
+last_updated: "2026-03-23"
+
+entries: []

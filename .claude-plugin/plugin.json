@@ -1,0 +1,25 @@
+{
+  "name": "andamio-dev",
+  "version": "0.1.0",
+  "description": "Build on the Andamio Protocol and API — interactive developer onboarding, API exploration, cost estimation, and operations guidance",
+  "author": {
+    "name": "Andamio",
+    "url": "https://andamio.io"
+  },
+  "homepage": "https://github.com/Andamio-Platform/andamio-dev",
+  "repository": "https://github.com/Andamio-Platform/andamio-dev",
+  "license": "MIT",
+  "keywords": [
+    "developer-onboarding",
+    "api-integration",
+    "cardano",
+    "blockchain",
+    "andamio",
+    "cost-estimation",
+    "cli",
+    "credentials",
+    "verifiable-credentials",
+    "courses",
+    "projects"
+  ]
+}

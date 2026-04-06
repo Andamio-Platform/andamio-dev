@@ -1,0 +1,79 @@
+# Gotchas — Known errors with root causes and verified fixes
+# Updated by /compound skill
+# Schema: id, error_pattern, root_cause, fix, category, frequency, confirmed
+
+version: 1
+last_updated: "2026-04-03"
+
+entries:
+  - id: gotcha-001
+    error_pattern: "401 Unauthorized on POST endpoints"
+    root_cause: "API key provides read-only access; write operations require a wallet JWT"
+    fix: "Run `andamio user login` to authenticate via browser wallet, or set ANDAMIO_JWT for CI/CD"
+    category: auth
+    frequency: 0
+    confirmed: true
+
+  - id: gotcha-002
+    error_pattern: "401 after working fine earlier"
+    root_cause: "JWT expired — wallet JWTs have ~24 hour lifetime"
+    fix: "Run `andamio user logout && andamio user login` to re-authenticate"
+    category: auth
+    frequency: 0
+    confirmed: true
+
+  - id: gotcha-003
+    error_pattern: "429 Too Many Requests"
+    root_cause: "Rate limit or daily quota exceeded for your API key tier"
+    fix: "Check usage with `andamio apikey usage`. Wait for rate limit window to reset, or upgrade tier via billing portal."
+    category: rate-limits
+    frequency: 0
+    confirmed: true
+
+  - id: gotcha-004
+    error_pattern: "Module not found in course"
+    root_cause: "CLI import requires the module to already exist on the platform"
+    fix: "Create the module shell first via `andamio course create-module <course-id>`, then import content"
+    category: cli
+    frequency: 0
+    confirmed: true
+
+  - id: gotcha-005
+    error_pattern: "slts_created: 0 on new module import"
+    root_cause: "CLI sends slt_index which the API interprets as 'update existing'. New SLTs need to be created without slt_index."
+    fix: "Create SLTs via API with slt_index omitted first, then CLI import works for lesson content. See /course-ops for the full workflow."
+    category: cli
+    frequency: 0
+    confirmed: true
+
+  - id: gotcha-006
+    error_pattern: "Transaction rejected: InsufficientFunds"
+    root_cause: "Wallet does not have enough ADA to cover transaction fee + service fee + min UTXO deposits"
+    fix: "Use /cost-estimator to calculate required ADA. On preprod, get test ADA from the Cardano faucet."
+    category: transactions
+    frequency: 0
+    confirmed: true
+
+  - id: gotcha-007
+    error_pattern: "Tiptap JSON parse error or garbled content"
+    root_cause: "API endpoints expect Tiptap JSON for rich content fields (lessons, assignments, task descriptions). Raw markdown or HTML won't work."
+    fix: "Use the CLI for import/export — it converts between Markdown and Tiptap JSON automatically. For direct API usage, construct Tiptap JSON documents."
+    category: content
+    frequency: 0
+    confirmed: true
+
+  - id: gotcha-008
+    error_pattern: "transaction confirmed but DB update failed / Module not found during batch confirm"
+    root_cause: "The gateway's batch confirm tries to match on-chain modules to DB records by SLT hash. If no DB module has a matching hash (e.g., import was skipped or hash wasn't computed), the sync fails."
+    fix: "Import content before minting on-chain — `course import` (v0.10.2+) computes the SLT hash automatically. If already minted, use `andamio course teacher register-module --slt-hash <hash>` to link the DB record. See andamio-cli/docs/COURSE-LIFECYCLE.md."
+    category: transactions
+    frequency: 1
+    confirmed: true
+
+  - id: gotcha-009
+    error_pattern: "slt_index out of range / register-module then import fails"
+    root_cause: "`register-module` sets module status to APPROVED, which locks SLTs. Import then can't update SLTs because they're locked, and if the module has 0 DB SLT records (only on-chain SLTs), lesson attachment fails."
+    fix: "Run `andamio course teacher update-module-status --course-id <id> --module-code <code> --status DRAFT` to unlock SLTs, then re-import."
+    category: cli
+    frequency: 1
+    confirmed: true
