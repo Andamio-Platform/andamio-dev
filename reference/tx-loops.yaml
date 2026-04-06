@@ -46,8 +46,6 @@ loops:
         note: >
           REQUIRED: advance module from APPROVED → PENDING_TX before minting.
           CLI: andamio course teacher update-module-status --course-id <id> --module-code 100 --status PENDING_TX
-          BLOCKED: DB API does not yet allow PENDING_TX (see andamio-db-api-go#180).
-          Workaround: direct DB update until fix lands.
       - tx: modules_manage
         role: teacher
         endpoint: /v2/tx/course/teacher/modules/manage
@@ -67,7 +65,6 @@ loops:
     status: validated
     validated_date: 2026-04-06
     known_gotchas:
-      - "DB API does not allow PENDING_TX via update-module-status (andamio-db-api-go#180)"
       - "Module must have assignment content before students can enroll"
       - "Service fee is 100 ADA base + 10 ADA per teacher, not ~50 ADA"
 
@@ -417,8 +414,9 @@ loops:
       - tx: credential_claim
         role: student
         note: "× N students"
-    cost_estimate: ~1.32 ADA × N
-    notes: "This is the real-world teaching scenario. course.credential is pedagogy; course.credential.cohort is production."
+    cost_estimate: ~1.32 ADA × N (linear per student)
+    cost_scaling: linear
+    notes: "This is the real-world teaching scenario. course.credential is pedagogy; course.credential.cohort is production. Cost scales linearly — each student is an independent credential loop."
     script: null
     status: stubbed
 

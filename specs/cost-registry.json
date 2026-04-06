@@ -513,7 +513,7 @@
     }
   },
   "loops": {
-    "single-credential": {
+    "course.credential": {
       "description": "Complete loop: enroll → commit assignment → assess → claim credential",
       "participants": {
         "student": {
@@ -538,7 +538,7 @@
       "breakdown": "student (~1.11) + teacher (~0.21)",
       "notes": "Assumes single assignment commitment at enrollment. Additional assignment-updates add ~0.33 ADA each."
     },
-    "multi-assignment-credential": {
+    "course.credential.with-updates": {
       "description": "Loop with assignment updates: enroll → update → update → assess → claim",
       "formula": "student: ~1.11 + (N × ~0.33) where N = number of assignment updates",
       "examples": {
