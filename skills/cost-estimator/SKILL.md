@@ -23,7 +23,30 @@ Calculates ADA costs for different Andamio scenarios. Accepts natural-language d
 ### Pre-Execution Knowledge Check
 
 1. Read `specs/cost-registry.json` for real execution unit data and fee structures.
-2. If knowledge files exist, read `knowledge/cost-scenarios.yaml` for previously calculated scenarios. Proceed without it if missing.
+2. Read `reference/tx-loops.yaml` for canonical loop definitions, dotted names, and validated fees.
+3. If knowledge files exist, read `knowledge/cost-scenarios.yaml` for previously calculated scenarios. Proceed without it if missing.
+
+### Transaction Loops
+
+Andamio operations are organized into named **transaction loops** — multi-step workflows that accomplish a complete outcome. Reference loops by their dotted name (e.g., `course.credential`, `project.setup`).
+
+**Validated loops** (tested against live stack, real fee data):
+
+| Loop | Dotted Name | Total Cost | Notes |
+|------|-------------|------------|-------|
+| Course Setup | `course.setup` | ~111 ADA | course_create + modules_manage |
+| Project Setup | `project.setup` | ~112 ADA + treasury deposit | project_create + treasury_fund + tasks_manage |
+| Course Credential | `course.credential` | ~1.32 ADA | Per student: enroll → assess → claim |
+| Project Credential | `project.credential` | ~1.21 ADA fees | Contributor net positive (deposit refund + reward) |
+| Access Token | `general.access-token` | ~5.36 ADA | Prerequisite for course/project creation |
+
+**Stubbed loops** (defined, not yet tested): `project.credential.native-assets`, `course.credential.sequential`, `course.credential.refused`, `project.credential.refused`, `project.credential.denied`, `project.tasks.replace`, `course.modules.ongoing`, `course.teachers.rotate`, `course.credential.cohort`, `project.treasury.drawdown`, `general.auth.headless`
+
+When estimating costs, compose from loops:
+- "Stand up a course and credential 50 students" = `general.access-token` + `course.setup` + 50 × `course.credential`
+- "Full project with 10 contributors" = `general.access-token` + `course.setup` + `project.setup` + 10 × (`course.credential` + `project.credential`)
+
+See `reference/tx-loops.yaml` for full step sequences, roles, prerequisites, and known gotchas.
 
 ### Cost Components
 

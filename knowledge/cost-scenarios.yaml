@@ -1,8 +1,84 @@
 # Cost Scenarios — Real-world cost calculations from developer sessions
-# Updated by /compound skill
-# Schema: id, scenario, inputs, breakdown, total_ada, timestamp
+# Updated by /compound skill and /cost-estimator
+# Schema: id, scenario, loops_used, inputs, breakdown, total_ada, timestamp
 
-version: 1
-last_updated: "2026-03-23"
+version: 2
+last_updated: "2026-04-07"
 
-entries: []
+entries:
+  - id: scenario-001
+    scenario: "Standalone course — 1 teacher, 3 modules, 10 students, no assignment updates"
+    loops_used: [general.access-token, course.setup, course.credential]
+    inputs:
+      teachers: 1
+      modules: 3
+      students: 10
+      assignment_updates_per_student: 0
+    breakdown:
+      access_token: 5.36
+      course_create: 130.00  # 0.53 fee + 110 service + 19.15 deposits
+      modules_manage: 5.58   # 3 × 1.86
+      setup_subtotal: 140.94
+      per_student_net: 1.32   # enroll 2.14 + assess 0.21 - claim 1.03
+      students_subtotal: 13.20
+    total_ada: 154.14
+    recoverable_ada: 10.30   # 10 × 1.03 claim refunds
+    net_after_recovery: 143.84
+    cost_per_student: 1.32
+    notes: "Minimal course. Access token is one-time per creator. Deposits from course_create partially recoverable if course is later closed."
+    timestamp: "2026-04-07"
+
+  - id: scenario-002
+    scenario: "Course + project — 1 teacher, 1 manager, 5 modules, 10 contributors earning both credentials"
+    loops_used: [general.access-token, course.setup, project.setup, course.credential, project.credential]
+    inputs:
+      teachers: 1
+      managers: 1
+      modules: 5
+      contributors: 10
+      task_reward_per_contributor_ada: 50
+      assignment_updates_per_student: 0
+    breakdown:
+      access_token: 5.36
+      course_setup:
+        course_create: 130.00
+        modules_manage: 9.30  # 5 × 1.86
+      project_setup:
+        project_create: 156.30  # 1.30 fee + 110 service + 2 stake reg + 45 deposits
+        treasury_fund: 500.18   # 0.18 fee + 500 deposit (10 × 50 ADA rewards)
+        tasks_manage: 0.43
+      per_contributor:
+        course_credential: 1.32
+        project_fees: 1.21     # 0.51 + 0.35 + 0.35 fees
+        project_protocol_fee: 1.00
+        project_deposit: 14.50  # refunded at claim
+        project_reward: -47.50  # 50 ADA - 5% commission
+        net_per_contributor: -43.97  # contributor is net positive
+      contributors_subtotal: -439.70  # 10 contributors, each net positive
+    total_ada: 361.87  # setup costs + per-contributor flows
+    treasury_outflow: 475.00  # 10 × 50 ADA × 95% (after 5% commission)
+    protocol_commission: 25.00  # 5% of 500 ADA rewards
+    notes: "Contributors are net positive — they earn ADA from task rewards. The 'cost' is borne by the project owner via treasury funding. Total owner outlay: ~801 ADA (setup + treasury). Contributors collectively receive ~475 ADA in rewards + deposit refunds."
+    timestamp: "2026-04-07"
+
+  - id: scenario-003
+    scenario: "Andamio Pioneers cohort — 1 teacher, 7 modules, 20 students, 2 assignment updates average"
+    loops_used: [general.access-token, course.setup, course.credential]
+    inputs:
+      teachers: 1
+      modules: 7
+      students: 20
+      assignment_updates_per_student: 2
+    breakdown:
+      access_token: 5.36
+      course_create: 130.00
+      modules_manage: 13.02  # 7 × 1.86
+      setup_subtotal: 148.38
+      per_student_net: 1.98   # 1.32 base + 2 × 0.33 updates
+      students_subtotal: 39.60
+    total_ada: 187.98
+    recoverable_ada: 20.60   # 20 × 1.03 claim refunds
+    net_after_recovery: 167.38
+    cost_per_student: 1.98
+    notes: "Realistic cohort scenario matching Andamio Pioneers. 2 assignment updates per student is typical for iterative submission workflows."
+    timestamp: "2026-04-07"

@@ -546,6 +546,32 @@
         "2-updates": { "student": "~1.77 ADA", "teacher": "~0.21 ADA", "total": "~1.98 ADA" },
         "5-updates": { "student": "~2.76 ADA", "teacher": "~0.21 ADA", "total": "~2.97 ADA" }
       }
+    },
+    "project.credential": {
+      "description": "Complete loop: contributor commits to task → manager assesses → contributor claims credential + ADA reward",
+      "participants": {
+        "contributor": {
+          "transactions": ["project-task-commit", "project-credential-claim"],
+          "costs": {
+            "project-task-commit": "~0.51 ADA fee + ~14.5 ADA state deposit",
+            "project-credential-claim": "~0.35 ADA fee + 1 ADA protocol fee - ~14.5 ADA deposit refund"
+          },
+          "netCost": "~0.86 ADA fees + 1 ADA protocol fee - deposit refund = NET GAIN (~12.6 ADA back)",
+          "notes": "State deposit (~14.5 ADA) fully refunded at claim. Net positive after task reward minus 5% commission."
+        },
+        "manager": {
+          "transactions": ["project-tasks-assess"],
+          "costs": {
+            "project-tasks-assess": "~0.35 ADA"
+          },
+          "netCost": "~0.35 ADA",
+          "notes": "No protocol fee for assessment"
+        }
+      },
+      "totalLoopCost": "~1.21 ADA in fees + 1 ADA protocol fee",
+      "breakdown": "contributor fees (~0.86) + protocol fee (1.0) + manager (~0.35). Contributor net positive due to deposit refund + task reward.",
+      "prerequisite": "Contributor must hold course credential (prerequisite gating). Project must have funded treasury.",
+      "notes": "Task reward from treasury minus 5% commission. State deposit is ~14.5 ADA locked at commit, fully refunded at claim. See tx-loops.yaml loop #4 for full step sequence."
     }
   }
 }
