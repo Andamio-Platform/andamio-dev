@@ -2,20 +2,29 @@
 # Every developer workflow on Andamio, named and structured.
 #
 # Naming: {domain}.{subject}.{variant}
-# Status: validated (tested against live stack) | stubbed (defined, not yet tested)
+# Status: validated (tested against live stack) | stubbed (defined, not yet tested) | blocked (tested, hit known issue)
 # Dependencies reference loop numbers, not names.
 #
 # Created: 2026-04-06
 # Source: orch task "andamio-dev - add each Tx Loop and build cost estimation into each.md"
 
 version: 2
-last_updated: 2026-04-06
+last_updated: 2026-04-07
 
 # Dependency graph:
-#   (1) course.setup
-#    ├──→ (2) project.setup  [project requires course module as prerequisite]
-#    └──→ (3) course.credential
-#                └──→ (4) project.credential ←── (2)
+#   (15) general.access-token
+#    └──→ (1) course.setup
+#          ├──→ (2) project.setup  [project requires course module as prerequisite]
+#          ├──→ (3) course.credential
+#          │         └──→ (4) project.credential ←── (2)
+#          ├──→ (7) course.credential.refused  [variant of 3]
+#          ├──→ (11) course.modules.ongoing    [variant of 1]
+#          └──→ (12) course.teachers.rotate    [variant of 1]
+#          (2) project.setup
+#          ├──→ (8) project.credential.refused ←── (3) [BLOCKED: indexer]
+#          ├──→ (9) project.credential.denied  ←── (3) [stubbed]
+#          └──→ (10) project.tasks.replace     [variant of 2]
+#   (16) general.auth.headless  [prerequisite for all loops]
 
 loops:
 
@@ -280,27 +289,64 @@ loops:
     name: course.credential.refused
     type: variant
     variant_of: course.credential
-    description: Teacher refuses submission. Student resubmits. Teacher accepts. Student claims.
+    description: Teacher refuses submission. Student resubmits. Teacher accepts. Student claims. Tests the "try again" path.
     roles: [student, teacher]
     prereqs: [course.setup]
     steps:
+      - action: create_commitment
+        role: student
+        note: >
+          Off-chain commitment must exist before enrollment TX.
+          CLI: andamio course student create --course-id <id> --module-code <code>
       - tx: assignment_submit
         role: student
-        note: commit
+        endpoint: /v2/tx/course/student/assignment/commit
+        tx_type: assignment_submit
+        note: >
+          Initial submission. Body: {"alias":"<student>","course_id":"<id>","slt_hash":"<hash>","assignment_info":"<evidence>"}
       - tx: assessment_assess
         role: teacher
-        note: refuse — evidence cleared, student can resubmit
+        endpoint: /v2/tx/course/teacher/assignments/assess
+        tx_type: assessment_assess
+        note: >
+          REFUSE decision. Body: {"alias":"<teacher>","course_id":"<id>","assignment_decisions":[{"alias":"<student>","outcome":"refuse"}]}
+          DB status → REFUSED. On-chain evidence hash cleared. Student can resubmit.
       - tx: assignment_submit
         role: student
-        note: new commit
+        endpoint: /v2/tx/course/student/assignment/commit
+        tx_type: assignment_submit
+        note: >
+          Resubmission with improved evidence. Same endpoint and body shape as initial submit.
+          Uses the same slt_hash. assignment_info is new evidence.
       - tx: assessment_assess
         role: teacher
-        note: accept
+        endpoint: /v2/tx/course/teacher/assignments/assess
+        tx_type: assessment_assess
+        note: >
+          ACCEPT decision. Body: {"alias":"<teacher>","course_id":"<id>","assignment_decisions":[{"alias":"<student>","outcome":"accept"}]}
+          DB status → ACCEPTED.
       - tx: credential_claim
         role: student
-    protocol_note: "Refuse means 'try again' — distinct from project deny which is terminal."
+        endpoint: /v2/tx/course/student/credential/claim
+        tx_type: credential_claim
+        note: >
+          Body: {"alias":"<student>","course_id":"<id>"}
+          Credential NFT minted on-chain.
+    protocol_note: "Refuse means 'try again' — distinct from project deny which is terminal. Student can resubmit any number of times."
+    cost_estimate: "~1.65 ADA total (2× submit: 0.37 each; 2× assess: 0.27 each; 1× claim: 0.36)"
+    validated_fees:
+      assignment_submit_1: { fee_ada: 0.37, paid_by: student }
+      assessment_assess_refuse: { fee_ada: 0.27, paid_by: teacher }
+      assignment_submit_2: { fee_ada: 0.37, paid_by: student }
+      assessment_assess_accept: { fee_ada: 0.27, paid_by: teacher }
+      credential_claim: { fee_ada: 0.36, paid_by: student }
     script: null
-    status: stubbed
+    status: validated
+    validated_date: 2026-04-07
+    known_gotchas:
+      - "Resubmission uses the same endpoint and slt_hash as initial submit — it's another assignment_submit TX, not an update"
+      - "After REFUSE, DB shows commitment_status: REFUSED, source: db_only (indexer may lag on-chain status)"
+      - "No need to re-create the off-chain commitment — the original one is reused for resubmission"
 
   - id: 8
     name: project.credential.refused
@@ -312,19 +358,57 @@ loops:
     steps:
       - tx: project_join
         role: contributor
+        endpoint: /v2/tx/project/contributor/task/commit
+        tx_type: project_join
+        note: Initial commit to task.
       - tx: task_assess
         role: manager
-        note: refuse
-      - tx: project_join
+        endpoint: /v2/tx/project/manager/tasks/assess
+        tx_type: task_assess
+        note: >
+          REFUSE decision. Body includes {"outcome":"refuse"}.
+          On-chain: contributor state transitions away from "committed".
+          DB: commitment_status remains COMMITTED with task_outcome: refuse.
+      - tx: task_action_recommit
         role: contributor
-        note: new commit — creates a new commit tx, not a datum update
+        endpoint: /v2/tx/project/contributor/task/action
+        tx_type: task_submit
+        note: >
+          BLOCKED — recommit after refuse does NOT work as expected.
+          project_join returns STATE_ERROR ("Contributor has wrong state").
+          task/action (task_submit) lands on-chain but moves contributor to non-assessable state.
+          After task/action: manager's task_assess returns STATE_ERROR ("Contributor is not committed").
+          The protocol does not have a clean refuse → recommit → re-assess path for projects.
       - tx: task_assess
         role: manager
-        note: accept
+        note: "BLOCKED — cannot assess contributor who used task/action after refuse"
       - tx: project_credential_claim
         role: contributor
+        note: "BLOCKED — depends on successful assessment"
+    protocol_note: >
+      KNOWN ISSUE (2026-04-07): The project refuse → recommit flow is blocked by an andamioscan
+      indexer gap. After manager refuses (task_assess refuse), the on-chain state transitions correctly
+      but the indexer does not process the refuse outcome (only Accept is indexed as of 2026-04-07).
+      This causes the gateway confirm to fail, leaving the contributor in an inconsistent state.
+      Fix is incoming in andamioscan. Re-test after indexer update lands.
+      Symptoms observed during testing:
+        1. project_join after refuse → STATE_ERROR "Contributor has wrong state"
+        2. task/action (task_submit) after refuse → TX lands on-chain but indexer never confirms (not_indexed_count climbs)
+        3. task_assess after task/action → STATE_ERROR "Contributor is not committed"
+    cost_estimate: "TBD — flow blocked, re-test after andamioscan fix"
+    validated_fees:
+      project_join: { fee_ada: 0.56, paid_by: contributor }
+      task_assess_refuse: { fee_ada: 0.36, paid_by: manager }
+      task_action_recommit: { fee_ada: 0.36, paid_by: contributor, note: "TX lands on-chain but indexer can't confirm" }
     script: null
-    status: stubbed
+    status: blocked
+    blocked_by: "andamioscan indexer — refuse outcome (constructor 1) not indexed"
+    validated_date: 2026-04-07
+    known_gotchas:
+      - "Blocked by andamioscan indexer gap — refuse outcome not indexed, fix incoming"
+      - "task/action endpoint (task_submit) creates a valid on-chain TX but the indexer never confirms it"
+      - "After task/action, DB shows ACCEPTED but on-chain state is not assessable — data inconsistency"
+      - "Course refuse flow works cleanly because course indexer handles refuse; project indexer does not yet"
 
   - id: 9
     name: project.credential.denied
@@ -336,14 +420,31 @@ loops:
     steps:
       - tx: project_join
         role: contributor
+        endpoint: /v2/tx/project/contributor/task/commit
+        tx_type: project_join
+        note: >
+          Contributor commits to task. Standard project_join TX.
       - tx: task_assess
         role: manager
-        note: deny — terminal, contributor permanently removed
+        endpoint: /v2/tx/project/manager/tasks/assess
+        tx_type: task_assess
+        note: >
+          DENY decision. Body: {"alias":"<manager>","project_id":"<id>","contributor_state_id":"<csid>","task_decisions":[{"alias":"<contributor>","outcome":"deny"}]}
+          Terminal — contributor permanently removed, treasury assets clawed back.
     outcome: Contributor removed. Treasury clawback.
-    known_gotchas:
-      - "Indexer gap: as of 2026-04-04, andamioscan only indexes Accept (constructor 0) and Refuse (constructor 1). Deny lands on-chain but is silently ignored."
+    protocol_note: >
+      NOT TESTED (2026-04-07): Could not validate deny flow in isolation.
+      The test project's contributor state was corrupted by loop 8 testing
+      (task_action TX put contributor in non-assessable state, Atlas returned 500).
+      Needs clean-room test on a fresh project with a contributor that has only done project_join.
+      Also blocked by same andamioscan indexer gap as loop 8 — deny (constructor 2) is not indexed.
+    cost_estimate: "TBD — not tested"
     script: null
     status: stubbed
+    known_gotchas:
+      - "Indexer gap: andamioscan only indexes Accept (constructor 0). Refuse (constructor 1) and Deny (constructor 2) land on-chain but are not indexed."
+      - "MUST test on a fresh contributor state — will likely be unblocked when andamioscan refuse/deny indexing lands"
+      - "Requires a fresh project or second contributor wallet to test in isolation"
 
   # ===========================================================================
   # SETUP VARIANTS
@@ -353,46 +454,119 @@ loops:
     name: project.tasks.replace
     type: variant
     variant_of: project.setup
-    description: Manager removes a task and adds a replacement. Only possible before any contributor commits.
+    description: Manager removes a task and adds a replacement in a single tasks_manage TX. Only possible before any contributor commits to the task.
     roles: [manager]
     prereqs: [project.setup]
     steps:
       - tx: tasks_manage
         role: manager
-        note: remove task + add new task in same tx
-    protocol_note: Reward returns to treasury on remove. Only possible pre-commit.
+        endpoint: /v2/tx/project/manager/tasks/manage
+        tx_type: tasks_manage
+        note: >
+          Remove + add in one TX.
+          Body: {"alias":"<mgr>","project_id":"<id>","contributor_state_id":"<csid>",
+            "tasks_to_add":[{"project_content":"<new_content>","expiration_posix":<ms>,"lovelace_amount":<amount>,"native_assets":[]}],
+            "tasks_to_remove":[{"project_content":"<old_content>","expiration_posix":<ms>,"lovelace_amount":<amount>,"native_assets":[]}],
+            "deposit_value":[["lovelace",<new_task_reward>]]}
+          CRITICAL: tasks_to_remove takes FULL TaskData objects that must EXACTLY match the on-chain task datum.
+          Fields: project_content (text), expiration_posix (ms), lovelace_amount, native_assets.
+          deposit_value covers the new task reward (removed task's reward returns to treasury automatically).
+      - action: verify_replacement
+        note: >
+          Confirm old task is gone and new task exists.
+          CLI: andamio project tasks <project-id> --output json
+    cost_estimate: "~0.32 ADA (network fee only, no service fee)"
+    validated_fees:
+      tasks_manage_replace: { fee_ada: 0.32, note: "remove 1 + add 1 in same TX" }
+    protocol_note: >
+      Reward from removed task returns to treasury automatically.
+      deposit_value in the TX body covers the NEW task's reward (not the total of add + remove).
+      Only possible when no contributor has committed to the task being removed.
     script: null
-    status: stubbed
+    status: validated
+    validated_date: 2026-04-07
+    known_gotchas:
+      - "tasks_to_remove needs FULL TaskData objects matching on-chain datum — NOT task hashes or strings"
+      - "All TaskData fields required: project_content, expiration_posix, lovelace_amount, native_assets"
+      - "If task data doesn't exactly match on-chain datum, Atlas returns STATE_ERROR 'Task to delete does not exist'"
+      - "Cannot remove tasks that have active contributor commitments"
+      - "Tasks created via tasks_manage may show as chain_only if no matching DB draft exists"
 
   - id: 11
     name: course.modules.ongoing
     type: variant
     variant_of: course.setup
-    description: Add, update, or remove modules after initial setup.
+    description: Add, update, or remove modules after initial course setup. Uses the same modules_manage TX as initial setup.
     roles: [teacher]
     prereqs: [course.setup]
     steps:
+      - action: create_module_draft
+        role: teacher
+        note: >
+          Create off-chain module record in DRAFT status, add SLTs, approve to compute slt_hash.
+          CLI: andamio course create-module --course-id <id> --code 200 --title "..." --slt "SLT 1" --slt "SLT 2" --approve
+          Creates DRAFT → adds SLTs → APPROVED in one step. slt_hash printed on success.
+      - action: set_pending_tx
+        role: teacher
+        note: >
+          Advance module from APPROVED → PENDING_TX before minting.
+          CLI: andamio course teacher update-module-status --course-id <id> --module-code 200 --status PENDING_TX
       - tx: modules_manage
         role: teacher
-        note: "modules_to_add / modules_to_update / modules_to_remove — one tx handles all three"
-    known_gotchas:
-      - "Updating SLTs changes slt_hash (on-chain identity). 'Update' is really burn + mint."
+        endpoint: /v2/tx/course/teacher/modules/manage
+        tx_type: modules_manage
+        note: >
+          Body: {"alias":"<teacher>","course_id":"<id>","modules_to_add":[{"slts":["SLT text 1","SLT text 2"],"allowed_student_state_ids":[],"prereq_slt_hashes":[]}],"modules_to_update":[],"modules_to_remove":[]}
+          All three arrays (modules_to_add, modules_to_update, modules_to_remove) are REQUIRED even when empty.
+          modules_to_add takes objects with slts (text array), not module codes or strings.
+          Gateway batch-confirms modules from PENDING_TX → ON_CHAIN.
+      - action: verify_module
+        note: >
+          Confirm module is ON_CHAIN.
+          CLI: andamio course modules <course-id>
+    cost_estimate: "~0.27 ADA per modules_manage TX (network fee only)"
+    validated_fees:
+      modules_manage_add: { fee_ada: 0.27, note: "add one module with 2 SLTs" }
     script: null
-    status: stubbed
+    status: validated
+    validated_date: 2026-04-07
+    known_gotchas:
+      - "modules_to_add takes objects with {slts, allowed_student_state_ids, prereq_slt_hashes} — NOT strings or module codes"
+      - "Module must be in PENDING_TX status before minting — gateway rejects APPROVED or DRAFT modules"
+      - "Updating SLTs changes slt_hash (on-chain identity). 'Update' is really burn + mint."
+      - "Module code is off-chain only — never appears in the TX body, matched by slt_hash"
 
   - id: 12
     name: course.teachers.rotate
     type: variant
     variant_of: course.setup
-    description: Add and/or remove teachers from a course.
+    description: Add and/or remove teachers from a course. Owner-only operation.
     roles: [owner]
     prereqs: [course.setup]
     steps:
-      - tx: teachers_manage
+      - tx: teachers_update
         role: owner
-        note: add + remove in same tx
+        endpoint: /v2/tx/course/owner/teachers/manage
+        tx_type: teachers_update
+        note: >
+          Body: {"alias":"<owner>","course_id":"<id>","teachers_to_add":["<alias>"],"teachers_to_remove":[]}
+          Can add and remove in same tx. At least one teacher must remain.
+          CLI: andamio tx run /v2/tx/course/owner/teachers/manage --skey <path> --tx-type teachers_update --body '<json>'
+      - action: verify_teachers
+        note: >
+          Confirm teacher list updated on-chain and in DB.
+          CLI: andamio course get <course-id> --output json | jq '.teachers'
+    cost_estimate: "~0.28 ADA per tx (network fee only, no service fee)"
+    validated_fees:
+      teachers_update_add: { fee_ada: 0.28, note: "add one teacher" }
+      teachers_update_remove: { fee_ada: 0.28, note: "remove one teacher" }
     script: null
-    status: stubbed
+    status: validated
+    validated_date: 2026-04-07
+    known_gotchas:
+      - "tx_type is 'teachers_update' NOT 'teachers_manage' — registration fails with invalid tx_type if wrong"
+      - "Endpoint path is /v2/tx/course/owner/teachers/manage but the tx_type for registration is teachers_update"
+      - "Only the course owner can manage teachers, not existing teachers"
 
   # ===========================================================================
   # MULTI-PARTY
@@ -472,12 +646,42 @@ loops:
     roles: [any]
     prereqs: []
     steps:
-      - action: andamio_auth_login
-      - action: andamio_user_login
-      - action: jwt_refresh
-      - action: session_expire
-      - action: re_login
+      - action: api_key_login
+        note: >
+          Store API key in CLI config. Required for all endpoints.
+          CLI: andamio auth login --api-key <key>
+          Verify: andamio auth status
+      - action: headless_wallet_login
+        note: >
+          CIP-8 headless login — signs nonce with .skey file, receives JWT.
+          CLI: andamio user login --skey <path/payment.skey> --alias <alias> --address <bech32-addr>
+          Requires: --skey, --alias, --address (all three mandatory).
+          Verify: andamio user status → shows "Session: active"
+      - action: verify_session
+        note: >
+          Confirm authenticated operations work.
+          CLI: andamio user me --output json
+          Returns dashboard with counts, courses, projects. Large response.
+          CLI: andamio user status → shows alias and session state.
+      - action: switch_identity
+        note: >
+          Logout and login as different wallet. JWT is replaced, not stacked.
+          CLI: andamio user logout && andamio user login --skey <other.skey> --alias <other> --address <other-addr>
+          Verify: andamio user status → shows new alias.
+      - action: session_expire_and_relogin
+        note: >
+          JWT expires after gateway-configured TTL (typically hours).
+          CLI: andamio user status → shows "not authenticated" after expiry.
+          Recovery: re-run andamio user login with same args.
+          No explicit refresh command — just re-login.
     cost_estimate: null  # no on-chain cost
     docs: guides/developers/cli/transaction-signing.mdx
     script: null
-    status: stubbed
+    status: validated
+    validated_date: 2026-04-07
+    known_gotchas:
+      - "All three flags required for headless login: --skey, --alias, --address. Missing --address gives clear error."
+      - "skey permissions warning (444 vs 0600) is informational, does not block login"
+      - "user me returns large dashboard JSON, not a simple alias/role object"
+      - "No JWT refresh command — session expires silently, re-login is the recovery path"
+      - "Logout clears JWT locally; server session may still be valid until TTL"
