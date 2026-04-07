@@ -1,0 +1,119 @@
+# Interpret the source field on Andamio API responses
+
+## Before we start
+
+Module 300 is about reading Andamio. No writes, no transactions, no ADA moved. Four lessons on querying data, interpreting responses, and navigating the API.
+
+Start with a field that appears on every course and project response: `source`. Understanding it is the difference between reading responses correctly and writing subtle integration bugs.
+
+## The architecture `source` exposes
+
+Andamio API responses are assembled from two categorically different sources:
+
+| Source | What it stores | Who sees it |
+|--------|---------------|-------------|
+| **On-chain** (the commons) | Course IDs, SLT hashes, enrollments, credential claims | Everyone — there is only one Cardano |
+| **Off-chain** (local) | Titles, descriptions, lesson content, commitment evidence | Only the API you're talking to |
+
+Today you talk to one Andamio API at `api.andamio.io`. In time there may be several, each with its own off-chain store but all sharing the same on-chain data.
+
+The `source` field tells you which half the API had available when it answered. Writing code that branches on `source` today prepares that code for the multi-API future.
+
+## The three values
+
+| Value | Meaning | What's present | What's missing |
+|-------|---------|----------------|----------------|
+| `merged` | Both on-chain and off-chain found and linked | Everything | Nothing |
+| `chain_only` | On-chain exists, off-chain not found | `course_id`, `slt_hash`, enrollment status | Titles, descriptions, content |
+| `db_only` | Off-chain exists, on-chain not found | Titles, descriptions, draft state | Real `course_id`, minted modules |
+
+`chain_only` happens when someone mints on-chain without the normal flow, or transiently when chain sync lags. `db_only` happens when a course is still in draft, or briefly between an off-chain create and on-chain confirmation.
+
+## A worked example
+
+```json
+{
+  "data": [
+    {
+      "course_id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0",
+      "course_title": "Introduction to Cardano Development",
+      "is_enrolled": true,
+      "enrollment_status": "enrolled",
+      "claimed_credentials": [],
+      "modules": [
+        {
+          "slt_hash": "8a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0",
+          "module_code": "100",
+          "title": "Wallets and Keys",
+          "status": "ON_CHAIN"
+        }
+      ],
+      "source": "merged"
+    }
+  ],
+  "meta": null
+}
+```
+
+Three tells: `course_id` is a real 56-char hex (on-chain side exists), `course_title` is populated (off-chain side exists), `source: "merged"` confirms both linked.
+
+With `chain_only`, expect `course_id` but no `course_title`. With `db_only`, expect `course_title` but `course_id` missing or placeholder.
+
+## Verifying what's on-chain
+
+The on-chain/off-chain split isn't just about data availability — it's about verifiability. Every credential on Andamio has a unique on-chain address:
+
+```
+<course_id>.<slt_hash>
+```
+
+The `course_id` is a policy ID minted when the course is created. The `slt_hash` is the hash of the module's learning targets. Together they form a permanent, verifiable identifier: this credential, on this course, proving these specific capabilities.
+
+You already computed an `slt_hash` in M100.2. Now you can verify a real one. Pick a course from `andamio course list --output json` and note a module's `slt_hash`. If you know the SLT text for that module, you can recompute the hash locally:
+
+```bash
+andamio course credential compute-hash \
+  --slt "First SLT text here" \
+  --slt "Second SLT text here"
+```
+
+If the computed hash matches the `slt_hash` in the API response, the off-chain SLT text matches what was minted on-chain. If it doesn't, the text has drifted from what the credential actually certifies.
+
+This is what makes `source: merged` powerful and `source: chain_only` still useful. Even without off-chain titles and descriptions, the `slt_hash` is enough to verify exactly what a credential proves — as long as someone has the original SLT text. The chain stores the proof. The off-chain data stores the human-readable content. Anyone can check one against the other.
+
+The same principle applies to student evidence: the commitment hash on-chain can be checked against the evidence that was submitted. The chain doesn't store the work — it stores the proof that the work is what it claims to be. M500 formalizes this model when you build a course yourself.
+
+## Why this matters for your code
+
+- **Only need on-chain fields** (IDs, hashes, credentials)? `merged` and `chain_only` both work. `db_only` means the data isn't there yet.
+- **Need human-readable content** (titles, descriptions)? You need `merged` or `db_only`. `chain_only` means the off-chain metadata is missing.
+- **After a write**, wait for `source: merged` before refetching. A new course may briefly appear as `db_only` or `chain_only` during settlement.
+- **Handle unknown values.** Today there are three. More may appear as new off-chain configurations emerge. Default to null-checking every non-required field.
+
+## Your turn
+
+```bash
+andamio course list --output json
+```
+
+Pick one course from the output and answer:
+
+1. Which `source` value does it report?
+2. Based on that value, which fields are trustworthy and which might be missing?
+3. If displaying this course in a UI, which fields would you null-check?
+4. If the course has modules with `slt_hash` values and you have access to the SLT text, try verifying one with `andamio course credential compute-hash`. Does it match?
+
+## Rubric
+
+No single correct answer — it depends on which course you picked. A good answer:
+
+1. Names the `source` value correctly.
+2. Maps value to expectation: `merged` → everything present, `chain_only` → on-chain only, `db_only` → off-chain only.
+3. Identifies at least one field to null-check. Typical: `course_title` for `chain_only`, `course_id` for `db_only`.
+4. If you verified a hash: a match means the off-chain SLTs are authentic. A mismatch means the text has changed since the module was minted. If you didn't have SLT text to verify, that's fine — the point is understanding that verification is always possible.
+
+If the value, expectations, and null checks all match each other, you've got it.
+
+## What you just did
+
+You understand Andamio's on-chain/off-chain split, how the `source` field makes it explicit, and how `slt_hash` makes credentials verifiable without trusting the API. The chain stores the proof; the off-chain store holds the readable content; anyone can check one against the other. This is the foundation for every read in M300 and every read-then-write from M400 onward.

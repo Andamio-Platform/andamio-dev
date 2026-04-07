@@ -1,0 +1,116 @@
+# Diagnose and respond to Andamio TX failures
+
+## Before we start
+
+Most transactions succeed. When one doesn't, the failure maps to exactly one of five modes — one per step of the state machine. This lesson is your diagnostic reference.
+
+## The five failure modes
+
+| # | Mode | Step | Signal | Recovery |
+|---|------|------|--------|----------|
+| 1 | Build error | build | CLI exits with HTTP 4xx | Fix request body, retry |
+| 2 | Sign error | sign | CLI exits with local error | Fix key path/permissions, retry |
+| 3 | Submit rejection | submit | CLI exits with Cardano error | Fix input, rebuild from scratch |
+| 4 | Chain expiry | wait | `state: expired`, `confirmed_at: null` | Safe to rebuild and retry |
+| 5 | Off-chain sync failure | wait | `state: failed`, `confirmed_at` set | **Don't retry** — fix off-chain condition |
+
+## What each looks like
+
+### 1. Build error
+
+```
+Error: failed to build transaction: 400 Bad Request: {"error": "alias field required"}
+```
+
+Common causes: missing/invalid fields in request body, business-rule violation (teacher without access token, missing prerequisite credentials), insufficient wallet ADA.
+
+**Response:** Read the error message, fix the body, retry. Nothing happened on-chain.
+
+### 2. Sign error
+
+```
+Error: failed to load signing key: open ./payment.skey: no such file or directory
+```
+
+Common causes: wrong `.skey` path, invalid key file, file permissions, key/address mismatch.
+
+**Response:** Fix the file issue, retry. Nothing happened beyond your machine.
+
+### 3. Submit rejection
+
+```
+Error: submit failed: 400 Bad Request: transaction validation failed: insufficient fee
+```
+
+Common causes: UTxOs spent by another TX between build and submit, fee edge cases, Plutus script validator rejection, Cardano constraint violations.
+
+**Response:** The error tells you what failed. For spent UTxOs, rebuild (new build selects fresh UTxOs). For script errors, fix the request body. No Andamio-side cleanup — the TX was never registered.
+
+### 4. Chain expiry
+
+```json
+{
+  "state": "expired",
+  "confirmed_at": null,
+  "not_indexed_count": 72,
+  "last_error": "Not found on chain"
+}
+```
+
+The TX was submitted and registered but never landed on-chain within 2 hours. Key signals: `confirmed_at: null` + high `not_indexed_count`.
+
+**Response:** The TX is dead. Build a fresh one from scratch. Some commitment states may need attention — M400.5 covers which ones revert and which don't.
+
+### 5. Off-chain sync failure
+
+```json
+{
+  "state": "failed",
+  "confirmed_at": "2026-04-05T12:00:30Z",
+  "retry_count": 5,
+  "failure_reason": "MODULE_NOT_FOUND",
+  "last_error": "Module with slt_hash abc... not found in DB"
+}
+```
+
+The on-chain write succeeded (`confirmed_at` is set), but the API's sync couldn't finish after five retries. This is the only mode where the on-chain part is real and permanent.
+
+**Response:** Do NOT retry — that would mint a duplicate on-chain. Fix the off-chain condition the sync was looking for (e.g., create the missing module record). Once fixed, the API's background retry will pick it up and transition the state to `updated`.
+
+## The diagnostic workflow
+
+```bash
+andamio tx status <tx_hash>
+```
+
+| State | What it means | What to do |
+|-------|--------------|------------|
+| `pending` | Still processing. Check `not_indexed_count` — if climbing, chain hasn't confirmed yet. | Wait. Preprod occasionally has slow blocks. |
+| `confirmed` | On-chain done, API mid-sync. | Wait a few more seconds. If stuck >30s, check `last_error`. |
+| `updated` | Done. | Nothing to diagnose. |
+| `failed` | On-chain confirmed, sync failed. | Read `failure_reason` + `last_error`. Fix off-chain condition. Don't retry. |
+| `expired` | Never confirmed on-chain. | Safe to retry with a fresh TX. |
+
+**No status response at all?** The failure happened before registration (modes 1–3). The CLI error message is your signal.
+
+## Your turn
+
+Name the failure mode and the fix for each scenario:
+
+1. CLI prints `Error: failed to build transaction: 400 Bad Request: {"error": "teachers array must be non-empty"}` and exits.
+2. `tx status` shows `state: expired`, `confirmed_at: null`, `not_indexed_count: 68`.
+3. `tx status` shows `state: failed`, `failure_reason: MODULE_NOT_FOUND`.
+4. CLI prints `Error: failed to load signing key: permission denied`.
+
+## Rubric
+
+1. **Build error.** Missing/empty `teachers` field. Fix: add a teacher alias, retry. No cleanup.
+2. **Chain expiry.** TX never landed on-chain. Fix: rebuild and resubmit fresh. Check M400.5 for expiry revert behavior.
+3. **Off-chain sync failure.** On-chain succeeded but the API can't find the off-chain module record. Fix: create the missing record. Do NOT retry the TX.
+4. **Sign error.** Can't read the key file. Fix: `chmod` or move to an accessible path. No cleanup.
+
+Scenario 3 trips developers most — the instinct is to retry, which is exactly wrong for sync failures.
+
+## What you just did
+
+You have the five failure modes and the diagnostic workflow: run `tx status`, read the state and supporting fields (`failure_reason`, `last_error`, `confirmed_at`, `not_indexed_count`), act accordingly. The critical distinction: modes 1–4 = start over; mode 5 = don't retry, fix the off-chain condition.

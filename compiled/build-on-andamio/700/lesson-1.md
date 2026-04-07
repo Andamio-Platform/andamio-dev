@@ -1,0 +1,85 @@
+# Choose the right Andamio integration strategy
+
+## Before we start
+
+You've run both lifecycle loops end to end. You know the API, the CLI, the transaction state machine, and both domain models. Module 700 is where you build something with all of it. This lesson starts with the most important decision: which integration strategy fits your use case.
+
+## Three strategies
+
+There are three legitimate ways to build on Andamio. Each solves a different problem.
+
+### 1. Fork the Andamio App Template
+
+**Best for:** Shipping a full Andamio-native web application.
+
+The Andamio App Template is a Next.js 15 application with Andamio wired in: wallet connection (CIP-30 via Mesh SDK), JWT auth, tRPC client typed from the OpenAPI spec, a transaction hook with confirmation tracking, and a component library with semantic colors. Fork it, configure `.env`, run `npm run dev`, and you have a working app with wallet-connected identity.
+
+| What the template gives you | What you'd build without it |
+|---|---|
+| CIP-30 wallet integration (Mesh SDK) | Manual Lucid/Mesh setup, CIP-30 event handling |
+| JWT auth flow with nonce signing | Implement the three-step auth handshake yourself |
+| Transaction hook with SSE + polling confirmation | Build TX state tracking, polling, backoff, stalled detection |
+| Auto-typed API client from OpenAPI | Hand-write fetch wrappers, maintain types manually |
+| Cross-page TX watcher (Zustand store) | Build state that survives navigation yourself |
+| shadcn/ui + Tailwind v4 design system | Choose and configure your own component library |
+
+The template is opinionated — Next.js, React, Tailwind, tRPC. If your stack is different, the template is a reference implementation, not a starting point.
+
+### 2. Direct API integration
+
+**Best for:** Adding Andamio features to an existing application.
+
+You have an app. You want to add credentialed learning or funded tasks to it. The Andamio API is a standard REST API — call it from whatever language and framework you already use. No wallet UI required if you can delegate signing to users via the CLI or their own tools.
+
+This strategy requires more work than the template: you write your own API client, manage auth tokens, implement transaction polling, and handle failure modes yourself. But it fits into any stack and doesn't impose architectural decisions.
+
+### 3. CLI-first
+
+**Best for:** Ops tooling, CI/CD pipelines, backend jobs, scripts.
+
+No UI, no wallet integration. Shell scripts or any language calling `andamio` as a subprocess. This is what `examples/course-lifecycle.sh` and `examples/project-lifecycle.sh` already do. It's also how agent-driven workflows operate — the CLI's `--output json` flag and composable exit codes make it a natural fit for automation.
+
+## Choosing
+
+The choice isn't "which is better" — it's "what are you building?"
+
+| If you're building... | Use |
+|---|---|
+| A new Andamio-native web app | Fork the template |
+| Andamio features inside an existing app | Direct API integration |
+| Backend automation, CI/CD, scripts | CLI-first |
+| A prototype or proof of concept | CLI-first (fastest to something working) |
+| An agent-driven workflow | CLI-first (composable JSON output) |
+
+Two heuristics:
+
+1. **Do you need a wallet UI?** If yes, the template saves weeks. If no, the template is overhead.
+2. **Do you already have a codebase?** If yes, direct API fits into what exists. If no, the template gives you a codebase.
+
+## What they share
+
+All three strategies talk to the same Andamio API. The transaction state machine is identical. The authentication model is the same. A credential earned via the template, the API, or the CLI is the same on-chain NFT.
+
+The strategies differ in how much of the plumbing you write yourself vs how much the template or CLI handles for you. The on-chain result is always the same.
+
+## Your turn
+
+For each scenario, name the integration strategy you'd recommend and explain why in one sentence:
+
+1. A university wants to add on-chain credentials to their existing Django LMS.
+2. A startup is building an Andamio-native marketplace for credentialed freelancers.
+3. A DevOps team wants to auto-provision course modules from a CI pipeline whenever a new training repo is tagged.
+
+Write your answers before checking the rubric.
+
+## Rubric
+
+1. **Direct API integration** — they have an existing Django app. The template's React/Next.js stack doesn't help. They need API calls from Python.
+2. **Fork the template** — they're building a new Andamio-native app with wallet UX. The template saves weeks of wallet integration and auth wiring.
+3. **CLI-first** — no UI, triggered by CI events. Shell scripts calling `andamio tx run` with `--output json` for composable automation.
+
+If a scenario felt like two strategies could work, that's a valid observation. The heuristics narrow the choice; they don't eliminate judgement.
+
+## What you just did
+
+You can evaluate a use case and recommend the right integration strategy. The three options — template, direct API, CLI — aren't a hierarchy. They're tools for different problems. The rest of Module 700 uses all three, starting with cost estimation in the next lesson.

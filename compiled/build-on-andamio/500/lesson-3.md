@@ -1,0 +1,138 @@
+# Publish a course module on-chain
+
+## Before we start
+
+You can compute an `slt_hash`. Now you'll mint it on-chain as a module token. Publishing a module is a two-phase operation: off-chain preparation (create the module record, add SLTs, advance its status) followed by an on-chain transaction (`modules_manage`). Both phases are required — the transaction fails without the off-chain setup.
+
+## Phase 1: Off-chain preparation
+
+Before any on-chain transaction, you create the module record in the Andamio API. This is free — no chain interaction, no ADA cost.
+
+### Create the module with SLTs
+
+```bash
+andamio course create-module "$COURSE_ID" \
+  --code 100 \
+  --title "Getting Started" \
+  --slt "I can explain the Andamio transaction state machine" \
+  --slt "I can execute a transaction through its full lifecycle" \
+  --approve
+```
+
+| Flag | Purpose |
+|------|---------|
+| `$COURSE_ID` | The 56-character hex policy ID from your `course_create` transaction |
+| `--code 100` | Module code — numeric, determines display order |
+| `--title` | Human-readable module title (off-chain only) |
+| `--slt` (repeatable) | SLT text strings. Order matters — determines the `slt_hash` |
+| `--approve` | Advances the module through DRAFT → APPROVED in one step |
+
+Without `--approve`, the module stays in DRAFT status and you'd need a separate approval step. With it, the CLI creates the record, adds SLTs, computes the `slt_hash`, and marks the module APPROVED.
+
+### Advance to PENDING_TX
+
+The module must be in `PENDING_TX` status before the on-chain mint will succeed. This tells the Andamio API that a transaction is coming and to expect on-chain confirmation.
+
+```bash
+andamio course teacher update-module-status \
+  --course-id "$COURSE_ID" \
+  --module-code 100 \
+  --status PENDING_TX
+```
+
+The status flow: `DRAFT → APPROVED → PENDING_TX → ON_CHAIN`.
+
+If the transaction fails or expires, the module reverts from `PENDING_TX` to `APPROVED` and you can retry.
+
+## Phase 2: On-chain mint
+
+The `modules_manage` transaction mints a module token on-chain. Its datum includes the `slt_hash`, linking the on-chain token to the SLT text you defined.
+
+### Build and run the transaction
+
+```bash
+andamio tx run /v2/tx/course/teacher/modules/manage \
+  --body-file modules-body.json \
+  --skey "$SKEY_PATH" \
+  --tx-type modules_manage \
+  --instance-id "$COURSE_ID"
+```
+
+Where `modules-body.json`:
+
+```json
+{
+  "alias": "alice-dev",
+  "course_id": "a1b2c3d4...",
+  "modules_to_add": [
+    {
+      "slts": [
+        "I can explain the Andamio transaction state machine",
+        "I can execute a transaction through its full lifecycle"
+      ],
+      "allowed_student_state_ids": [],
+      "prereq_slt_hashes": []
+    }
+  ],
+  "modules_to_update": [],
+  "modules_to_remove": []
+}
+```
+
+| Field | Purpose |
+|-------|---------|
+| `modules_to_add` | Array of modules to mint. Each entry has `slts`, `allowed_student_state_ids`, and `prereq_slt_hashes`. |
+| `slts` | The SLT text strings — must match the off-chain module exactly, or the hash won't match. |
+| `allowed_student_state_ids` | Allowlist for enrollment. Empty array = open to all. |
+| `prereq_slt_hashes` | Credential prerequisites. Empty = no prerequisites. |
+| `modules_to_update` | For modifying existing modules (burns old token, mints new one). |
+| `modules_to_remove` | For removing modules. |
+
+All three arrays are required in the body, even if empty.
+
+### What happens on-chain
+
+The transaction mints a module token at the module validator address. The token's datum includes the `slt_hash` computed from the SLTs you provided. After the transaction reaches `updated`, the Andamio API matches the on-chain token to the off-chain module record by `slt_hash` and advances the module status to `ON_CHAIN`.
+
+### Cost
+
+No service fee for module management. Cost is tx fee (~0.27 ADA) plus a minUTxO deposit (~1.59 ADA per module). The deposit is locked in the module UTxO and recoverable if the module is later removed.
+
+Total: ~1.86 ADA per module. Scales linearly — five modules in one transaction costs ~8.4 ADA.
+
+## Phase 3: Publish content
+
+After the module is on-chain, publish the lesson content and assignment. This is off-chain — no transaction needed.
+
+```bash
+andamio course import ./my-course/ --course-id "$COURSE_ID"
+```
+
+The import reads lesson files and assignment content from the specified directory. Assignment content must exist before students can create commitments — the Andamio API rejects enrollment attempts for modules with no assignment.
+
+## The full sequence
+
+```
+create-module (off-chain, free)
+  → DRAFT → APPROVED → PENDING_TX
+modules_manage (on-chain, ~1.86 ADA)
+  → ON_CHAIN
+import content (off-chain, free)
+  → students can enroll
+```
+
+This is the `course.setup` loop from `reference/tx-loops.yaml`, minus the `course_create` transaction that precedes it.
+
+## Your turn
+
+If you have a course created from M200 or from the `course-lifecycle.sh` example, publish a module to it. Run the three-step sequence: `create-module`, `update-module-status`, `tx run modules_manage`. Paste the `modules_manage` transaction hash.
+
+If you don't have a course yet, read the three commands and their flags. The assignment will ask you to run the full sequence.
+
+## Rubric
+
+A valid transaction hash is a 64-character hex string. You can verify it with `andamio tx status <hash>` — the state should be `updated` and the `tx_type` should be `modules_manage`. If you didn't run the command, no hash to paste — that's fine, the assignment covers this.
+
+## What you just did
+
+You published a module on-chain. The off-chain preparation (create, approve, advance to PENDING_TX) sets up the record. The on-chain transaction mints the token with the `slt_hash`. The content import makes the module ready for students. Two phases, one result: a credentialable module.

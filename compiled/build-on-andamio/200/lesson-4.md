@@ -1,0 +1,113 @@
+# Verify an Attestation JWT offline
+
+## Before we start
+
+Attestation JWTs exist for a specific use case: third-party apps that want to verify a user owns an Andamio alias, without calling the Andamio API on every check. Discord bots gating channels on credentials, hiring tools accepting Andamio proof-of-skill, DAOs using aliases for voting — any integration where someone claims "I'm `alice-dev`" and the verifier needs cryptographic proof.
+
+You won't need attestation JWTs to finish this course. You'll need them when you build integrations (M700 territory). This lesson sets up the shape.
+
+## What an Attestation JWT is
+
+A signed token that says: *"at time T, wallet X proved it controls the key for alias Y."* Ten-minute lifetime, signed with RS256, verifiable against a public key.
+
+| Property | Attestation JWT | User JWT (M200.3) |
+|----------|----------------|--------------------|
+| **Signing** | RS256 (asymmetric) — anyone can verify with the public key | HS256 (shared secret) — only Andamio can verify |
+| **Lifetime** | ~10 minutes | ~24 hours |
+| **Verification** | Offline via JWKS | Requires Andamio infrastructure |
+| **Purpose** | Prove alias ownership to third parties | Authenticate writes to the Andamio API |
+
+## The claim shape
+
+```json
+{
+  "sub": "alice-dev",
+  "iss": "andamio-api",
+  "aud": ["access-token-verification"],
+  "wallet_address": "addr_test1q...",
+  "exp": 1738512000,
+  "iat": 1738511400,
+  "nbf": 1738511400
+}
+```
+
+| Field | Meaning | Verification rule |
+|-------|---------|-------------------|
+| `sub` | Alias being attested | Must match the alias the verifier expects |
+| `iss` | Issuer | Must be `"andamio-api"` |
+| `aud` | Audience | Must be `["access-token-verification"]` |
+| `wallet_address` | Wallet that signed the nonce | Confirm against the wallet in your context |
+| `exp` | Expiration (Unix timestamp) | Reject if in the past |
+| `iat` / `nbf` | Issued-at / not-before | Reject `nbf` if in the future |
+
+## How a third-party app gets one
+
+1. User claims alias `alice-dev` at the third-party app.
+2. App calls `POST /api/v2/verify/session` → gets session ID + nonce.
+3. User signs the nonce (CIP-30 browser wallet or local `.skey`).
+4. App calls `POST /api/v2/verify/complete` with session ID + signature → gets Attestation JWT.
+5. App verifies JWT offline and makes its access-control decision.
+
+Steps 2 and 4 are the only calls to Andamio. After that, verification is local.
+
+## Offline verification in code
+
+Standard JWT verification against a JWKS. Node.js with `jose`:
+
+```javascript
+import { createRemoteJWKSet, jwtVerify } from 'jose';
+
+const JWKS = createRemoteJWKSet(
+  new URL('https://api.andamio.io/.well-known/jwks.json')
+);
+
+async function verifyAttestationJwt(token, expectedAlias) {
+  const { payload } = await jwtVerify(token, JWKS, {
+    issuer: 'andamio-api',
+    audience: 'access-token-verification',
+  });
+
+  if (payload.sub !== expectedAlias) {
+    throw new Error(`Expected alias ${expectedAlias}, got ${payload.sub}`);
+  }
+
+  return payload;
+}
+```
+
+`createRemoteJWKSet` handles caching and key rotation. No Andamio API calls during verification — pure cryptographic check against a public key fetched once.
+
+Same shape in any language: import a JWT library, point at the JWKS URL, check `iss`, `aud`, `sub`.
+
+## Why this shape
+
+The alternative — "call Andamio to check if alias X is owned by wallet Y" — has two problems:
+
+- **Availability.** Every verification requires a network call, making Andamio a single point of failure for every third-party integration.
+- **Trust.** Every integration needs Andamio API credentials and trusts Andamio's database answer. The point of on-chain credentials is to reduce that trust.
+
+Attestation JWTs invert both: Andamio proves ownership once at auth time, the proof is verifiable offline for ten minutes by anyone with the public key. Same pattern as TLS certificates — prove identity once, verify offline via trust anchors.
+
+## Your turn
+
+For each scenario, decide whether an Attestation JWT is the right tool:
+
+1. A Discord bot assigns a role to anyone who proves they hold the access token for `alice-dev`.
+2. Your own app, already holding a User JWT, submits a course assignment on the user's behalf.
+3. A hiring tool displays "verified Andamio contributor: 3 projects" next to a candidate's name.
+4. A backend service checks hourly whether an alias has earned new credentials.
+
+Write your answers before checking the rubric.
+
+## Rubric
+
+1. **Yes, Attestation JWT.** Exactly the designed use case — verify alias ownership offline, assign role, done.
+2. **No, User JWT.** Your own app acting on its logged-in user. You already have the User JWT from M200.3.
+3. **Yes, Attestation JWT.** Third party verifying a candidate's alias claim.
+4. **No, API key.** Reading credentials is a read operation — no attestation needed, just an API key query.
+
+Scenario 2 is the most common mistake — reaching for attestation when a User JWT is already in hand.
+
+## What you just did
+
+You know the three credential shapes and when to use each: API keys for developer reads, User JWTs for authenticated writes, Attestation JWTs for third-party identity verification. Module 200 is complete.
