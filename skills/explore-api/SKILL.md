@@ -1,17 +1,19 @@
 ---
 name: explore-api
-description: Search Gateway and Andamioscan API endpoints by natural language. Find endpoints, params, auth requirements, and example responses.
+description: Search Andamio Gateway API endpoints by natural language. Find endpoints, params, auth requirements, and example responses.
 license: MIT
 metadata:
   author: Andamio
-  version: 0.1.0
+  version: 0.2.0
 ---
 
 # Skill: Explore API
 
 ## Description
 
-Natural-language search across the Andamio Gateway API and Andamioscan specs. Developers ask questions like "How do I list courses?" and get matching endpoints with params, auth requirements, and example responses.
+Natural-language search across the Andamio Gateway API spec. Developers ask questions like "How do I list courses?" and get matching endpoints with params, auth requirements, and example responses.
+
+The Gateway API is the single entry point for all Andamio operations. It proxies to backend services (DB API, Atlas TX builder, Andamioscan indexer) and merges their data into unified responses. Developers never call backend services directly.
 
 ## Instructions
 
@@ -23,8 +25,7 @@ Natural-language search across the Andamio Gateway API and Andamioscan specs. De
 ### Pre-Execution Knowledge Check
 
 1. Read `specs/andamio-api.yaml` — the Andamio Gateway API spec (Swagger 2.0, 111 endpoints).
-2. Read `specs/andamioscan.yaml` — the Andamioscan on-chain observer spec (Swagger 2.0, 34 endpoints).
-3. If knowledge files exist, read `knowledge/endpoint-usage.yaml` for previously discovered patterns. Proceed without it if the file is empty or missing.
+2. If knowledge files exist, read `knowledge/endpoint-usage.yaml` for previously discovered patterns. Proceed without it if the file is empty or missing.
 
 ### Endpoint Filtering
 
@@ -39,33 +40,38 @@ Natural-language search across the Andamio Gateway API and Andamioscan specs. De
 
 When the developer asks a question:
 
-1. **Search both specs** for matching endpoints by path, operation summary, tags, and parameter names.
+1. **Search the spec** for matching endpoints by path, operation summary, tags, and parameter names.
 
-2. **Present matches** with clear source labels:
+2. **Present matches** with clear structure:
 
 ```
 Gateway API: GET /v2/course/user/courses/list
   Auth: API Key (read-only OK)
   Params: none
   Returns: { data: [{ course_id, content: { title, description }, ... }] }
-
-Andamioscan: GET /api/v2/courses
-  Auth: None (public)
-  Params: none
-  Returns: On-chain course data indexed from Cardano
 ```
 
 3. **Include for each endpoint:**
    - HTTP method and full path
-   - Source (Gateway API or Andamioscan)
    - Auth requirement (None, API Key, API Key + JWT)
    - Required and optional parameters
    - Response shape (summarize from spec definitions)
    - Rate limit tier if applicable
 
-4. **When endpoints overlap** between Gateway and Andamioscan (e.g., course listings), explain the difference:
-   - **Gateway API**: Application data, includes off-chain metadata, supports write operations
-   - **Andamioscan**: On-chain verified data, read-only, useful for auditing and analytics
+4. **For read endpoints**, note that responses merge on-chain and off-chain data:
+   - `source: "merged"` — both on-chain and off-chain data present
+   - `source: "chain_only"` — on-chain only, no off-chain metadata yet
+   - `source: "db_only"` — off-chain only, not yet confirmed on-chain
+
+### Known Schema Gaps
+
+Three TX request schemas have underspecified array fields in the spec. When a developer asks about these endpoints, provide the correct format from `reference/tx-loops.yaml`:
+
+| Schema | Field | Spec says | Actual format |
+|--------|-------|-----------|---------------|
+| `CreateProjectTxRequest` | `course_prereqs` | `[][]any` | `[["<56-hex-course-id>", ["<64-hex-slt-hash>", ...]]]` |
+| `AddFundsTxRequest` | `deposit_value` | `[]any` | `[["lovelace", <amount>]]` |
+| `ManageTasksTxRequest` | `deposit_value` | `[]any` | `[["lovelace", <amount>]]` |
 
 ### Content Format Notes
 
@@ -88,7 +94,7 @@ This is a multi-step process:
 2. Student submits the commitment:
    Gateway API: POST /v2/course/student/commitment/submit
    Auth: API Key + JWT
-   Body: { course_id, course_module_code, evidence: <Tiptap JSON> }
+   Body: { course_id, slt_hash, evidence: <Tiptap JSON>, evidence_hash }
 
 3. Build the enrollment transaction:
    Gateway API: POST /v2/tx/course/student/assignment/commit
@@ -102,17 +108,12 @@ Use /cost-estimator for a full cost breakdown.
 **Developer asks: "How do I check if a user completed a course?"**
 
 ```
-Two options:
-
-Gateway API: GET /v2/course/student/credentials/list
+Gateway API: POST /v2/course/student/credentials/list
   Auth: API Key + JWT (as the student)
-  Returns: List of earned credential NFTs
+  Returns: List of earned credentials with course_id, slt_hashes, enrollment_status
 
-Andamioscan: GET /api/v2/users/{alias}/courses/completed
-  Auth: None (public)
-  Returns: Courses where the user has claimed credentials on-chain
-
-Use Andamioscan for public verification without user authentication.
+The response merges on-chain credential NFTs with off-chain course metadata.
+Entries with source: "chain_only" have credentials but no off-chain course record.
 ```
 
 ### Offer Next Steps
@@ -126,9 +127,9 @@ After answering, offer related skills:
 
 ### Guidelines
 
-- Always label the source (Gateway API vs Andamioscan) for every endpoint
 - Show auth requirements prominently — developers waste time on 401s without this
 - Include response shapes, not just endpoint paths
 - When multiple endpoints could answer a question, show all of them with trade-offs
 - Note Tiptap JSON format whenever content fields are involved
 - If a question has no matching endpoint, say so clearly and suggest alternatives
+- For tx body schemas with underspecified types, always check `reference/tx-loops.yaml` for the correct format

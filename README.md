@@ -84,7 +84,7 @@ Outside the course, the plugin provides operational skills for day-to-day develo
 | Skill | Command | What it does |
 |-------|---------|-------------|
 | **Start** | `/start` | Entry point. Detects intent, routes to the right skill. |
-| **Explore API** | `/explore-api` | Search Gateway and Andamioscan endpoints by natural language. |
+| **Explore API** | `/explore-api` | Search Gateway API endpoints by natural language. |
 | **CLI Guide** | `/cli-guide` | Get exact CLI commands for any operation. |
 | **Auth Setup** | `/auth-setup` | Walk through API key, wallet JWT, and environment config. |
 | **Cost Estimator** | `/cost-estimator` | Calculate ADA costs for courses, projects, and user scenarios. |
@@ -115,10 +115,11 @@ Each transaction follows the same 5-step pattern: build → sign → submit → 
 
 ## What's Bundled
 
-- **Gateway API spec** — 111 endpoints for courses, projects, transactions, auth
-- **Andamioscan spec** — 34 read-only endpoints for on-chain verification
+- **Gateway API spec** — 111 endpoints for courses, projects, transactions, auth (single entry point — backends are not called directly)
+- **TX loops reference** — Canonical transaction workflows with complete CLI commands, body examples, and gotchas
 - **Cost registry** — Real transaction cost data (fees, min UTXO, execution units)
 - **CLI reference** — Complete command reference with agent workflow examples
+- **Acceptance test prerequisites** — Wallet setup, environment config, and verification checklist
 
 ## Environments
 

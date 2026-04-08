@@ -9,7 +9,7 @@ Read [AGENTS.md](AGENTS.md) for full project context — API specs, authenticati
 **andamio-dev** is a Claude Code plugin (not a code project). It provides:
 1. **A 7-module course** ("Build on Andamio") delivered by AI agent skills
 2. **Operational skills** for day-to-day Andamio development (API exploration, CLI guidance, cost estimation)
-3. **Bundled specs and reference** for the Andamio Gateway API (111 endpoints), Andamioscan (34 endpoints), cost registry, and CLI
+3. **Bundled specs and reference** for the Andamio Gateway API (111 endpoints), cost registry, and CLI
 
 There is no build step, no test suite, no linter. "Testing" means invoking skills in Claude Code and verifying behavior.
 
@@ -25,6 +25,8 @@ Two skill systems coexist, with different locations:
 **Course harness flow**: `/learn` skill orchestrates → spawns `instructor` agent (for lessons) or `assessor` agent (for assignments) → agents use `deliver-lesson` / `assess-assignment` skills → progress tracked in `progress.json`.
 
 **Course content**: `courses-in-progress/build-on-andamio/lessons/m{N}/` — modules 100–400 have lessons, 500–700 are not yet drafted.
+
+**Reference data**: `reference/tx-loops.yaml` is the canonical source for all Andamio transaction workflows. Each loop has named steps (off-chain and on-chain), exact CLI commands, roles, prerequisites, validated fees, and known gotchas. **Read this file first when running or testing transactions** — it is more complete than the tx-flow docs in devkit or the individual course lessons. For acceptance testing setup, also read `reference/acceptance-test-prerequisites.md`.
 
 **Knowledge base**: `knowledge/*.yaml` — append-only YAML files. Always increment counts, never overwrite. Update `knowledge/index.yaml` after extraction.
 

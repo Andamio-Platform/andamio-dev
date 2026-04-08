@@ -63,8 +63,8 @@ Four transactions take a student from enrollment to credential. This is the `cou
 ### TX 3: Student enrolls
 
 ```bash
-# Off-chain: create commitment record
-andamio course student commitment create \
+# Off-chain: create commitment record (must happen before the on-chain tx)
+andamio course student create \
   --course-id "$COURSE_ID" --module-code 100
 
 # On-chain: enrollment + initial evidence
@@ -74,7 +74,20 @@ andamio tx run /v2/tx/course/student/assignment/commit \
   --tx-type assignment_submit
 ```
 
-Cost: ~2.14 ADA (includes ~1.45 ADA enrollment deposit, refunded at credential claim). The `assignment_info` field is the student's initial evidence — it can be updated before the teacher assesses.
+The off-chain step is required. The on-chain transaction does not auto-create the commitment record in the database. Without it, the commitment won't appear in queries and evidence submission will fail.
+
+Cost: ~2.14 ADA (includes ~1.45 ADA enrollment deposit, refunded at credential claim). The `assignment_info` field is the student's initial evidence (max 140 chars, stored on-chain).
+
+After the on-chain tx confirms, submit rich evidence off-chain:
+
+```bash
+# Off-chain: submit evidence (Markdown supported)
+andamio course student submit \
+  --course-id "$COURSE_ID" --slt-hash "$SLT_HASH" \
+  --evidence "My evidence: completed the enrollment and verified module state."
+```
+
+This transitions the commitment from AWAITING_SUBMISSION to SUBMITTED. The teacher can now see it in their review queue.
 
 ### TX 4: Student updates evidence (optional)
 

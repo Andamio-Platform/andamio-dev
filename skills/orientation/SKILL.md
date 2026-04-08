@@ -127,7 +127,7 @@ Walk through what's available, organized by purpose:
 
 | Skill | What it does | When to use it |
 |-------|-------------|----------------|
-| `/explore-api` | Search across Gateway + Andamioscan API specs | "What endpoints handle X?" |
+| `/explore-api` | Search Gateway API endpoints by natural language | "What endpoints handle X?" |
 | `/cost-estimator` | Calculate ADA costs for any operation | Before committing real ADA |
 | `/course-ops` | Course lifecycle — create, modules, content, publish | Understanding how courses work end-to-end |
 | `/project-ops` | Project lifecycle — treasury, tasks, contributors | Understanding how projects work end-to-end |
@@ -228,7 +228,7 @@ andamio tx types --output json
 **Key resources:**
 - CLI reference: `reference/andamio-cli-context.md` in this plugin
 - Gateway API spec: `specs/andamio-api.yaml` (111 endpoints)
-- Andamioscan spec: `specs/andamioscan.yaml` (34 endpoints, read-only on-chain data)
+- TX loops reference: `reference/tx-loops.yaml` (canonical transaction workflows)
 - Cost data: `specs/cost-registry.json`
 - Lifecycle examples: `examples/course-lifecycle.sh` and `examples/project-lifecycle.sh`
 

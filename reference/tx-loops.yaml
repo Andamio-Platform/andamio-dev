@@ -8,8 +8,8 @@
 # Created: 2026-04-06
 # Source: orch task "andamio-dev - add each Tx Loop and build cost estimation into each.md"
 
-version: 2
-last_updated: 2026-04-07
+version: 3
+last_updated: 2026-04-08
 
 # Dependency graph:
 #   (15) general.access-token
@@ -48,13 +48,28 @@ loops:
         role: teacher
         note: >
           REQUIRED before modules_manage TX. Create module in DB with SLTs.
-          CLI: andamio course create-module --course-id <id> --code 100 --title "..." --slt "SLT 1" --slt "SLT 2" --approve
-          This creates DRAFT, adds SLTs, and approves (APPROVED) with computed slt_hash in one step.
+
+          Path A — create-module (single module, SLTs as flags):
+            andamio course create-module --course-id <id> --code 100 --title "..." --slt "SLT 1" --slt "SLT 2" --approve
+            Creates DRAFT, adds SLTs, and approves (APPROVED) with computed slt_hash in one step.
+
+          Path B — import-all (bulk from compiled content directories):
+            andamio course import-all ./compiled/my-course --course-id <id> --create --sort-order-start 1
+            Creates modules in DRAFT. Does NOT approve — must run update-module-status separately.
+            The slt_hash is printed in the import output for each module.
+
+          Path A is simpler. Path B is needed when lesson/assignment content already exists on disk.
       - action: set_pending_tx
         role: teacher
         note: >
           REQUIRED: advance module from APPROVED → PENDING_TX before minting.
-          CLI: andamio course teacher update-module-status --course-id <id> --module-code 100 --status PENDING_TX
+
+          If Path A (create-module --approve): module is already APPROVED, skip to PENDING_TX:
+            andamio course teacher update-module-status --course-id <id> --module-code 100 --status PENDING_TX
+
+          If Path B (import-all): module is DRAFT, must approve first:
+            andamio course teacher update-module-status --course-id <id> --module-code 100 --status APPROVED --slt-hash <hash>
+            andamio course teacher update-module-status --course-id <id> --module-code 100 --status PENDING_TX
       - tx: modules_manage
         role: teacher
         endpoint: /v2/tx/course/teacher/modules/manage
@@ -90,8 +105,22 @@ loops:
         endpoint: /v2/tx/instance/owner/project/create
         tx_type: project_create
         note: >
-          Body: {"alias":"<owner>","managers":["<mgr>"],"course_prereqs":[["<course_id>",["<slt_hash>"]]]}
-          Response includes project_id. Treasury UTxO created but NOT funded for task rewards.
+          Body (complete example):
+            {
+              "alias": "owner-alias",
+              "managers": ["owner-alias"],
+              "course_prereqs": [
+                ["<56-hex-course-id>", ["<64-hex-slt-hash-1>", "<64-hex-slt-hash-2>"]]
+              ]
+            }
+
+          CRITICAL: course_prereqs is an array of tuples, NOT objects.
+            Correct: [["courseId", ["hash1", "hash2"]]]
+            Wrong:   [{"course_id": "courseId", "slt_hashes": ["hash1"]}]
+
+          Response includes project_id (56-hex). Treasury UTxO created but NOT funded for task rewards.
+          After tx confirms, discover project_id and contributor_state_id:
+            andamio project get <project-id> --output json
       - action: create_draft_tasks
         role: manager
         note: >
@@ -104,16 +133,45 @@ loops:
         tx_type: treasury_fund
         note: >
           REQUIRED: fund treasury with enough ADA to cover all task rewards.
-          Body: {"alias":"<owner>","project_id":"<id>","deposit_value":[["lovelace",<total_rewards>]]}
-          Without this, contributor join fails with INSUFFICIENT_FUNDS_TREASURY.
+          Body (complete example — 50 ADA):
+            {
+              "alias": "owner-alias",
+              "project_id": "<56-hex>",
+              "deposit_value": [["lovelace", 50000000]]
+            }
+
+          deposit_value must cover total task rewards across all tasks.
+          Without this, tasks_manage fails (insufficient treasury to escrow rewards).
+          Verify after tx confirms:
+            andamio project get <project-id> --output json
+            treasury_balance should equal deposit minus 5 ADA reserve.
       - tx: tasks_manage
         role: manager
         endpoint: /v2/tx/project/manager/tasks/manage
         tx_type: tasks_manage
         note: >
-          Body includes tasks_to_add, tasks_to_remove, deposit_value.
-          Requires contributor_state_id (from project get response).
-          Gateway confirms tasks via (project_state_id, task_index) fallback.
+          Body (complete example — one task, 5 ADA reward):
+            {
+              "alias": "manager-alias",
+              "project_id": "<56-hex>",
+              "contributor_state_id": "<56-hex>",
+              "tasks_to_add": [
+                {
+                  "project_content": "Task description (max 140 chars)",
+                  "expiration_posix": 1798675200000,
+                  "lovelace_amount": 5000000,
+                  "native_assets": []
+                }
+              ],
+              "tasks_to_remove": [],
+              "deposit_value": [["lovelace", 5000000]]
+            }
+
+          contributor_state_id: from project get response.
+          deposit_value: total reward moving from treasury to escrow (must match sum of tasks_to_add rewards).
+          expiration_posix: Unix milliseconds (not seconds).
+          After tx confirms, discover task_hash:
+            andamio project tasks <project-id> --output json
     cost_estimate: "~112 ADA total (project_create: 110 service + 1.30 fee; treasury_fund: 0.18 fee + deposit; tasks_manage: 0.32 fee)"
     validated_fees:
       project_create: { fee_ada: 1.303, service_ada: 110.0 }
@@ -150,7 +208,16 @@ loops:
         tx_type: assignment_submit
         note: >
           Body: {"alias":"<student>","course_id":"<id>","slt_hash":"<hash>","assignment_info":"<evidence>"}
-          Transitions: AWAITING_SUBMISSION → SUBMITTED. assignment_info becomes evidence_hash on-chain.
+          On-chain enrollment + initial evidence. assignment_info is stored on-chain (max 140 chars).
+      - action: submit_evidence
+        role: student
+        note: >
+          Off-chain evidence submission. Links rich evidence (Markdown) to the on-chain commitment.
+          CLI: andamio course student submit --course-id <id> --slt-hash <hash> --evidence "evidence text"
+          Or: andamio course student submit --course-id <id> --module-code <code> --evidence "evidence text"
+          Transitions: AWAITING_SUBMISSION → SUBMITTED.
+          NOTE: --module-code lookup requires the module to have content.course_module_code in the API response.
+          If --module-code fails, use --slt-hash as fallback.
       - tx: assessment_assess
         role: teacher
         endpoint: /v2/tx/course/teacher/assignments/assess
@@ -185,14 +252,35 @@ loops:
     prereqs: [project.setup, course.credential]
     prereq_note: Contributor must hold course credential (prerequisite) and project must exist with funded tasks.
     steps:
+      - action: create_task_commitment
+        role: contributor
+        note: >
+          Create off-chain commitment record before the on-chain TX.
+          CLI: andamio project contributor commit --project-id <id> --task-hash <hash>
+          Or: andamio project contributor commit --project-id <id> --task-index <index>
+          NOTE: task must exist in DB (merged source) for --task-index to work.
+          For chain-only tasks, use --task-hash.
       - tx: project_join
         role: contributor
         endpoint: /v2/tx/project/contributor/task/commit
         tx_type: project_join
         note: >
-          Body: {"alias":"<contributor>","project_id":"<id>","contributor_state_id":"<csid>","task_hash":"<hash>","task_info":"<evidence>"}
+          Body (complete example):
+            {
+              "alias": "contributor-alias",
+              "project_id": "<56-hex>",
+              "contributor_state_id": "<56-hex>",
+              "task_hash": "<64-hex>",
+              "task_info": "evidence text (max 140 chars)"
+            }
+
           CLI auto-injects task_hash into registration metadata from the request body.
           Requires contributor to hold prerequisite course credential — Atlas returns 422 without it.
+      - action: submit_task_evidence
+        role: contributor
+        note: >
+          Off-chain evidence submission (optional — enriches evidence beyond the 140-char on-chain field).
+          CLI: andamio project contributor update --project-id <id> --task-hash <hash> --evidence "evidence text"
       - tx: task_assess
         role: manager
         endpoint: /v2/tx/project/manager/tasks/assess
@@ -657,6 +745,20 @@ loops:
           CLI: andamio user login --skey <path/payment.skey> --alias <alias> --address <bech32-addr>
           Requires: --skey, --alias, --address (all three mandatory).
           Verify: andamio user status → shows "Session: active"
+
+          CRITICAL: the skey must correspond to the address, and the alias must be
+          the one minted with that address. If the skey key hash doesn't match
+          the payment key hash in the address, on-chain txs will fail with
+          MissingVKeyWitnessesUTXOW even though login succeeds.
+
+          To verify skey matches address:
+            cardano-cli conway address key-hash --payment-verification-key-file <vkey>
+          must match the payment key hash in:
+            cardano-cli conway address info --address <addr>
+
+          To discover which alias a wallet owns, check its native tokens:
+            Look for tokens under the access-token policy (starts with 'u' prefix).
+            Token name 'ualice' means the alias is 'alice'.
       - action: verify_session
         note: >
           Confirm authenticated operations work.

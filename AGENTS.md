@@ -15,7 +15,7 @@ skills/                   # Agent skill definitions (Agent Skills standard)
   orientation/            # First-run experience — 15-minute guided walkthrough with hands-on exercises
   start/                  # Entry point — detect intent and mode, route to the right skill
   auth-setup/             # API key + wallet JWT authentication walkthrough
-  explore-api/            # Natural-language search across Gateway + Andamioscan specs
+  explore-api/            # Natural-language search across Gateway API endpoints
   cli-guide/              # Interactive CLI command guidance
   cost-estimator/         # ADA cost calculator for courses and projects
   course-ops/             # Course lifecycle: create, modules, teachers, content
@@ -26,8 +26,7 @@ examples/                 # Runnable scripts demonstrating full tx state machine
   course-lifecycle.sh     # Course: create → module → enroll → submit → assess → claim
   project-lifecycle.sh    # Project: create → task → commit → assess → claim
 specs/                    # Bundled API specifications (read-only reference)
-  andamio-api.yaml        # Andamio API (Swagger 2.0, 111 endpoints)
-  andamioscan.yaml        # Andamioscan on-chain observer (Swagger 2.0, 34 endpoints)
+  andamio-api.yaml        # Andamio Gateway API (Swagger 2.0, 111 endpoints — single entry point)
   cost-registry.json      # Transaction cost data (fees, min UTXO, execution units)
 reference/                # Bundled reference documentation
   andamio-cli-context.md  # CLI agent context (commands, auth, composability)
@@ -58,20 +57,6 @@ The public-facing Andamio API. 111 endpoints across these groups:
 | System | 2 | none | Health check, JWKS |
 
 **Endpoint filtering**: Skills should exclude admin endpoints (`/v1/admin/*`) and internal state management endpoints when presenting options to developers.
-
-### Andamioscan (`specs/andamioscan.yaml`)
-
-Read-only on-chain observer. 34 endpoints, no authentication required.
-
-| Group | Endpoints | Purpose |
-|-------|-----------|---------|
-| Courses | 4 | On-chain course data, student progress, pending assessments |
-| Projects | 4 | On-chain project data, contributor status, pending assessments |
-| Users | 10 | User state across courses and projects |
-| Events | 14 | Transaction event details by tx hash |
-| Transactions | 2 | Paginated transaction list |
-
-**When to use Andamioscan vs Gateway**: Andamioscan provides on-chain verification, analytics, and audit trails. Gateway API provides application data and write operations.
 
 ### Cost Registry (`specs/cost-registry.json`)
 

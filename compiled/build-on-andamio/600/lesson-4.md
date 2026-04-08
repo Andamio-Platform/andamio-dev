@@ -26,12 +26,16 @@ Two transactions create the project and publish a task. This is the `project.set
 
 ```bash
 andamio tx run /v2/tx/instance/owner/project/create \
-  --body '{"alias":"'"$ALIAS"'","managers":["'"$ALIAS"'"],"treasury_deposit":'"$TREASURY_LOVELACE"'}' \
+  --body '{"alias":"'"$ALIAS"'","managers":["'"$ALIAS"'"],"course_prereqs":[["'"$COURSE_ID"'",["'"$SLT_HASH"'"]]]}' \
   --skey "$SKEY_PATH" \
   --tx-type project_create
 ```
 
-This is the most complex transaction on Andamio: six mints, six validator UTxOs, a stake account registration, and the treasury deposit. Cost: ~112 ADA in service fees (100 base + 10 per manager) plus ~45 ADA in minUTxO deposits plus the treasury deposit.
+The `course_prereqs` field links the project to a course credential prerequisite. The format is an array of tuples: `[["<course_id>", ["<slt_hash_1>", "<slt_hash_2>"]]]`. Each tuple pairs a course ID with the slt_hashes that contributors must have earned.
+
+This is the most complex transaction on Andamio: six mints, six validator UTxOs, a stake account registration, and a protocol reserve deposit. Cost: ~112 ADA in service fees (100 base + 10 per manager) plus ~45 ADA in minUTxO deposits.
+
+**Important:** This transaction creates the treasury UTxO but does NOT fund it for task rewards. You must fund the treasury separately before publishing tasks (see TX 2a below).
 
 After `updated`, discover two IDs you'll need for every subsequent transaction:
 
@@ -50,7 +54,26 @@ CONTRIBUTOR_STATE_ID=$(andamio project show "$PROJECT_ID" --output json \
 
 Both are 56-character hex strings. Every project transaction after creation requires both.
 
-### TX 2: Publish a task
+### TX 2a: Fund the treasury
+
+The treasury must hold enough ADA to cover all task rewards before you can publish tasks.
+
+```bash
+andamio tx run /v2/tx/project/user/treasury/add-funds \
+  --body '{"alias":"'"$ALIAS"'","project_id":"'"$PROJECT_ID"'","deposit_value":[["lovelace",'"$TREASURY_LOVELACE"']]}' \
+  --skey "$SKEY_PATH" \
+  --tx-type treasury_fund
+```
+
+Cost: ~0.18 ADA tx fee plus the deposit amount. The deposit moves ADA from your wallet into the project treasury. After `updated`, verify the balance:
+
+```bash
+andamio project get "$PROJECT_ID" --output json | python3 -c "import json,sys; print('Treasury balance:', json.load(sys.stdin)['data']['treasury_balance'])"
+```
+
+The displayed balance excludes a 5 ADA protocol reserve, so depositing 200 ADA shows a balance of 195 ADA.
+
+### TX 2b: Publish a task
 
 Create the task off-chain, then mint it with `tasks_manage`:
 
