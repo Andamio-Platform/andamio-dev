@@ -45,6 +45,8 @@ Two auth methods coexist:
 - JWT lifetime is ~24 hours
 - Headless login signs a CIP-8 nonce with the .skey file — for CI/CD, scripting, and agents
 
+**Direct API usage from apps:** When building a web app that calls the Andamio API directly (without the CLI), proxy requests through a server-side gateway route that injects `X-API-Key` server-side — never ship the API key to the browser. The wallet JWT is obtained on the client via Mesh SDK signing and sent in the `Authorization: Bearer` header; the gateway adds `X-API-Key`. See the Midnight PBL site and `cardano-xp` for reference implementations.
+
 ## Output Formats
 
 All data commands support `--output` (`-o`) flag:
@@ -570,3 +572,12 @@ compiled/<course-slug>/<module-code>/
 | task_hash | 64-char hex | Blake2b-256 of Plutus Data `Constr 0 [content, expiration, lovelace, native_assets]` (CBOR tag 121). Different encoding from `slt_hash`. |
 | tx_hash | 64-char hex | `cfd58c772c21a6a281b207d6999595b81771e911cb8450a34cf323af61a61b4e` (Cardano transaction hash) |
 | evidence_hash | string | Evidence hash. **Request inputs** use `evidence_hash`. **Response outputs** disambiguate with `assignment_evidence_hash` (courses) or `task_evidence_hash` (projects). |
+
+### Global Access Token Policy IDs
+
+Andamio issues a global access-token NFT policy, one per Cardano network. These policy IDs are **protocol constants** — stable, shared across all Andamio courses and apps, and will not change. Every learner holds an access token under the policy ID matching the network their course is published on. Use these when detecting access tokens in a wallet (via CIP-30 UTxO scanning) or building wallet auth flows.
+
+| Network | Policy ID |
+|---------|-----------|
+| Preprod | `aa1cbea2524d369768283d7c8300755880fd071194a347cf0a4e274f` |
+| Mainnet | `ff5d0640b5a2717646d3f3151d100d57d194fdfa88cacf03f9edc568` |
