@@ -28,12 +28,12 @@ Both agents use `model: "opus"`.
 | 200 | Identity | 4 | Yes (M200.1–M200.4 + assignment) |
 | 300 | Reading Andamio | 4 | Yes (M300.1–M300.4 + assignment) |
 | 400 | TX State Machine | 5 | Yes (M400.1–M400.5 + assignment) |
-| 500 | Courses End-to-End | 5 | Not yet drafted |
-| 600 | Projects End-to-End | 4 | Not yet drafted |
-| 700 | Build Something Real | 5 | Not yet drafted |
+| 500 | Courses End-to-End | 5 | Yes (M500.1–M500.5 + assignment) |
+| 600 | Projects End-to-End | 4 | Yes (M600.1–M600.4 + assignment) |
+| 700 | Build Something Real | 5 | Yes (M700.1–M700.5 + assignment) |
 
-Lesson files: `courses-in-progress/build-on-andamio/lessons/m{N}/`
-SLT list: `courses-in-progress/build-on-andamio/01-slts.md`
+Lesson files: `courses/build-on-andamio/lessons/m{N}/`
+SLT list: `courses/build-on-andamio/01-slts.md`
 
 ## Workflow
 
@@ -60,7 +60,6 @@ Based on learner intent:
 | "Submit assignment" / "I'm ready" | Check all module lessons complete → launch assessor |
 | "Where am I" / "Progress" | Show progress summary |
 | "Go back" / "Review {lesson}" | Deliver requested lesson (no gating for review) |
-| Module 500–700 lesson requested | Tell learner these modules are being written. Offer to continue with available modules or explore the topic via plugin skills. |
 
 ### Phase 2: Deliver Lesson (via instructor agent)
 
@@ -74,7 +73,7 @@ Agent(
     Read .claude/skills/deliver-lesson/SKILL.md for pedagogy instructions.
     
     Deliver lesson {slt} to the learner.
-    Lesson file: courses-in-progress/build-on-andamio/lessons/m{N}/{slt}-{slug}.md
+    Lesson file: courses/build-on-andamio/lessons/m{N}/{slt}-{slug}.md
     
     Learner context: {summary from progress.json — what they've completed, current module}
     
@@ -100,8 +99,8 @@ Agent(
     Read .claude/skills/assess-assignment/SKILL.md for assessment instructions.
     
     Evaluate Module {N} assignment.
-    Assignment file: courses-in-progress/build-on-andamio/lessons/m{N}/assignment.md
-    SLT list: courses-in-progress/build-on-andamio/01-slts.md
+    Assignment file: courses/build-on-andamio/lessons/m{N}/assignment.md
+    SLT list: courses/build-on-andamio/01-slts.md
     
     Learner's evidence:
     {paste learner's submitted evidence}
@@ -149,7 +148,7 @@ After each module completion, mention the newly relevant operational skills:
 | Situation | Strategy |
 |-----------|----------|
 | progress.json corrupted/invalid | Back up the broken file, initialize fresh, tell the learner |
-| Lesson file missing | Check if module is M500–M700 (not yet drafted). Otherwise report the gap. |
+| Lesson file missing | Report the gap. All seven modules should have lesson files at `courses/build-on-andamio/lessons/m{N}/`. |
 | Assessor returns unclear verdict | Default to Revise, ask learner to resubmit with clearer evidence |
 | Learner requests module they haven't unlocked | Explain gating, show what they need to complete first |
 

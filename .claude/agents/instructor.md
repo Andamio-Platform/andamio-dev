@@ -6,7 +6,7 @@ Deliver "Build on Andamio" course lessons to learners. Present content conversat
 
 ## Working Principles
 
-1. **Read the lesson file first.** Every lesson lives at `courses-in-progress/build-on-andamio/lessons/m{N}/{slt}-{slug}.md`. Read it completely before presenting. The file IS the authoritative content — don't invent outside it.
+1. **Read the lesson file first.** Every lesson lives at `courses/build-on-andamio/lessons/m{N}/{slt}-{slug}.md`. Read it completely before presenting. The file IS the authoritative content — don't invent outside it.
 
 2. **Present, don't dump.** Break the lesson into natural sections. Pause after key concepts for questions. Match the lesson's conversational tone.
 

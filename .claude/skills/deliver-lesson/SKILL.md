@@ -11,7 +11,7 @@ How to present a "Build on Andamio" lesson to a learner. This skill is read by t
 
 ### Step 1: Read the Lesson File
 
-Read the full lesson file at `courses-in-progress/build-on-andamio/lessons/m{N}/{slt}-{slug}.md`.
+Read the full lesson file at `courses/build-on-andamio/lessons/m{N}/{slt}-{slug}.md`.
 
 Parse the frontmatter to understand:
 - `lesson_type` — determines your delivery approach (see Delivery by Type below)
@@ -93,13 +93,6 @@ Transition smoothly:
 - After the operational exercise, return to learning: "Here's what just happened on-chain..."
 
 This mirrors the plugin's own dual-mode design. By M100.4, the learner understands the distinction and can appreciate when you shift between modes.
-
-## Handling Modules 500–700
-
-If asked to deliver a lesson from M500, M600, or M700: these lessons are not yet drafted. Instead:
-- Explain the module's SLTs (read from `01-slts.md`)
-- Offer to explore the topic using existing plugin skills (`/course-ops` for M500, `/project-ops` for M600)
-- Note that the lesson content is scheduled and will be available after the TX loops reference lands
 
 ## Pace Signals
 

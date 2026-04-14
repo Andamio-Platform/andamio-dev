@@ -11,12 +11,12 @@ How to evaluate a "Build on Andamio" module assignment. This skill is read by th
 
 ### Step 1: Read the Assignment File
 
-Read `courses-in-progress/build-on-andamio/lessons/m{N}/assignment.md` for the module being assessed. This file defines:
+Read `courses/build-on-andamio/lessons/m{N}/assignment.md` for the module being assessed. This file defines:
 - Exactly what evidence each SLT requires
 - What a strong answer looks like
 - The format expected (written response, CLI output, tx hash, etc.)
 
-Also read the SLT definitions from `courses-in-progress/build-on-andamio/01-slts.md` for the canonical wording.
+Also read the SLT definitions from `courses/build-on-andamio/01-slts.md` for the canonical wording.
 
 ### Step 2: Evaluate Each SLT
 

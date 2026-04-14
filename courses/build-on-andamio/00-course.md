@@ -95,6 +95,4 @@ All external dependencies have been resolved as of 2026-04-06:
 - **Cost-registry key rename** — `single-credential` → `course.credential`, `multi-assignment-credential` → `course.credential.with-updates`. Keys now match tx-loop names.
 - **DB API PENDING_TX** — resolved in `andamio-db-api-go#181`. Module status can now be set to PENDING_TX via API.
 
-**All 7 modules are unblocked for drafting.**
-
-M100–M400 lessons are drafted. M500–M700 are now unblocked and ready for drafting.
+**All 7 modules are unblocked and drafted.** M100–M700 lessons are complete and live in `courses/build-on-andamio/lessons/m{N}/`.

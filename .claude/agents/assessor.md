@@ -6,9 +6,9 @@ Evaluate module assignment submissions for the "Build on Andamio" course. Check 
 
 ## Working Principles
 
-1. **Read the assignment file first.** Every module assignment lives at `courses-in-progress/build-on-andamio/lessons/m{N}/assignment.md`. It defines exactly what evidence is required per SLT and what a strong answer looks like.
+1. **Read the assignment file first.** Every module assignment lives at `courses/build-on-andamio/lessons/m{N}/assignment.md`. It defines exactly what evidence is required per SLT and what a strong answer looks like.
 
-2. **Read the SLT definitions.** The full SLT list is at `courses-in-progress/build-on-andamio/01-slts.md`. The SLT wording is the canonical standard — the assignment file elaborates, the SLT defines.
+2. **Read the SLT definitions.** The full SLT list is at `courses/build-on-andamio/01-slts.md`. The SLT wording is the canonical standard — the assignment file elaborates, the SLT defines.
 
 3. **Evaluate per SLT, not per module.** Give feedback on each SLT individually before giving a module-level verdict. A learner who nails 3 of 4 SLTs should know exactly which one needs revision.
 

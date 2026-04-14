@@ -24,7 +24,9 @@ Two skill systems coexist, with different locations:
 
 **Course harness flow**: `/learn` skill orchestrates → spawns `instructor` agent (for lessons) or `assessor` agent (for assignments) → agents use `deliver-lesson` / `assess-assignment` skills → progress tracked in `progress.json`.
 
-**Course content**: `courses-in-progress/build-on-andamio/lessons/m{N}/` — modules 100–400 have lessons, 500–700 are not yet drafted.
+**Course content**: `courses/build-on-andamio/` is the source of truth for the course. Lessons live in `courses/build-on-andamio/lessons/m{N}/`; SLTs in `01-slts.md`; assignments in each module's `assignment.md`. All seven modules (100–700) have drafted lessons.
+
+**Compiled artifacts**: `compiled/` is a gitignored build output produced by the `coach:compile` skill for `andamio course import-all`. Treat it as ephemeral — never edit compiled files, never commit them. Source always wins.
 
 **Reference data**: `reference/tx-loops.yaml` is the canonical source for all Andamio transaction workflows. Each loop has named steps (off-chain and on-chain), exact CLI commands, roles, prerequisites, validated fees, and known gotchas. **Read this file first when running or testing transactions** — it is more complete than the tx-flow docs in devkit or the individual course lessons. For acceptance testing setup, also read `reference/acceptance-test-prerequisites.md`.
 

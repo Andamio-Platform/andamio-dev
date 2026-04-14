@@ -4,14 +4,14 @@ Project context for AI agents working in this repository. Read this file to unde
 
 ## Project Overview
 
-**andamio-dev** is a skills and knowledge workspace for developers building on the Andamio Protocol and API. The primary artifacts are agent skill definitions (`skills/`), bundled API specifications (`specs/`), CLI reference documentation (`reference/`), and a compounding knowledge base (`knowledge/`).
+**andamio-dev** is a Claude Code plugin that serves two purposes: (1) delivering the "Build on Andamio" course via AI agent skills, and (2) providing operational skills for day-to-day Andamio development. The primary artifacts are course content (`courses/`), the course-delivery harness (`.claude/`), agent skill definitions (`skills/`), bundled API specifications (`specs/`), CLI reference documentation (`reference/`), and a compounding knowledge base (`knowledge/`).
 
-This is **not a code project**. It is a Claude Code plugin that provides interactive developer guidance.
+This is **not a code project**. There is no build step, no test suite, no linter.
 
 ## Directory Structure
 
 ```
-skills/                   # Agent skill definitions (Agent Skills standard)
+skills/                   # Operational agent skills (Agent Skills standard, 10 skills)
   orientation/            # First-run experience — 15-minute guided walkthrough with hands-on exercises
   start/                  # Entry point — detect intent and mode, route to the right skill
   auth-setup/             # API key + wallet JWT authentication walkthrough
@@ -22,6 +22,18 @@ skills/                   # Agent skill definitions (Agent Skills standard)
   project-ops/            # Project lifecycle: create, tasks, contributors, treasury
   troubleshoot/           # Debug API errors, CLI failures, transaction rejections
   compound/               # Extract patterns from sessions into knowledge files
+courses/                  # Course source of truth (authored markdown)
+  build-on-andamio/       # "Build on Andamio" — 7 modules, 31 SLTs
+    00-course.md          # Course overview
+    01-slts.md            # Canonical SLT list (all modules)
+    lessons/m{N}/         # Lessons and assignment for each module (N = 100..700)
+    drafting-guidelines.md, terminology.md, ...
+.claude/                  # Course-delivery harness (invoked by /learn)
+  skills/learn/           # Course orchestrator — routes to instructor or assessor
+  skills/deliver-lesson/  # Pedagogy guide for the instructor agent
+  skills/assess-assignment/ # Assessment guide for the assessor agent
+  agents/instructor.md    # Delivers lessons, guides exercises
+  agents/assessor.md      # Evaluates module assignments
 examples/                 # Runnable scripts demonstrating full tx state machine loops
   course-lifecycle.sh     # Course: create → module → enroll → submit → assess → claim
   project-lifecycle.sh    # Project: create → task → commit → assess → claim
@@ -30,13 +42,16 @@ specs/                    # Bundled API specifications (read-only reference)
   cost-registry.json      # Transaction cost data (fees, min UTXO, execution units)
 reference/                # Bundled reference documentation
   andamio-cli-context.md  # CLI agent context (commands, auth, composability)
+  tx-loops.yaml           # Canonical transaction workflows (source of truth for tx flows)
+  acceptance-test-prerequisites.md
 knowledge/                # Compound knowledge base (YAML files)
   index.yaml              # Master index and aggregate stats
   gotchas.yaml            # Known errors with root causes and fixes
   faq.yaml                # Frequently asked questions from developer sessions
   endpoint-usage.yaml     # Endpoint usage patterns and context
   cost-scenarios.yaml     # Real-world cost calculations
-docs/                     # Planning and brainstorm documents
+compiled/                 # Gitignored. Build output of `coach:compile` for `andamio course import-all`. Never edit.
+progress.json             # Gitignored. Per-learner state written by the /learn skill.
 ```
 
 ## Bundled Assets
