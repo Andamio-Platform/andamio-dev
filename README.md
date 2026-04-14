@@ -7,6 +7,16 @@ A Claude Code plugin that serves two purposes:
 
 Use one or both. The course teaches the concepts you'll use the ops skills for; the ops skills remain useful long after you finish the course.
 
+## Two ways to take the course
+
+| | Live course | This repo + agent harness |
+|---|---|---|
+| **Where** | [app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376](https://app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376) | Your terminal, via Claude Code |
+| **How you learn** | Browser-based lessons with on-chain progress and credential NFTs | AI instructor agent delivers lessons, runs exercises alongside you, assesses assignments |
+| **Best for** | Self-paced reading, official credential, mobile-friendly | Hands-on CLI work, paired-agent exercises, offline access to source lessons |
+
+Both cover the same 31 learning targets across 7 modules. You can mix them — read a lesson in the app, then run `/learn` locally to do the exercise with an agent.
+
 ## Install
 
 ### Claude Code Plugin (recommended)
