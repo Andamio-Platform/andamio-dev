@@ -1,6 +1,6 @@
 # Windows, WSL, and Codex Setup
 
-Use this guide to set up `andamio-dev` on Windows with WSL and OpenAI Codex. The goal is to make the operational Andamio skills available to Codex, verify the Andamio CLI on preprod, and leave the deeper course-agent refactor for later.
+Use this guide to set up `andamio-dev` on Windows with WSL and OpenAI Codex. The goal is to make the Andamio skills available to Codex and verify the Andamio CLI on preprod.
 
 The portable source of truth is `skills/`. The `.agents/skills/` directory is only a local compatibility layer for agents that discover project skills there. It should contain symlinks, not copied skill files.
 
@@ -45,7 +45,7 @@ codex
 
 ## 3. Configure Project Skills For Codex
 
-The repo stores reusable operational skills in `skills/`. Codex discovers project skills from `.agents/skills/`, so create relative symlinks instead of copying files.
+The repo stores reusable skills in `skills/`. Codex discovers project skills from `.agents/skills/`, so create relative symlinks instead of copying files.
 
 Run this from the repo root inside WSL:
 
@@ -66,7 +66,10 @@ Expected result:
 .agents/skills/compound/SKILL.md
 .agents/skills/cost-estimator/SKILL.md
 .agents/skills/course-ops/SKILL.md
+.agents/skills/assess-assignment/SKILL.md
+.agents/skills/deliver-lesson/SKILL.md
 .agents/skills/explore-api/SKILL.md
+.agents/skills/learn/SKILL.md
 .agents/skills/orientation/SKILL.md
 .agents/skills/project-ops/SKILL.md
 .agents/skills/start/SKILL.md
@@ -79,7 +82,7 @@ Verify with:
 find -L .agents/skills -maxdepth 2 -name SKILL.md -print | sort
 ```
 
-Do not symlink `.claude/skills/learn`, `.claude/skills/deliver-lesson`, `.claude/skills/assess-assignment`, `.claude/agents/instructor.md`, or `.claude/agents/assessor.md` into `.agents/`. Those files still contain Claude-specific course orchestration and sub-agent assumptions. They should be refactored before being exposed as agent-agnostic skills.
+Do not symlink from `.claude/skills/` into `.agents/`. The canonical course skills live in `skills/learn`, `skills/deliver-lesson`, and `skills/assess-assignment`.
 
 On WSL, symlinks work normally when the repo is stored under your Linux home directory. Avoid cloning this repo under `/mnt/c` for agent use.
 
@@ -176,6 +179,6 @@ initial teacher aliases:
 environment: preprod
 ```
 
-## 8. Known Codex Gap
+## 8. Course Learning In Codex
 
-The operational skills in `skills/` are ready for Codex. The full `/learn` course harness still has Claude-specific pieces in `.claude/`, especially the instructor and assessor agent definitions. Leave those alone for now; the later refactor should move the learning orchestrator into an agent-neutral structure without changing the course content in `courses/`.
+The `/learn` course harness is available to Codex through `skills/learn`. It runs inline in Codex instead of launching Claude-specific subagents. The lesson and assessment protocols are available as `deliver-lesson` and `assess-assignment`.

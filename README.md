@@ -2,8 +2,8 @@
 
 An Agent Skills package, originally built as a Claude Code plugin, that serves two purposes:
 
-- **Take the "Build on Andamio" course** — a seven-module curriculum with interactive lessons, hands-on exercises, and on-chain credential assessment, delivered by AI agent skills.
-- **Use Andamio from your terminal** — ten operational skills for day-to-day development: API exploration, CLI guidance, cost estimation, course/project operations, and more.
+- **Take the "Build on Andamio" course** — a seven-module curriculum with interactive lessons, hands-on exercises, and assignment assessment, delivered by AI agent skills.
+- **Use Andamio from your terminal** — operational skills for day-to-day development: API exploration, CLI guidance, cost estimation, course/project operations, and more.
 
 Use one or both. The course teaches the concepts you'll use the ops skills for; the ops skills remain useful long after you finish the course.
 
@@ -12,7 +12,7 @@ Use one or both. The course teaches the concepts you'll use the ops skills for; 
 |                   | Live course                                                                                                                                                              | This repo + agent harness                                                                |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | **Where**         | [app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376](https://app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376) | Your terminal, via an agent harness                                                      |
-| **How you learn** | Browser-based lessons with on-chain progress and credential NFTs                                                                                                         | AI instructor agent delivers lessons, runs exercises alongside you, assesses assignments |
+| **How you learn** | Browser-based lessons with on-chain progress and credential NFTs                                                                                                         | AI agent delivers lessons, runs exercises alongside you, assesses assignments            |
 | **Best for**      | Self-paced reading, official credential, mobile-friendly                                                                                                                 | Hands-on CLI work, paired-agent exercises, offline access to source lessons              |
 
 Both cover the same 31 learning targets across 7 modules. You can mix them — read a lesson in the app, then run `/learn` locally to do the exercise with an agent.
@@ -73,7 +73,7 @@ Ten skills for day-to-day Andamio development. Works standalone without the cour
 
 ## For learners — the course
 
-Run `/learn` to start. An instructor agent delivers each lesson, guides you through exercises, and runs CLI commands alongside you. When you finish a module, an assessor agent evaluates your assignment — pass and the next module unlocks.
+Run `/learn` to start. An agent delivers each lesson, guides you through exercises, and runs CLI commands alongside you. When you finish a module, the assessment skill evaluates your assignment — pass and the next module unlocks.
 
 ### What you'll learn
 
@@ -128,7 +128,7 @@ Each transaction follows the same 5-step pattern: build → sign → submit → 
 ## What's bundled
 
 - **Course content** (`courses/`) — "Build on Andamio" curriculum source: 31 SLTs across 7 modules, lessons, assignments, SLT quality review, and drafting guidelines
-- **Course delivery harness** (`.claude/`) — the `/learn` orchestrator plus instructor and assessor agents
+- **Course delivery harness** (`skills/learn`, `skills/deliver-lesson`, `skills/assess-assignment`) — the portable `/learn` orchestrator plus lesson and assessment protocols
 - **Gateway API spec** — 111 endpoints for courses, projects, transactions, auth (single entry point — backends are not called directly)
 - **TX loops reference** (`reference/tx-loops.yaml`) — canonical transaction workflows with complete CLI commands, body examples, and gotchas
 - **Cost registry** — real transaction cost data (fees, min UTXO, execution units)
