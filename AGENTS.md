@@ -4,7 +4,7 @@ Project context for AI agents working in this repository. Read this file to unde
 
 ## Project Overview
 
-**andamio-dev** is a Claude Code plugin that serves two purposes: (1) delivering the "Build on Andamio" course via AI agent skills, and (2) providing operational skills for day-to-day Andamio development. The primary artifacts are course content (`courses/`), the course-delivery harness (`.claude/`), agent skill definitions (`skills/`), bundled API specifications (`specs/`), CLI reference documentation (`reference/`), and a compounding knowledge base (`knowledge/`).
+**andamio-dev** is an Agent Skills package originally built as a Claude Code plugin. It serves two purposes: (1) delivering the "Build on Andamio" course via AI agent skills, and (2) providing operational skills for day-to-day Andamio development. The primary artifacts are course content (`courses/`), the course-delivery harness (`.claude/`), portable agent skill definitions (`skills/`), bundled API specifications (`specs/`), CLI reference documentation (`reference/`), and a compounding knowledge base (`knowledge/`).
 
 This is **not a code project**. There is no build step, no test suite, no linter.
 
@@ -22,6 +22,8 @@ skills/                   # Operational agent skills (Agent Skills standard, 10 
   project-ops/            # Project lifecycle: create, tasks, contributors, treasury
   troubleshoot/           # Debug API errors, CLI failures, transaction rejections
   compound/               # Extract patterns from sessions into knowledge files
+.agents/                  # Agent compatibility layer
+  skills/                 # Relative symlinks to portable operational skills only
 courses/                  # Course source of truth (authored markdown)
   build-on-andamio/       # "Build on Andamio" — 7 modules, 31 SLTs
     00-course.md          # Course overview
@@ -104,6 +106,8 @@ Both headers are sent simultaneously when both credentials exist. JWT lifetime i
 ## Conventions
 
 **Skill format**: Agent Skills standard with YAML frontmatter (`name`, `description`, `license`, `metadata`).
+
+**Skill source of truth**: `skills/` is the portable source of truth for operational skills. `.agents/skills/` may contain relative symlinks back to `skills/` for agents that discover project skills there. Do not copy skill directories into `.agents/skills/`, and do not symlink `.claude/skills/learn`, `.claude/skills/deliver-lesson`, or `.claude/skills/assess-assignment` until the course harness is refactored to remove Claude-specific sub-agent assumptions.
 
 **Path resolution**: Skills resolve paths based on execution context:
 - **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): Read specs/reference from `${CLAUDE_PLUGIN_ROOT}`. Read/write knowledge at `${CLAUDE_PLUGIN_DATA}/knowledge/`.

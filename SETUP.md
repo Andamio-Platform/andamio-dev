@@ -2,6 +2,8 @@
 
 Use this guide to set up `andamio-dev` on Windows with WSL and OpenAI Codex. The goal is to make the operational Andamio skills available to Codex, verify the Andamio CLI on preprod, and leave the deeper course-agent refactor for later.
 
+The portable source of truth is `skills/`. The `.agents/skills/` directory is only a local compatibility layer for agents that discover project skills there. It should contain symlinks, not copied skill files.
+
 ## 1. Install WSL And Clone The Repo
 
 Install Ubuntu in WSL from PowerShell:
@@ -41,23 +43,19 @@ cd ~/andamio/andamio-dev
 codex
 ```
 
-## 3. Ask Codex To Configure This Repo
+## 3. Configure Project Skills For Codex
 
-The repo already stores reusable operational skills in `skills/`. Codex discovers project skills from `.agents/skills/`, so ask Codex to create symlinks instead of copying files.
+The repo stores reusable operational skills in `skills/`. Codex discovers project skills from `.agents/skills/`, so create relative symlinks instead of copying files.
 
-Paste this prompt into Codex:
+Run this from the repo root inside WSL:
 
-```text
-Configure this repository for Codex use on WSL.
-
-Create `.agents/skills/` if it does not exist. For every directory under `skills/` that contains a `SKILL.md`, create a relative symlink at `.agents/skills/<skill-name>` pointing back to `../../skills/<skill-name>`.
-
-Do not copy skill files. Do not move or rewrite the `skills/` directory. Do not modify `.claude/`.
-
-For now, do not migrate or symlink `.claude/skills/learn`, `.claude/skills/deliver-lesson`, `.claude/skills/assess-assignment`, `.claude/agents/instructor.md`, or `.claude/agents/assessor.md`. Those are still Claude-specific and will be refactored later.
-
-After creating symlinks, verify with:
-find .agents/skills -maxdepth 2 -name SKILL.md -print
+```bash
+mkdir -p .agents/skills
+for skill in skills/*; do
+  [ -f "$skill/SKILL.md" ] || continue
+  name="$(basename "$skill")"
+  ln -sfnT "../../skills/$name" ".agents/skills/$name"
+done
 ```
 
 Expected result:
@@ -75,7 +73,15 @@ Expected result:
 .agents/skills/troubleshoot/SKILL.md
 ```
 
-If Codex asks whether symlinks are allowed, say yes. On WSL they should work normally when the repo is stored under your Linux home directory.
+Verify with:
+
+```bash
+find -L .agents/skills -maxdepth 2 -name SKILL.md -print | sort
+```
+
+Do not symlink `.claude/skills/learn`, `.claude/skills/deliver-lesson`, `.claude/skills/assess-assignment`, `.claude/agents/instructor.md`, or `.claude/agents/assessor.md` into `.agents/`. Those files still contain Claude-specific course orchestration and sub-agent assumptions. They should be refactored before being exposed as agent-agnostic skills.
+
+On WSL, symlinks work normally when the repo is stored under your Linux home directory. Avoid cloning this repo under `/mnt/c` for agent use.
 
 ## 4. Install The Andamio CLI
 
@@ -172,4 +178,4 @@ environment: preprod
 
 ## 8. Known Codex Gap
 
-The operational skills in `skills/` are ready for Codex. The full `/learn` course harness still has Claude-specific pieces in `.claude/`, especially the instructor and assessor agent definitions. Leave those alone for now; the later refactor should move the learning orchestrator into a Codex-native `.agents/` structure without changing the course content in `courses/`.
+The operational skills in `skills/` are ready for Codex. The full `/learn` course harness still has Claude-specific pieces in `.claude/`, especially the instructor and assessor agent definitions. Leave those alone for now; the later refactor should move the learning orchestrator into an agent-neutral structure without changing the course content in `courses/`.

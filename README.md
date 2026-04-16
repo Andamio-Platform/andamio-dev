@@ -1,6 +1,6 @@
 # andamio-dev
 
-A Claude Code plugin that serves two purposes:
+An Agent Skills package, originally built as a Claude Code plugin, that serves two purposes:
 
 - **Take the "Build on Andamio" course** — a seven-module curriculum with interactive lessons, hands-on exercises, and on-chain credential assessment, delivered by AI agent skills.
 - **Use Andamio from your terminal** — ten operational skills for day-to-day development: API exploration, CLI guidance, cost estimation, course/project operations, and more.
@@ -11,7 +11,7 @@ Use one or both. The course teaches the concepts you'll use the ops skills for; 
 
 |                   | Live course                                                                                                                                                              | This repo + agent harness                                                                |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| **Where**         | [app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376](https://app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376) | Your terminal, via Claude Code                                                           |
+| **Where**         | [app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376](https://app.andamio.io/course/c3b219c31be6c82a587ece8f6e45df2c8bcc3c39ad133ba7014d7376) | Your terminal, via an agent harness                                                      |
 | **How you learn** | Browser-based lessons with on-chain progress and credential NFTs                                                                                                         | AI instructor agent delivers lessons, runs exercises alongside you, assesses assignments |
 | **Best for**      | Self-paced reading, official credential, mobile-friendly                                                                                                                 | Hands-on CLI work, paired-agent exercises, offline access to source lessons              |
 
