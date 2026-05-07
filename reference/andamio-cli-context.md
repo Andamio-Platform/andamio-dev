@@ -1,7 +1,7 @@
 # Andamio CLI — Agent Context
 
 > Complete reference for developers and agents interacting with the Andamio Protocol via the CLI.
-> CLI version: 0.11.0 | Last updated: 2026-04-06
+> CLI version: 0.12.0 | Last updated: 2026-05-07
 
 ## Quick Start
 
@@ -31,19 +31,21 @@ Switch environment: `andamio config set-url https://mainnet.api.andamio.io`
 
 ## Authentication
 
-Two auth methods coexist:
+Three auth methods coexist:
 
 | Method | Command | Header Sent | Access Level |
 |--------|---------|-------------|-------------|
 | API Key | `andamio auth login --api-key <key>` | `X-API-Key` | Read-only |
 | Wallet JWT | `andamio user login` | `Authorization: Bearer <jwt>` | Read + Write |
 | Headless JWT | `andamio user login --skey <path> --alias <name> --address <addr>` | `Authorization: Bearer <jwt>` | Read + Write (no browser) |
+| Developer JWT | `andamio dev login --skey <path> --alias <name> --address <addr>` | `Authorization: Bearer <devJWT>` | Manage developer-portal API keys |
 
-- Config stored at `~/.andamio/config.json` (permissions 0600)
-- Environment variable `ANDAMIO_JWT` overrides stored JWT (useful for CI/CD)
-- Both headers are sent simultaneously when both credentials exist
-- JWT lifetime is ~24 hours
+- Config stored at `~/.andamio/config.json` (permissions 0600, atomic write — concurrent `Save` calls are safe as of 0.12.0)
+- Env overrides: `ANDAMIO_JWT` (user JWT), `ANDAMIO_DEV_JWT` (dev JWT), `ANDAMIO_DEV_REFRESH_TOKEN` (dev refresh token). Env-sourced credentials are **not** persisted to disk on subsequent `Save` (0.12.0+) — rotation still works because rotated values differ from the env snapshot
+- Both headers (`X-API-Key` + a JWT) are sent simultaneously when both are stored
+- User/wallet JWT lifetime is ~24 hours. Developer JWT lifetime is 60 minutes; a 30-day single-use refresh token is issued at `dev login` and rotates on `dev refresh`
 - Headless login signs a CIP-8 nonce with the .skey file — for CI/CD, scripting, and agents
+- Wallet and developer JWTs live in separate config slots (`user_jwt` vs `dev_jwt`). The gateway's developer-JWT middleware rejects wallet/user JWTs and vice versa — they are not interchangeable
 
 **Direct API usage from apps:** When building a web app that calls the Andamio API directly (without the CLI), proxy requests through a server-side gateway route that injects `X-API-Key` server-side — never ship the API key to the browser. The wallet JWT is obtained on the client via Mesh SDK signing and sent in the `Authorization: Bearer` header; the gateway adds `X-API-Key`. See the Midnight PBL site and `cardano-xp` for reference implementations.
 
@@ -116,6 +118,29 @@ andamio course modules "$COURSE_ID" --output json
 | `user me` | either | Current user dashboard |
 | `user exists <alias>` | none | Check if alias is taken |
 
+### dev — Developer portal authentication
+
+Parallel to `user` login but for the developer portal. Wallet and developer JWTs live in separate config slots and are not interchangeable on the gateway.
+
+| Command | Auth | Description |
+|---------|------|-------------|
+| `dev login --skey <path> --alias <name> --address <addr>` | api-key | Headless CIP-8 nonce-signing flow — mints a 60-min developer JWT and a 30-day single-use refresh token. 401 on `/complete` hints at wallet-address/`.skey` mismatch |
+| `dev refresh` | none | Rotate the developer JWT using the stored refresh token (single-use server-side; CLI updates both stored tokens in lockstep). 401 clears the entire dev slot |
+| `dev logout` | none | Clear the dev slot (JWT, refresh token, alias, ID, tier, key hash). Independent of `user logout`. Fires when **either** `dev_jwt` **or** `dev_refresh_token` is persisted |
+| `dev status` | none | Show dev JWT and refresh-token expiry, tier, alias/ID. Both clocks surface separately in JSON (`jwt_expires_at`, `refresh_token_expires_at`, plus `*_expired` and `*_remaining_seconds`). Branch on `dev_authenticated` first |
+
+### dev keys — Developer API key management
+
+All commands require a developer JWT (from `dev login`). The gateway rejects wallet/user JWTs and bare api-keys on this surface.
+
+| Command | Auth | Description |
+|---------|------|-------------|
+| `dev keys list` | dev-jwt | List your API keys across mainnet + preprod. Mainnet entries lack `last4` (legacy storage). Envelope: `{keys: [{id, name, environment, last4, created_at}]}` |
+| `dev keys create` | dev-jwt | Create an API key. **Raw key is surfaced once on stdout** — gateway makes it unrecoverable. Text mode routes WARNING + metadata to stderr so `andamio dev keys create … \| pbcopy` captures the key alone. JSON envelope: `{id, name, environment, key, last4, created_at}` |
+| `dev keys delete <id>` | dev-jwt | Revoke a key. Client-side validates UUID format before hitting the wire. 404 means "not found OR not owned by you" — gateway threat model collapses both. Envelope: `{id, deleted: true}` |
+
+Stable error codes preserved verbatim in error messages: `tier_limit_exceeded` (429), `invalid_environment` (422), `preprod_routing_disabled` / `preprod_unavailable` (503).
+
 ### course — Course content (read)
 
 | Command | Auth | Description |
@@ -153,7 +178,7 @@ andamio course modules "$COURSE_ID" --output json
 |---------|------|-------------|
 | `course teacher commitments --course-id <id>` | jwt | List pending assignment reviews |
 | `course teacher review --course-id <id> --module-code <code> --participant-alias <alias> --decision <accept/refuse>` | jwt | Accept or refuse a student submission |
-| `course teacher register-module --course-id <id> --module-code <code> --slt-hash <hash>` | jwt | Register module from on-chain data |
+| `course teacher register-module --course-id <id> --module-code <code> --slt-hash <hash>` | jwt | Register module from on-chain data. Idempotent on `slt_hash` match (DRAFT advances to APPROVED; APPROVED/PENDING_TX/ON_CHAIN no-ops; mismatch errors and points at `delete-module`). **Breaking in 0.12.0 (`--output json` consumers):** response is now wrapped — `{action, status, slt_hash, advanced_from, response}`. Branch on `.action` (`registered` / `advanced` / `already_registered`); gateway fields nest under `.response` |
 | `course teacher publish-module --course-id <id> --module-code <code>` | jwt | Publish a module |
 | `course teacher delete-module --course-id <id> --module-code <code>` | jwt | Delete a module |
 | `course teacher update-module-status --course-id <id> --module-code <code> --status <status>` | jwt | Update module status. `--slt-hash` required for APPROVED. Valid statuses: DRAFT, APPROVED, PENDING_TX |
@@ -234,7 +259,8 @@ andamio course modules "$COURSE_ID" --output json
 
 | Command | Auth | Description |
 |---------|------|-------------|
-| `project manager commitments --project-id <id>` | jwt | List pending task assessments |
+| `project manager commitments --project-id <id>` | jwt | List **all** task commitments (pending + already-assessed with evidence, evidence hash, assessor, decision). Pre-v2.3 returned only pending. Filter with `jq` on `content.commitment_status`, `source`, or `task_outcome`. Text-mode columns (0.12.0): `submitted_by` + `task_hash` |
+| `project manager qualified-contributors --project-id <id>` | jwt | List aliases qualified to commit to the project (one per line in text mode). Server-capped at 500 — text mode emits a stderr warning when `truncated=true`. JSON envelope: `{projectId, aliases, totalCount, truncated}` |
 
 ### manager — Top-level manager operations
 
