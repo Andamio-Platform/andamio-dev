@@ -1,7 +1,7 @@
 # Andamio CLI — Agent Context
 
 > Complete reference for developers and agents interacting with the Andamio Protocol via the CLI.
-> CLI version: 0.12.0 | Last updated: 2026-05-07
+> CLI version: 0.12.1 | Last updated: 2026-05-07
 
 ## Quick Start
 
@@ -131,7 +131,7 @@ Parallel to `user` login but for the developer portal. Wallet and developer JWTs
 
 ### dev keys — Developer API key management
 
-All commands require a developer JWT (from `dev login`). The gateway rejects wallet/user JWTs and bare api-keys on this surface.
+All commands require **both** an API key (`auth login --api-key <key>`) **and** a developer JWT (`dev login`). The gateway middleware on `/api/v2/keys` is dual: `V2AuthMiddleware` validates `X-API-Key` for app-level auth and billing, then `developerJWTAuth` validates the developer JWT for identity. Sending dev JWT alone returns 401. The wallet/user JWT slot is not used here.
 
 | Command | Auth | Description |
 |---------|------|-------------|
