@@ -24,7 +24,7 @@ The Gateway API is the single entry point for all Andamio operations. It proxies
 
 ### Pre-Execution Knowledge Check
 
-1. Read `specs/andamio-api.yaml` — the Andamio Gateway API spec (Swagger 2.0, 111 endpoints).
+1. Read `specs/andamio-api.yaml` — the Andamio Gateway API spec (Swagger 2.0, 123 endpoints).
 2. If knowledge files exist, read `knowledge/endpoint-usage.yaml` for previously discovered patterns. Proceed without it if the file is empty or missing.
 
 ### Endpoint Filtering

@@ -227,7 +227,7 @@ andamio tx types --output json
 
 **Key resources:**
 - CLI reference: `reference/andamio-cli-context.md` in this plugin
-- Gateway API spec: `specs/andamio-api.yaml` (111 endpoints)
+- Gateway API spec: `specs/andamio-api.yaml` (123 endpoints)
 - TX loops reference: `reference/tx-loops.yaml` (canonical transaction workflows)
 - Cost data: `specs/cost-registry.json`
 - Lifecycle examples: `examples/course-lifecycle.sh` and `examples/project-lifecycle.sh`

@@ -129,7 +129,7 @@ Each transaction follows the same 5-step pattern: build → sign → submit → 
 
 - **Course content** (`courses/`) — "Build on Andamio" curriculum source: 31 SLTs across 7 modules, lessons, assignments, SLT quality review, and drafting guidelines
 - **Course delivery harness** (`.claude/`) — the `/learn` orchestrator plus instructor and assessor agents
-- **Gateway API spec** — 111 endpoints for courses, projects, transactions, auth (single entry point — backends are not called directly)
+- **Gateway API spec** — 123 endpoints for courses, projects, transactions, auth (single entry point — backends are not called directly)
 - **TX loops reference** (`reference/tx-loops.yaml`) — canonical transaction workflows with complete CLI commands, body examples, and gotchas
 - **Cost registry** — real transaction cost data (fees, min UTXO, execution units)
 - **CLI reference** (`reference/andamio-cli-context.md`) — complete command reference with agent workflow examples
