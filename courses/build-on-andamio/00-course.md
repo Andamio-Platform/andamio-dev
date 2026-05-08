@@ -16,24 +16,26 @@ The course is designed to be publishable on Andamio itself: each module has a de
 ## Scope
 
 In scope:
+
 - Andamio gateway API (`specs/andamio-api.yaml`)
 - Andamio CLI
 - Andamio App Template (surfaced in lessons, not in SLTs)
 
 Out of scope:
+
 - Andamioscan, andamio-db-api, andamio-atlas-api — learners meet these implicitly through gateway responses, but they are not subjects of the course. The internal architecture is not taught; the surface is.
 
 ## Modules
 
-| # | Module | SLTs | Purpose |
-|---|--------|------|---------|
-| 100 | Foundations | 4 | Mental model + working toolchain |
-| 200 | Identity | 4 | Access token, JWT auth, headless login |
-| 300 | Reading Andamio | 4 | Query the gateway, interpret responses |
-| 400 | The Transaction State Machine | 5 | The pattern behind every write |
-| 500 | Courses End-to-End | 5 | Full course lifecycle on-chain |
-| 600 | Projects End-to-End | 4 | Full project lifecycle with treasury and escrow |
-| 700 | Build Something Real | 5 | Capstone integration |
+| #   | Module                        | SLTs | Purpose                                         |
+| --- | ----------------------------- | ---- | ----------------------------------------------- |
+| 100 | Foundations                   | 4    | Mental model + working toolchain                |
+| 200 | Identity                      | 4    | Access token, JWT auth, headless login          |
+| 300 | Reading Andamio               | 4    | Query the gateway, interpret responses          |
+| 400 | The Transaction State Machine | 5    | The pattern behind every write                  |
+| 500 | Courses End-to-End            | 5    | Full course lifecycle on-chain                  |
+| 600 | Projects End-to-End           | 4    | Full project lifecycle with treasury and escrow |
+| 700 | Build Something Real          | 5    | Capstone integration                            |
 
 Total: **31 SLTs across 7 modules.**
 
@@ -71,18 +73,18 @@ The feedback section is non-negotiable. The opening promise in M100.1 — *"We'l
 
 Canonical references the course author should cite when drafting lessons:
 
-| Source | Location | Feeds |
-|---|---|---|
-| Andamio System Reference | `andamio-dev-kit-internal/docs/SYSTEM_REFERENCE.md` | M200, M300, M400, M500, M600 technical content |
-| Andamio Authentication | `andamio-dev-kit-internal/docs/AUTH.md` | M200 auth flows, attestation JWT |
-| Contribution-centered learning | `andamio-ai-context/02-strategy/contribution-centered-learning.md` | M100.1 + pedagogy framing across all modules |
-| Andamio CLI source | `andamio-cli/` | M100, M200, M400, M500, M600 CLI command examples |
-| Andamio gateway source | `andamio-api/` | M300, M400 gateway behavior, error shapes |
-| Andamio App Template | `andamio-platform/andamio-app-template/` | M700 integration strategy and scaffold |
-| Andamio App V2 | `andamio-platform/andamio-app-v2/` | M700 idiomatic failure handling patterns |
-| Gateway OpenAPI spec | `andamio-dev/specs/andamio-api.yaml` | M300, M400 endpoint references |
-| Cost registry | `andamio-dev/specs/cost-registry.json` | M700 cost estimation |
-| **TX loops reference** (pending) | `andamio-dev/reference/tx-loops.yaml` | M400, M500, M600, M700 — names each runnable loop and its cost model. See Pending dependencies below. |
+| Source                           | Location                                                           | Feeds                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Andamio System Reference         | `andamio-dev-kit-internal/docs/SYSTEM_REFERENCE.md`                | M200, M300, M400, M500, M600 technical content                                                        |
+| Andamio Authentication           | `andamio-dev-kit-internal/docs/AUTH.md`                            | M200 auth flows, attestation JWT                                                                      |
+| Contribution-centered learning   | `andamio-ai-context/02-strategy/contribution-centered-learning.md` | M100.1 + pedagogy framing across all modules                                                          |
+| Andamio CLI source               | `andamio-cli/`                                                     | M100, M200, M400, M500, M600 CLI command examples                                                     |
+| Andamio gateway source           | `andamio-api/`                                                     | M300, M400 gateway behavior, error shapes                                                             |
+| Andamio App Template             | `andamio-platform/andamio-app-template/`                           | M700 integration strategy and scaffold                                                                |
+| Andamio App V2                   | `andamio-platform/andamio-app-v2/`                                 | M700 idiomatic failure handling patterns                                                              |
+| Gateway OpenAPI spec             | `andamio-dev/specs/andamio-api.yaml`                               | M300, M400 endpoint references                                                                        |
+| Cost registry                    | `andamio-dev/specs/cost-registry.json`                             | M700 cost estimation                                                                                  |
+| **TX loops reference** (pending) | `andamio-dev/reference/tx-loops.yaml`                              | M400, M500, M600, M700 — names each runnable loop and its cost model. See Pending dependencies below. |
 
 All 32 SLTs are now backed by at least one of the above sources. No SLT requires content to be reconstructed by the lesson author.
 
