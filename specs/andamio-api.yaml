@@ -149,19 +149,21 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       deposit_value:
-        description: List of (asset class, quantity) pairs. This is an asset class,
-          i.e. either \"lovelace\" or some other token with its minting policy and
-          token name delimited by dot (.).
+        description: List of (asset class, quantity) pairs. An asset class is either
+          "lovelace" or a token with its minting policy and token name delimited by
+          dot (.).
         items:
           items: {}
           type: array
         type: array
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
     type: object
   AddTeachersV2Request:
@@ -428,16 +430,23 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       assignment_decisions:
         items:
           $ref: '#/definitions/AssignmentOutcome'
         type: array
       course_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/SponsorData'
+        description: Sponsored path (Path A) — API caller needs to handle sponsorship
+          tank.
     type: object
   Asset:
     properties:
@@ -455,15 +464,22 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       assignment_info:
-        description: A text string with a maximum length of 140 characters
+        description: A text string with a maximum length of 140 characters.
         type: string
       course_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/SponsorData'
+        description: Sponsored path (Path A) — API caller needs to handle sponsorship
+          tank.
     type: object
   AssignmentCommitment:
     properties:
@@ -491,6 +507,9 @@ definitions:
     type: object
   AssignmentCommitmentContent:
     properties:
+      assessment_outcome:
+        description: '"accept" or "refuse"'
+        type: string
       assignment_evidence_hash:
         description: Hash for on-chain verification
         type: string
@@ -504,8 +523,13 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
         type: string
       outcome:
+        description: 'enum: accept,refuse'
+        enum:
+        - accept
+        - refuse
         type: string
     type: object
   AssignmentSubmissionInput:
@@ -598,11 +622,10 @@ definitions:
       product:
         enum:
         - api
-        - platform
         example: api
         type: string
       tier:
-        example: developer
+        example: starter
         type: string
     required:
     - product
@@ -628,12 +651,19 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       course_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/SponsorData'
+        description: Sponsored path (Path A) — API caller needs to handle sponsorship
+          tank.
     type: object
   ClaimCredentialV2Request:
     properties:
@@ -648,63 +678,88 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       contributor_state_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      fee_tier:
-        type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
     type: object
   ClaimV2AccessTokenTxRequest:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
         type: string
-      initiator_data:
-        $ref: '#/definitions/SponsoredInitiatorData'
+    type: object
+  CleanerStatsView:
+    properties:
+      candidates:
+        type: integer
+      deleted:
+        type: integer
+      dry_run:
+        type: boolean
+      errored:
+        type: integer
+      operation_id:
+        type: string
+      skipped:
+        type: integer
     type: object
   CommitAssignmentTxRequest:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       assignment_info:
-        description: A text string with a maximum length of 140 characters
+        description: A text string with a maximum length of 140 characters.
         type: string
       course_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       slt_hash:
-        description: Hex encoded hash of slts (exactly 64 characters)
+        description: Hex-encoded hash of the task SLT (exactly 64 characters).
+        example: a1b2c3d4e5f6...
         type: string
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/SponsorData'
+        description: Sponsored path (Path A) — API caller needs to handle sponsorship
+          tank.
     type: object
   CommitTaskTxRequest:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       contributor_state_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      fee_tier:
-        type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       task_hash:
-        description: Hex encoded hash of slts (exactly 64 characters)
+        description: Hex-encoded hash of the task SLT (exactly 64 characters).
+        example: a1b2c3d4e5f6...
         type: string
       task_info:
-        description: A text string with a maximum length of 140 characters
+        description: A text string with a maximum length of 140 characters.
         type: string
     type: object
   CompleteVerificationRequest:
@@ -1033,13 +1088,49 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/SponsorData'
+        description: Sponsored path (Path A) — API caller needs to handle sponsorship
+          tank.
       teachers:
         items:
           type: string
         type: array
+    type: object
+  CreateKeyRequest:
+    properties:
+      environment:
+        enum:
+        - mainnet
+        - preprod
+        type: string
+      name:
+        maxLength: 64
+        minLength: 3
+        type: string
+    required:
+    - environment
+    - name
+    type: object
+  CreateKeyResponse:
+    properties:
+      created_at:
+        type: string
+      environment:
+        type: string
+      id:
+        type: string
+      key:
+        type: string
+      last4:
+        type: string
+      name:
+        type: string
     type: object
   CreateModuleRequest:
     properties:
@@ -1060,14 +1151,15 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       course_prereqs:
         items:
           items: {}
           type: array
         type: array
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       managers:
         items:
           type: string
@@ -1391,6 +1483,15 @@ definitions:
     required:
     - error
     type: object
+  FederatedCleanupCandidate:
+    properties:
+      created_at:
+        type: string
+      user_id:
+        type: string
+      wallet_address:
+        type: string
+    type: object
   ForbiddenErrorResponse:
     properties:
       details:
@@ -1530,6 +1631,19 @@ definitions:
     - expires_at
     - token
     type: object
+  KeyListItem:
+    properties:
+      created_at:
+        type: string
+      environment:
+        type: string
+      id:
+        type: string
+      last4:
+        type: string
+      name:
+        type: string
+    type: object
   LeaveAssignmentCommitmentV2Request:
     properties:
       course_id:
@@ -1557,6 +1671,30 @@ definitions:
         type: string
       video_url:
         type: string
+    type: object
+  ListKeysKeyMetadata:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      is_active:
+        type: boolean
+      key_id:
+        type: string
+      name:
+        type: string
+      prefix:
+        type: string
+      source:
+        type: string
+    type: object
+  ListKeysResponse:
+    properties:
+      keys:
+        items:
+          $ref: '#/definitions/KeyListItem'
+        type: array
     type: object
   ListManagerTasksRequest:
     properties:
@@ -1587,6 +1725,17 @@ definitions:
     properties:
       course_id:
         type: string
+    type: object
+  LoginCompleteRequest:
+    properties:
+      session_id:
+        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
+        type: string
+      signature:
+        $ref: '#/definitions/SignatureData'
+    required:
+    - session_id
+    - signature
     type: object
   LoginRequest:
     properties:
@@ -1639,10 +1788,41 @@ definitions:
     - id
     - nonce
     type: object
+  LoginSessionRequest:
+    properties:
+      alias:
+        example: johndoe
+        maxLength: 32
+        minLength: 1
+        type: string
+      wallet_address:
+        example: addr1q...
+        maxLength: 108
+        minLength: 103
+        type: string
+    required:
+    - alias
+    - wallet_address
+    type: object
+  LoginSessionResponse:
+    properties:
+      expires_at:
+        example: "2026-05-05T12:35:00Z"
+        type: string
+      nonce:
+        example: 'Sign this message to login to Andamio: abc123...'
+        type: string
+      session_id:
+        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
+        type: string
+    type: object
   ManageContributorBlacklistTxRequest:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       aliases_to_add:
         items:
@@ -1652,19 +1832,19 @@ definitions:
         items:
           type: string
         type: array
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
     type: object
   ManageManagersTxRequest:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       managers_to_add:
         items:
           type: string
@@ -1674,19 +1854,22 @@ definitions:
           type: string
         type: array
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
     type: object
   ManageModulesTxRequest:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       course_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       modules_to_add:
         items:
           $ref: '#/definitions/MintModuleV2'
@@ -1699,27 +1882,35 @@ definitions:
         items:
           $ref: '#/definitions/UpdateModuleV2'
         type: array
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/SponsorData'
+        description: Sponsored path (Path A) — API caller needs to handle sponsorship
+          tank.
     type: object
   ManageTasksTxRequest:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       contributor_state_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       deposit_value:
-        description: List of (asset class, quantity) pairs. This is an asset class,
-          i.e. either \"lovelace\" or some other token with its minting policy and
-          token name delimited by dot (.).
+        description: List of (asset class, quantity) pairs. An asset class is either
+          "lovelace" or a token with its minting policy and token name delimited by
+          dot (.).
         items:
           items: {}
           type: array
         type: array
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       tasks_to_add:
         items:
@@ -1734,12 +1925,19 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       course_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/SponsorData'
+        description: Sponsored path (Path A) — API caller needs to handle sponsorship
+          tank.
       teachers_to_add:
         items:
           type: string
@@ -2253,6 +2451,8 @@ definitions:
     type: object
   MergedProjectListItem:
     properties:
+      available_task_count:
+        type: integer
       content:
         allOf:
         - $ref: '#/definitions/ProjectContent'
@@ -2283,6 +2483,9 @@ definitions:
       source:
         description: Data source indicator
         type: string
+      total_reward_lovelace:
+        description: Aggregated task reward data (computed from Andamioscan detail)
+        type: integer
       treasury_address:
         type: string
     required:
@@ -2351,6 +2554,9 @@ definitions:
         items:
           $ref: '#/definitions/Asset'
         type: array
+      commitment_count:
+        description: Number of active (non-terminal) commitments on this task
+        type: integer
       content:
         allOf:
         - $ref: '#/definitions/TaskContent'
@@ -2411,10 +2617,19 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       initiator_data:
-        description: An address, serialised as Bech32.
+        description: 'Self-funded path: Bech32 address of the access token recipient.
+          Enterprise Path B also uses this as the receiver address.'
         type: string
+      sponsor_data:
+        allOf:
+        - $ref: '#/definitions/MintSponsorData'
+        description: 'Sponsored path (Path A): provide this OR initiator_data, not
+          both.'
     type: object
   MintModuleV2:
     properties:
@@ -2430,6 +2645,31 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  MintSponsorData:
+    properties:
+      access_token_receiver:
+        description: |-
+          Bech32 address of the end-user wallet that will receive the minted access token.
+          MUST differ from sponsor_address — the sponsor pays fees but does not receive the token.
+        type: string
+      collateral_utxo_ref:
+        description: 'UTxO reference for collateral (format: txhash#index) returned
+          by getStaticInfo() from the utxos.dev SDK.'
+        type: string
+      sponsor_address:
+        description: Bech32 address of the sponsor wallet that funds the transaction.
+        type: string
+      static_utxo_ref:
+        description: |-
+          UTxO reference (format: txhash#index) returned by getStaticInfo() from the utxos.dev SDK.
+          Do not pick arbitrary UTxOs — the sponsorship contract requires this exact reference.
+        type: string
+    required:
+    - access_token_receiver
+    - collateral_utxo_ref
+    - sponsor_address
+    - static_utxo_ref
     type: object
   ModuleContent:
     properties:
@@ -2516,6 +2756,20 @@ definitions:
     - page
     - page_size
     - total
+    type: object
+  PaymentRequiredErrorResponse:
+    properties:
+      details:
+        type: string
+      message:
+        example: 'Payment Required: Sponsorship quota exhausted.'
+        type: string
+      status_code:
+        example: 402
+        type: integer
+    required:
+    - message
+    - status_code
     type: object
   PendingAssessmentSummary:
     properties:
@@ -2615,6 +2869,46 @@ definitions:
         example: user_abc123
         type: string
     type: object
+  PlanTier:
+    properties:
+      checkout_keys:
+        additionalProperties:
+          type: string
+        type: object
+      daily_quota:
+        example: 2500
+        type: integer
+      description:
+        example: For developers building on the Andamio protocol.
+        type: string
+      max_api_keys:
+        example: 2
+        type: integer
+      monthly_quota:
+        example: 75000
+        type: integer
+      name:
+        example: starter
+        type: string
+      rate_limit_per_minute:
+        example: 50
+        type: integer
+    type: object
+  PlansResponse:
+    properties:
+      plans:
+        items:
+          $ref: '#/definitions/PlanTier'
+        type: array
+    type: object
+  PlansResponseEnvelope:
+    description: Standard API response envelope for available plans
+    properties:
+      data:
+        $ref: '#/definitions/PlansResponse'
+    required:
+    - data
+    type: object
   PortalResponse:
     properties:
       url:
@@ -2640,6 +2934,19 @@ definitions:
     properties:
       access_token_alias:
         type: string
+    type: object
+  PreviewCandidatesResponse:
+    properties:
+      candidates:
+        items:
+          $ref: '#/definitions/FederatedCleanupCandidate'
+        type: array
+      count:
+        type: integer
+      cross_env_operation_id:
+        type: string
+      grace_period_minutes:
+        type: integer
     type: object
   Project:
     properties:
@@ -2741,8 +3048,14 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
         type: string
       outcome:
+        description: 'enum: accept,refuse,deny'
+        enum:
+        - accept
+        - refuse
+        - deny
         type: string
     type: object
   ProjectPrerequisite:
@@ -2885,6 +3198,50 @@ definitions:
       course_id:
         type: string
       course_module_code:
+        type: string
+    type: object
+  QualifiedContributorsResponse:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      project_id:
+        type: string
+      status:
+        description: |-
+          Status indicates the reason for an empty aliases list.
+          "ok" — prerequisites are configured and the intersection was computed.
+          "no_prerequisites_configured" — the project has no prerequisites on-chain; every alias is vacuously qualified.
+        type: string
+      total_count:
+        type: integer
+      truncated:
+        type: boolean
+    type: object
+  QualifiedContributorsResponseEnvelope:
+    properties:
+      data:
+        $ref: '#/definitions/QualifiedContributorsResponse'
+    required:
+    - data
+    type: object
+  RefreshRequest:
+    properties:
+      refresh_token:
+        example: a3f1c2d4e5b6...
+        type: string
+    required:
+    - refresh_token
+    type: object
+  RefreshTokenData:
+    description: Refresh token data included in login and refresh responses
+    properties:
+      expires_at:
+        example: "2026-06-04T12:30:00Z"
+        type: string
+      token:
+        example: a3f1c2d4e5b6...
         type: string
     type: object
   RegisterCompleteRequest:
@@ -3136,6 +3493,17 @@ definitions:
     x-enum-varnames:
     - ReviewAssignmentCommitmentV2RequestDecisionAccept
     - ReviewAssignmentCommitmentV2RequestDecisionRefuse
+  RevokeKeyResponse:
+    properties:
+      cross_env_operation_id:
+        type: string
+      environment:
+        type: string
+      key_id:
+        type: string
+      revoked_at:
+        type: string
+    type: object
   RotateAPIKeyRequest:
     properties:
       api_key_name:
@@ -3157,6 +3525,34 @@ definitions:
         type: string
     required:
     - confirmation
+    type: object
+  RunCleanupOnceRequest:
+    properties:
+      dry_run:
+        type: boolean
+    type: object
+  RunCleanupOnceResponse:
+    properties:
+      cross_env_operation_id:
+        type: string
+      stats:
+        $ref: '#/definitions/CleanerStatsView'
+    type: object
+  SecureLoginResponse:
+    properties:
+      alias:
+        example: johndoe
+        type: string
+      jwt:
+        $ref: '#/definitions/JWTResponse'
+      refresh_token:
+        $ref: '#/definitions/RefreshTokenData'
+      tier:
+        example: pioneer
+        type: string
+      user_id:
+        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
+        type: string
     type: object
   ServiceUnavailableErrorResponse:
     properties:
@@ -3241,18 +3637,24 @@ definitions:
       slt_text:
         type: string
     type: object
-  SponsoredInitiatorData:
+  SponsorData:
     properties:
       collateral_utxo_ref:
-        description: 'UTxO reference for collateral (format: txhash#index).'
+        description: 'UTxO reference for collateral (format: txhash#index) returned
+          by getStaticInfo() from the utxos.dev SDK.'
         type: string
       sponsor_address:
-        description: The sponsor's address that will fund the transaction, serialised
-          as Bech32.
+        description: Bech32 address of the sponsor wallet that funds the transaction.
         type: string
       static_utxo_ref:
-        description: 'UTxO reference for the static input (format: txhash#index).'
+        description: |-
+          UTxO reference (format: txhash#index) returned by getStaticInfo() from the utxos.dev SDK.
+          Do not pick arbitrary UTxOs — the sponsorship contract requires this exact reference.
         type: string
+    required:
+    - collateral_utxo_ref
+    - sponsor_address
+    - static_utxo_ref
     type: object
   StartVerificationRequest:
     description: Request to start an Access Token ownership verification session.
@@ -3458,6 +3860,15 @@ definitions:
         description: SltHash The SLT hash identifying the module (on-chain identifier)
         type: string
     type: object
+  SubmitSponsoredRequest:
+    properties:
+      tx:
+        description: holder-signed tx hex
+        example: 84a40081825820...
+        type: string
+    required:
+    - tx
+    type: object
   SubscriptionStatus:
     properties:
       cancel_at_period_end:
@@ -3516,14 +3927,16 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       project_info:
-        description: A text string with a maximum length of 140 characters
+        description: A text string with a maximum length of 140 characters.
         type: string
     type: object
   TaskCommitment:
@@ -3556,7 +3969,8 @@ definitions:
         description: Manager who assessed
         type: string
       commitment_status:
-        description: DRAFT, COMMITTED, SUBMITTED, ACCEPTED, etc.
+        description: DRAFT, COMMITTED, ACCEPTED, REFUSED, DENIED, REWARDED, ABANDONED,
+          PENDING_TX_*.
         type: string
       evidence:
         description: Tiptap JSON document
@@ -3564,7 +3978,7 @@ definitions:
         description: Hash for on-chain verification
         type: string
       task_outcome:
-        description: ACCEPTED, REFUSED, DENIED
+        description: accept, refuse, deny (lowercase, matches db-api enum)
         type: string
     type: object
   TaskContent:
@@ -3590,19 +4004,24 @@ definitions:
   TaskData:
     properties:
       expiration_posix:
+        description: Unix timestamp (milliseconds) for task expiration
+        example: 1776421758000
         type: integer
       lovelace_amount:
+        description: Amount in lovelace
+        example: 2000000
         type: integer
       native_assets:
-        description: List of (asset class, quantity) pairs. This is an asset class,
-          i.e. either \"lovelace\" or some other token with its minting policy and
-          token name delimited by dot (.).
+        description: List of (asset class, quantity) pairs. An asset class is either
+          "lovelace" or a token with its minting policy and token name delimited by
+          dot (.).
         items:
           items: {}
           type: array
         type: array
       project_content:
-        description: A text string with a maximum length of 140 characters
+        description: Human-readable description of the task requirements
+        example: Complete the assigned module and submit proof.
         type: string
     type: object
   TaskSubmissionInput:
@@ -3616,14 +4035,17 @@ definitions:
     properties:
       alias:
         description: Plain text alias. Any characters allowed.
+        example: JohnDoe
+        maxLength: 31
+        minLength: 1
         type: string
       contributor_state_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
-      initiator_data:
-        $ref: '#/definitions/WalletData'
       project_id:
-        description: This is the hash of a minting policy script.
+        description: Hash of a minting policy script.
+        example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       task_decisions:
         items:
@@ -3885,7 +4307,7 @@ definitions:
         description: Required when status = "APPROVED"
         type: string
       status:
-        description: '"APPROVED" or "DRAFT"'
+        description: '"DRAFT", "APPROVED", or "PENDING_TX"'
         type: string
     type: object
   UpdateModuleV2:
@@ -3899,7 +4321,7 @@ definitions:
           type: string
         type: array
       slt_hash:
-        description: Hex encoded hash of slts (exactly 64 characters)
+        description: Hex-encoded hash of the SLT (exactly 64 characters).
         type: string
     type: object
   UpdateProjectRequest:
@@ -4287,13 +4709,33 @@ definitions:
         type: array
     type: object
   ValidateSignatureRequest:
+    description: Validates CIP-30/CIP-8 wallet signature and returns JWT token.
     properties:
-      session_id:
+      access_token_alias:
+        description: Access token alias (e.g. 'falcon'). For CLI/agent headless login.
+        example: falcon
+        type: string
+      address:
+        description: Wallet address in bech32 or hex format
+        example: addr_test1qq...
+        type: string
+      andamio_access_token_unit:
+        description: Full access token unit (policyId + hex-encoded name). For browser
+          wallets.
+        type: string
+      id:
+        description: Session ID from /auth/login/session
+        example: session-123
         type: string
       signature:
-        $ref: '#/definitions/SignatureData'
+        allOf:
+        - $ref: '#/definitions/SignatureData'
+        description: CIP-30 wallet signature
+      wallet_preference:
+        description: Wallet name for debugging
+        type: string
     required:
-    - session_id
+    - id
     - signature
     type: object
   VerificationFailureResponse:
@@ -4338,16 +4780,6 @@ definitions:
       user_id:
         example: a1b2c3d4-e5f6-7890-1234-567890abcdef
         type: string
-    type: object
-  WalletData:
-    properties:
-      change_address:
-        description: An address, serialised as Bech32.
-        type: string
-      used_addresses:
-        items:
-          type: string
-        type: array
     type: object
 externalDocs:
   description: OpenAPI Specification
@@ -4815,6 +5247,126 @@ paths:
       x-metadata-status: alpha
       x-operation-id: userDailyUsageHandlerV1
       x-rate-limit-tier: none
+  /v2/admin/keys:
+    get:
+      description: Returns all API keys for the specified user in the requested environment.
+        environment=mainnet queries local storage and includes both active and revoked
+        keys (full audit view). environment=preprod proxies to the Preprod gateway
+        via the cross-env channel. Requires an admin-tier API key plus a valid RS256
+        developer JWT.
+      operationId: v2-admin-keys-list
+      parameters:
+      - description: Target environment
+        enum:
+        - mainnet
+        - preprod
+        in: query
+        name: environment
+        required: true
+        type: string
+      - description: Target user UUID
+        format: uuid
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Key list (active + revoked on mainnet; active-only on preprod)
+          schema:
+            $ref: '#/definitions/ListKeysResponse'
+        "400":
+          description: Missing or invalid query parameter (environment or user_id)
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Missing or invalid authentication
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "403":
+          description: Non-admin tier or end-user JWT presented
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        "404":
+          description: User not found (preprod path)
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+        "503":
+          description: Preprod gateway unavailable
+          schema:
+            $ref: '#/definitions/ServiceUnavailableErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List API keys for a user (admin)
+      tags:
+      - Admin Keys
+      x-access-level: internal
+  /v2/admin/keys/{key_id}:
+    delete:
+      description: Soft-revokes the specified API key by setting is_active=false.
+        environment=mainnet updates the local row directly; environment=preprod proxies
+        the revoke to the Preprod gateway. The response body carries a cross_env_operation_id
+        for audit correlation. Requires an admin-tier API key plus a valid RS256 developer
+        JWT.
+      operationId: v2-admin-keys-revoke
+      parameters:
+      - description: API key UUID to revoke
+        format: uuid
+        in: path
+        name: key_id
+        required: true
+        type: string
+      - description: Target environment
+        enum:
+        - mainnet
+        - preprod
+        in: query
+        name: environment
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Key revoked; body includes cross_env_operation_id for audit
+          schema:
+            $ref: '#/definitions/RevokeKeyResponse'
+        "400":
+          description: Malformed key_id UUID or missing environment
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Missing or invalid authentication
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "403":
+          description: Non-admin tier or end-user JWT presented
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        "404":
+          description: Key not found
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+        "503":
+          description: Preprod gateway unavailable
+          schema:
+            $ref: '#/definitions/ServiceUnavailableErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Revoke an API key (admin)
+      tags:
+      - Admin Keys
+      x-access-level: internal
   /v2/admin/tx/stats:
     get:
       description: |-
@@ -4846,6 +5398,103 @@ paths:
       summary: Get TX state machine stats
       tags:
       - Tx/Admin
+  /v2/admin/users/orphan-cleanup/candidates:
+    get:
+      description: Returns the set of federated users the cleaner would delete right
+        now given the specified grace window. Read-only — no deletions are performed.
+        If grace_minutes is omitted or 0, the cleaner's configured default is used.
+        This endpoint is Preprod-only — it returns 404 on a Mainnet gateway. Requires
+        an admin-tier API key plus a valid RS256 developer JWT.
+      operationId: v2-admin-cleanup-candidates
+      parameters:
+      - description: Grace period in minutes (0 = use configured default)
+        in: query
+        minimum: 0
+        name: grace_minutes
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Candidate list and effective grace window
+          schema:
+            $ref: '#/definitions/PreviewCandidatesResponse'
+        "400":
+          description: grace_minutes is not a non-negative integer
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Missing or invalid authentication
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "403":
+          description: Non-admin tier or end-user JWT presented
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        "404":
+          description: Endpoint not available on Mainnet gateway
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Preview orphan-cleanup candidates (admin, Preprod only)
+      tags:
+      - Admin Keys
+      x-access-level: internal
+  /v2/admin/users/orphan-cleanup/run-once:
+    post:
+      consumes:
+      - application/json
+      description: Runs an on-demand federated-account cleanup pass. Optional request
+        body allows overriding the live dry_run config flag for this single pass without
+        changing global config. Returns cleanup statistics and a cross_env_operation_id
+        for audit correlation. This endpoint is Preprod-only — it returns 404 on a
+        Mainnet gateway. Requires an admin-tier API key plus a valid RS256 developer
+        JWT.
+      operationId: v2-admin-cleanup-run-once
+      parameters:
+      - description: Optional dry_run override
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/RunCleanupOnceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cleanup stats and audit op-id
+          schema:
+            $ref: '#/definitions/RunCleanupOnceResponse'
+        "400":
+          description: Malformed request body
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Missing or invalid authentication
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "403":
+          description: Non-admin tier or end-user JWT presented
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        "404":
+          description: Endpoint not available on Mainnet gateway
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Trigger orphan-cleanup pass (admin, Preprod only)
+      tags:
+      - Admin Keys
+      x-access-level: internal
   /v2/apikey/developer/account/delete:
     post:
       description: Permanently deletes the authenticated developer's account and all
@@ -4942,6 +5591,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/UnauthorizedErrorResponse'
+        "409":
+          description: Federated user already has an active Preprod key
+          schema:
+            $ref: '#/definitions/ConflictErrorResponse'
         "422":
           description: Validation failed
           schema:
@@ -5053,7 +5706,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticates a developer and returns a JWT token for API access.
+      deprecated: true
+      description: 'DEPRECATED: When `wallet_signature_verification_enabled` is true
+        (v2.3+ default), this endpoint returns 410 Gone. Use POST /v2/auth/developer/login/session
+        and /login/complete instead — alias + wallet_address alone are public values
+        and do not prove wallet ownership.'
       operationId: v2-auth-developer-login
       parameters:
       - description: Developer login request
@@ -5066,7 +5723,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Successfully authenticated
+          description: Successfully authenticated (only when feature flag disabled)
           schema:
             $ref: '#/definitions/LoginResponse'
         "400":
@@ -5077,6 +5734,10 @@ paths:
           description: Authentication failed
           schema:
             $ref: '#/definitions/UnauthorizedErrorResponse'
+        "410":
+          description: Endpoint retired — use /v2/auth/developer/login/session + /login/complete
+          schema:
+            $ref: '#/definitions/GoneErrorResponse'
         "422":
           description: Validation failed
           schema:
@@ -5085,15 +5746,19 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/InternalServerErrorResponse'
-      summary: Login
+      summary: Login (DEPRECATED in v2.3)
       tags:
       - Auth/Developer
   /v2/auth/developer/account/register:
     post:
       consumes:
       - application/json
-      description: Registers a new developer account for API access. Creates account
-        with default free tier.
+      deprecated: true
+      description: 'DEPRECATED: When `wallet_signature_verification_enabled` is true
+        (v2.3+ default), this endpoint returns 410 Gone. Use POST /v2/auth/developer/register/session
+        and /register/complete instead — they require a CIP-30 wallet signature, which
+        proves wallet ownership rather than relying on the wallet address as a public
+        credential.'
       operationId: v2-auth-developer-register
       parameters:
       - description: Developer registration request
@@ -5106,7 +5771,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Successfully registered developer
+          description: Successfully registered developer (only when feature flag disabled)
           schema:
             $ref: '#/definitions/RegisterResponse'
         "400":
@@ -5117,6 +5782,11 @@ paths:
           description: Alias already taken
           schema:
             $ref: '#/definitions/ConflictErrorResponse'
+        "410":
+          description: Endpoint retired — use /v2/auth/developer/register/session
+            + /register/complete
+          schema:
+            $ref: '#/definitions/GoneErrorResponse'
         "422":
           description: Validation failed
           schema:
@@ -5125,7 +5795,7 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/InternalServerErrorResponse'
-      summary: Register account
+      summary: Register account (DEPRECATED in v2.3)
       tags:
       - Auth/Developer
   /v2/auth/developer/email-status:
@@ -5150,6 +5820,104 @@ paths:
       security:
       - BearerAuth: []
       summary: Get email verification status
+      tags:
+      - Auth/Developer
+  /v2/auth/developer/login/complete:
+    post:
+      consumes:
+      - application/json
+      description: Completes wallet-based developer login by validating the CIP-30
+        signature of the nonce from /v2/auth/developer/login/session. If valid, mints
+        a 60-minute developer JWT and a 30-day refresh token.
+      operationId: v2-auth-developer-login-complete
+      parameters:
+      - description: Login complete request with session ID and wallet signature
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/LoginCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Developer JWT and refresh token minted
+          schema:
+            $ref: '#/definitions/SecureLoginResponse'
+        "400":
+          description: Invalid request body or session ID
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Invalid wallet signature
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "404":
+          description: Login session not found
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        "409":
+          description: Session already used
+          schema:
+            $ref: '#/definitions/ConflictErrorResponse'
+        "410":
+          description: Login session expired
+          schema:
+            $ref: '#/definitions/GoneErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/UnprocessableEntityErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      summary: Complete login
+      tags:
+      - Auth/Developer
+  /v2/auth/developer/login/session:
+    post:
+      consumes:
+      - application/json
+      description: Initiates wallet-based developer login by generating a nonce for
+        the user to sign with their CIP-30 wallet. The user must sign this nonce and
+        submit it to /v2/auth/developer/login/complete within 5 minutes.
+      operationId: v2-auth-developer-login-session
+      parameters:
+      - description: Login session request with alias and wallet address
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/LoginSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login session created with nonce to sign
+          schema:
+            $ref: '#/definitions/LoginSessionResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Alias or wallet address not found
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/UnprocessableEntityErrorResponse'
+        "429":
+          description: Login session already pending
+          schema:
+            $ref: '#/definitions/TooManyRequestsErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      summary: Start login session
       tags:
       - Auth/Developer
   /v2/auth/developer/register/complete:
@@ -5281,6 +6049,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Resend verification email
+      tags:
+      - Auth/Developer
+  /v2/auth/developer/token/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Rotates the caller's refresh token. The old token is immediately
+        invalidated; a new JWT (60 min) and a new refresh token (30 days) are returned.
+        Refresh tokens are single-use.
+      operationId: v2-auth-developer-token-refresh
+      parameters:
+      - description: Refresh token rotation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New JWT and refresh token
+          schema:
+            $ref: '#/definitions/SecureLoginResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Invalid, expired, revoked, or already-used refresh token
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/UnprocessableEntityErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      summary: Refresh token
       tags:
       - Auth/Developer
   /v2/auth/developer/verify-email:
@@ -5436,6 +6245,25 @@ paths:
       security:
       - BearerAuth: []
       summary: Create checkout session
+      tags:
+      - Billing
+  /v2/billing/plans:
+    get:
+      description: Returns all available subscription tiers with their quotas, rate
+        limits, and checkout keys.
+      operationId: v2-billing-plans
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Available plans
+          schema:
+            $ref: '#/definitions/PlansResponseEnvelope'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      summary: Get available plans
       tags:
       - Billing
   /v2/billing/portal:
@@ -6331,8 +7159,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates module status. Allows DRAFT → APPROVED (requires slt_hash)
-        or APPROVED → DRAFT (to enable SLT edits).
+      description: Updates module status. Allows DRAFT ↔ APPROVED (requires slt_hash)
+        and APPROVED → PENDING_TX (before modules_manage TX).
       operationId: v2-course-teacher-update-module-status
       parameters:
       - description: Module status update request
@@ -6725,6 +7553,139 @@ paths:
       tags:
       - Course/User
       x-access-level: public
+  /v2/keys:
+    get:
+      description: Returns the unified list of the developer's active API keys across
+        both environments. Mainnet keys come from the local api_keys table; Preprod
+        keys come from cross_env_key_metadata cached at create time. Sorted DESC by
+        created_at. Mainnet entries do not carry last4 (the legacy table stores only
+        the bcrypt hash + key_prefix shard); Preprod entries do.
+      operationId: v2-keys-list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unified list of keys
+          schema:
+            $ref: '#/definitions/ListKeysResponse'
+        "401":
+          description: Missing or invalid authentication
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List API keys
+      tags:
+      - Keys
+      x-access-level: public
+    post:
+      consumes:
+      - application/json
+      description: Creates a developer API key in the requested environment. env=mainnet
+        creates locally; env=preprod proxies to the Preprod gateway via the cross-env
+        channel. env=preprod additionally requires an active Stripe subscription (queried
+        directly from the subscriptions table). Tier-cap (union of mainnet + preprod
+        active keys) applies to both envs. The raw key value is returned exactly once.
+      operationId: v2-keys-create
+      parameters:
+      - description: Key creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Key created
+          schema:
+            $ref: '#/definitions/CreateKeyResponse'
+        "400":
+          description: Malformed request body
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Missing or invalid authentication
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "403":
+          description: Subscription expired
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        "409":
+          description: Direct-user collision on cross-env path
+          schema:
+            $ref: '#/definitions/ConflictErrorResponse'
+        "422":
+          description: Validation failed (invalid environment, name)
+          schema:
+            $ref: '#/definitions/UnprocessableEntityErrorResponse'
+        "429":
+          description: Tier API-key limit reached
+          schema:
+            $ref: '#/definitions/TooManyRequestsErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+        "503":
+          description: Preprod routing disabled or upstream unavailable
+          schema:
+            $ref: '#/definitions/ServiceUnavailableErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create API key
+      tags:
+      - Keys
+      x-access-level: public
+  /v2/keys/{id}:
+    delete:
+      description: Revokes the developer's API key with the given local id. If the
+        id matches a cross_env_key_metadata row, the revoke is proxied to the Preprod
+        gateway and the local row is marked revoked on success; a Preprod 404 is treated
+        as success (already gone). Otherwise falls back to the legacy api_keys row.
+        A stranger's id returns 404 indistinguishable from non-existence.
+      operationId: v2-keys-delete
+      parameters:
+      - description: Local key id (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Key revoked
+        "400":
+          description: Malformed UUID
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Missing or invalid authentication
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "404":
+          description: Key not found (or owned by another user)
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+        "503":
+          description: Preprod routing disabled or upstream unavailable
+          schema:
+            $ref: '#/definitions/ServiceUnavailableErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete API key
+      tags:
+      - Keys
+      x-access-level: public
   /v2/project/contributor/commitment/create:
     post:
       consumes:
@@ -6953,13 +7914,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns task commitments pending review by the authenticated manager.
-        Optionally filter by project_id.
+      description: Returns all task commitments (pending and assessed) for the authenticated
+        manager's project. project_id is required.
       operationId: v2-merged-project-manager-commitments-list
       parameters:
-      - description: Optional project_id to filter commitments
+      - description: project_id is required
         in: body
         name: request
+        required: true
         schema:
           $ref: '#/definitions/ListProjectCommitmentsRequest'
       produces:
@@ -6970,11 +7932,11 @@ paths:
           schema:
             $ref: '#/definitions/ManagerCommitmentsResponse'
         "206":
-          description: Partial content (DB unavailable)
+          description: Partial content (DB or chain unavailable)
           schema:
             $ref: '#/definitions/ManagerCommitmentsResponse'
         "400":
-          description: Invalid request body
+          description: Missing or invalid request body
           schema:
             $ref: '#/definitions/ErrorResponse'
         "401":
@@ -6982,13 +7944,62 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         "502":
-          description: Andamioscan unavailable
+          description: Upstream unavailable
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
       - ApiKeyAuth: []
         BearerAuth: []
-      summary: List pending assessments
+      summary: List project commitments (manager view)
+      tags:
+      - Project/Manager
+      x-access-level: public
+  /v2/project/manager/contributors/get-qualified:
+    get:
+      description: Returns the aliases eligible to commit to a managed project's tasks.
+        An alias is qualified iff it holds every (course_id, slt_hash) pair required
+        by the project's current on-chain state prerequisites. Both API-key-only and
+        API-key+JWT auth paths are accepted; caller must appear in the project's managers
+        list. Returns 404 for unknown projects, 403 for non-managers, 502 on any downstream
+        failure.
+      operationId: v2-merged-project-manager-qualified-contributors
+      parameters:
+      - description: Project ID
+        in: query
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Alias list (may be empty)
+          schema:
+            $ref: '#/definitions/QualifiedContributorsResponseEnvelope'
+        "400":
+          description: project_id query param missing
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Caller is not a manager of the project
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "502":
+          description: Downstream scan or dbapi failure
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+      summary: Get qualified contributors
       tags:
       - Project/Manager
       x-access-level: public
@@ -7856,7 +8867,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Build an unsigned transaction to claim project credentials.
+      description: Build an unsigned transaction to claim project credentials. The
+        gateway looks up the project's authoritative commission rate from the DB API
+        (cached in Redis for 5 minutes) and injects it as fee_rate — the client cannot
+        supply or override this value.
       operationId: v2-tx-claim-project-credential
       parameters:
       - description: Claim credential request
@@ -7880,6 +8894,10 @@ paths:
           description: Failed to build transaction
           schema:
             $ref: '#/definitions/InternalServerErrorResponse'
+        "503":
+          description: DB API unreachable — commission rate lookup failed
+          schema:
+            $ref: '#/definitions/ServiceUnavailableErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Claim project credential
@@ -7925,7 +8943,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Build an unsigned transaction to commit to a project task.
+      description: Build an unsigned transaction to commit to a project task. The
+        gateway looks up the project's authoritative commission rate from the DB API
+        (cached in Redis for 5 minutes) and injects it as fee_rate — the client cannot
+        supply or override this value.
       operationId: v2-tx-commit-task
       parameters:
       - description: Commit task request
@@ -7949,6 +8970,10 @@ paths:
           description: Failed to build transaction
           schema:
             $ref: '#/definitions/InternalServerErrorResponse'
+        "503":
+          description: DB API unreachable — commission rate lookup failed
+          schema:
+            $ref: '#/definitions/ServiceUnavailableErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Commit to task
@@ -8176,6 +9201,68 @@ paths:
       summary: Register pending transaction
       tags:
       - Tx/State
+      x-access-level: public
+  /v2/tx/sponsored/submit:
+    post:
+      consumes:
+      - application/json
+      description: Merge sponsor and holder witnesses, then submit to Cardano via
+        the configured provider. Only valid for transactions built through an enterprise-sponsored
+        build endpoint.
+      operationId: v2-tx-sponsored-submit
+      parameters:
+      - description: Holder-signed tx hex
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/SubmitSponsoredRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: tx_hash
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request or tx rejected by Maestro
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        "401":
+          description: Missing or invalid API key
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        "402":
+          description: Sponsorship quota exhausted
+          schema:
+            $ref: '#/definitions/PaymentRequiredErrorResponse'
+        "404":
+          description: No pending sponsored build for this tx
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        "409":
+          description: Transaction already submitted
+          schema:
+            $ref: '#/definitions/ConflictErrorResponse'
+        "410":
+          description: Sponsored build expired — rebuild required
+          schema:
+            $ref: '#/definitions/GoneErrorResponse'
+        "500":
+          description: Failed to decode stored witness or merge tx
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+        "502":
+          description: Provider submission failed
+          schema:
+            $ref: '#/definitions/BadGatewayErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Submit sponsored transaction
+      tags:
+      - Tx/Sponsored
       x-access-level: public
   /v2/tx/status/{tx_hash}:
     get:
@@ -8516,7 +9603,11 @@ securityDefinitions:
     name: X-API-Key
     type: apiKey
   BearerAuth:
-    description: 'End user''s JWT from wallet login. Format: "Bearer USER_JWT"'
+    description: 'JWT bearer token. Accepts either an HS256 DB-API end-user JWT (issued
+      at wallet login; alias = accessTokenAlias claim) or an RS256 gateway developer
+      JWT (issued by /v2/auth/developer/login; alias = X-API-Key user). Dispatched
+      by the JWT header''s alg. Malformed, expired, or wrong-algorithm tokens return
+      HTTP 401. Format: "Bearer <jwt>".'
     in: header
     name: Authorization
     type: apiKey
