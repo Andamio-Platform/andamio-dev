@@ -69,7 +69,7 @@ Below, each now-Ready SLT has a verified example the lesson author can point to.
 
 ```bash
 andamio tx run /v2/tx/global/user/access-token/mint \
-  --body '{"alias":"myalias","initiator_data":{"change_address":"addr_test1...","used_addresses":["addr_test1..."]}}' \
+  --body '{"alias":"myalias","initiator_data":"addr_test1..."}' \
   --skey ./payment.skey \
   --tx-type access_token_mint
 ```
