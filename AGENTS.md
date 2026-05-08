@@ -38,7 +38,7 @@ examples/                 # Runnable scripts demonstrating full tx state machine
   course-lifecycle.sh     # Course: create → module → enroll → submit → assess → claim
   project-lifecycle.sh    # Project: create → task → commit → assess → claim
 specs/                    # Bundled API specifications (read-only reference)
-  andamio-api.yaml        # Andamio Gateway API (Swagger 2.0, 111 endpoints — single entry point)
+  andamio-api.yaml        # Andamio Gateway API (Swagger 2.0, 123 endpoints — single entry point)
   cost-registry.json      # Transaction cost data (fees, min UTXO, execution units)
 reference/                # Bundled reference documentation
   andamio-cli-context.md  # CLI agent context (commands, auth, composability)
@@ -58,7 +58,7 @@ progress.json             # Gitignored. Per-learner state written by the /learn 
 
 ### Andamio API (`specs/andamio-api.yaml`)
 
-The public-facing Andamio API. 111 endpoints across these groups:
+The public-facing Andamio API. 123 endpoints across these groups:
 
 | Group | Endpoints | Auth | Purpose |
 |-------|-----------|------|---------|
