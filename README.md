@@ -133,6 +133,9 @@ Each transaction follows the same 5-step pattern: build → sign → submit → 
 - **TX loops reference** (`reference/tx-loops.yaml`) — canonical transaction workflows with complete CLI commands, body examples, and gotchas
 - **Cost registry** — real transaction cost data (fees, min UTXO, execution units)
 - **CLI reference** (`reference/andamio-cli-context.md`) — complete command reference with agent workflow examples
+- **Integration paths** (`reference/integration-paths.md`) — CLI, app-template, and custom-app paths compared
+- **API endpoints by use case** (`reference/api-endpoints-by-use-case.md`) — "I want to X" → endpoint navigator for the OpenAPI spec
+- **Status enums** (`reference/status-enums.md`) — canonical status vocabulary (assignment, task, module, TX lifecycle) sourced from `andamio-api`
 - **Acceptance test prerequisites** (`reference/acceptance-test-prerequisites.md`) — wallet setup, environment config, and verification checklist
 - **Runnable examples** (`examples/`) — full tx state machine scripts for course and project lifecycles
 
