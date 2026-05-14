@@ -1,7 +1,9 @@
 # Andamio CLI — Agent Context
 
 > Complete reference for developers and agents interacting with the Andamio Protocol via the CLI.
-> CLI version: 0.12.1 | Last updated: 2026-05-07
+
+**Last synced**: 2026-05-14 (CLI v0.12.1 — current latest).
+**Canonical CLI version**: run `andamio --version`. CLI release notes: `github.com/Andamio-Platform/andamio-cli/releases`. This doc is hand-curated; if commands here drift from what `andamio --help` shows, the CLI wins — file an issue.
 
 ## Quick Start
 

@@ -148,7 +148,7 @@ Contributors join projects, commit to tasks, submit work, and claim credentials:
    POST /v2/tx/project/contributor/credential/claim
    Body: { alias, project_id, contributor_state_id }
    ```
-   Mints credential NFT, burns contributor-state, returns ~14.5 ADA deposit. Charges a 1 ADA protocol fee to the instance-treasury.
+   Mints credential NFT, burns contributor-state, returns ~14.5 ADA deposit. Charges `max(1 ADA, commission_rate × reward)` as a service fee to the serviceFeeRecipient. Default commission is 5%; tier-upgradeable.
 
 #### 4. Fund Treasury
 

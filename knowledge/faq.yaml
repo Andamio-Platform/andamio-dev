@@ -20,7 +20,7 @@ entries:
 
   - id: faq-003
     question: "How much does it cost to create a course?"
-    answer: "About 130 ADA for a course with 1 teacher: 100 ADA service fee + ~20 ADA min UTXO deposits + ~0.55 ADA tx fee. Add 10 ADA per additional teacher. Modules are ~1.86 ADA each (no service fee). Use /cost-estimator for precise calculations."
+    answer: "About 20.7 ADA flat under Pricing v3 (shipped 2026-04-09): 1 ADA service fee + ~19 ADA min UTXO deposits + ~0.55 ADA tx fee. Does not scale with teacher count anymore. Modules are ~1.86 ADA each (no service fee). Earlier docs that quote ~130 ADA reflect the deprecated v2 fee model. Use /cost-estimator for precise calculations."
     category: costs
     frequency: 0
 
