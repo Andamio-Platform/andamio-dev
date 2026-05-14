@@ -81,16 +81,16 @@ loops:
           Off-chain — save lesson content, introduction, and assignment via API.
           CLI: andamio course import <path> --course-id <id>
           IMPORTANT: assignment content MUST exist before students can create commitments.
-    cost_estimate: "~111 ADA total (course_create: 110 service + 0.52 fee; modules_manage: 0.27 fee)"
+    cost_estimate: "~20.7 ADA flat + ~1.86 ADA per module (course_create: 1 service + 0.52 fee + ~19 deposits; modules_manage: 0.27 fee + deposit/module). v3 pricing — does not scale with teacher count."
     validated_fees:
-      course_create: { fee_ada: 0.522, service_ada: 110.0 }
+      course_create: { fee_ada: 0.522, service_ada: 1.0, note: "v3 — flat 1 ADA, no per-teacher scaling" }
       modules_manage: { fee_ada: 0.268 }
     script: examples/course-lifecycle.sh (partial — also covers loop 3)
     status: validated
-    validated_date: 2026-04-06
+    validated_date: 2026-05-14
     known_gotchas:
       - "Module must have assignment content before students can enroll"
-      - "Service fee is 100 ADA base + 10 ADA per teacher, not ~50 ADA"
+      - "Service fee under Pricing v3 is a flat 1 ADA. Earlier docs / lessons that say '100 ADA base + 10 ADA per teacher' are stale (v2 model)."
 
   - id: 2
     name: project.setup
@@ -172,18 +172,18 @@ loops:
           expiration_posix: Unix milliseconds (not seconds).
           After tx confirms, discover task_hash:
             andamio project tasks <project-id> --output json
-    cost_estimate: "~112 ADA total (project_create: 110 service + 1.30 fee; treasury_fund: 0.18 fee + deposit; tasks_manage: 0.32 fee)"
+    cost_estimate: "~49 ADA flat + treasury deposit (project_create: 1 service + 1.30 fee + ~45 deposits + 2 stake reg; treasury_fund: 0.18 fee + deposit; tasks_manage: 0.32 fee). v3 pricing — does not scale with manager count."
     validated_fees:
-      project_create: { fee_ada: 1.303, service_ada: 110.0 }
+      project_create: { fee_ada: 1.303, service_ada: 1.0, note: "v3 — flat 1 ADA, no per-manager scaling" }
       treasury_fund: { fee_ada: 0.175, note: "plus deposit amount" }
       tasks_manage: { fee_ada: 0.322 }
     script: examples/project-lifecycle.sh (partial — also covers loop 4)
     status: validated
-    validated_date: 2026-04-06
+    validated_date: 2026-05-14
     known_gotchas:
       - "Treasury is NOT funded at project creation — explicit treasury_fund TX required"
       - "contributor_state_id must be discovered via project get response (not documented in SYSTEM_REFERENCE §6.2)"
-      - "Service fee is 100 ADA base + 10 ADA per manager, not ~50 ADA"
+      - "Service fee under Pricing v3 is a flat 1 ADA. Earlier docs / lessons that say '100 ADA base + 10 ADA per manager' are stale (v2 model)."
 
   # ===========================================================================
   # HAPPY PATH — Credentials
@@ -717,13 +717,13 @@ loops:
           This is the only TX where alias doesn't need to exist yet.
       - action: use_in_protected_tx
         note: "e.g. course_create, project_create"
-    cost_estimate: "~5.36 ADA (5 ADA service fee + 0.36 ADA network fee)"
+    cost_estimate: "~2.87 ADA total (0.36 tx fee + ~2.51 net UTxO change; v3 removed the 5 ADA service fee)"
     validated_fees:
-      access_token_mint: { fee_ada: 0.362, service_ada: 5.0 }
+      access_token_mint: { fee_ada: 0.362, service_ada: 0.0, note: "v3 — service fee removed" }
     docs: state-machine/general/mint-access-token.mdx
     script: null
     status: validated
-    validated_date: 2026-04-06
+    validated_date: 2026-05-14
     known_gotchas:
       - "initiator_data is a plain bech32 address string, not a JSON object with sponsor_address"
 

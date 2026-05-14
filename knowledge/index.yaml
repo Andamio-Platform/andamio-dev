@@ -2,8 +2,8 @@
 # Master index for andamio-dev compound knowledge
 # Updated by /compound skill
 
-version: 1
-last_updated: "2026-04-03"
+version: 2
+last_updated: "2026-05-14"
 
 # Aggregate statistics (seed data)
 stats:
@@ -27,3 +27,24 @@ files:
   faq: faq.yaml
   endpoint_usage: endpoint-usage.yaml
   cost_scenarios: cost-scenarios.yaml
+
+# Sync discipline
+#
+# The reference/ and specs/ surfaces in this repo drift from their sources
+# (andamio-api code, andamio-cli releases, andamio-app-template README) if
+# not refreshed. Run a sync check periodically:
+#
+#   1. Refresh specs/andamio-api.yaml against andamio-api OpenAPI output.
+#   2. Diff reference/status-enums.md against API enum source (paths listed
+#      in that doc's Provenance section).
+#   3. Diff reference/andamio-cli-context.md command list against
+#      `andamio --help` and the cli release notes.
+#   4. Re-run /cost-estimator against preprod and update specs/cost-registry.json.
+#   5. Bump last_updated above and commit.
+#
+# Cadence target: every 30 days, or after any breaking API change.
+# Last sync: 2026-05-14 (reference/ pass — status-enums, integration-paths,
+#            api-endpoints-by-use-case added; cli-context header de-hardcoded;
+#            cost-registry.json bumped to v0.4.0 — service fees synced from
+#            devkit/configs/andamio-atlas/preprod/fee-config.json, commission
+#            tier model added from devkit/plans/PricingV3Plan.md).

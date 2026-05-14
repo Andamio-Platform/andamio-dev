@@ -1,130 +1,169 @@
 {
-  "version": "0.3.0",
-  "lastUpdated": "2025-12-09",
+  "version": "0.4.0",
+  "lastUpdated": "2026-05-14",
   "network": "preprod",
   "notes": [
-    "Costs extracted from decoded transaction CBORs in /drafts/example-txs/v2/",
-    "Values are in lovelace unless noted",
-    "Min UTxO depends on datum/token size - these are observed values",
-    "Tx fees depend on script execution units - will vary",
-    "walletDelta = actual change to wallet balance (positive = cost, negative = gain)",
-    "See /docs/protocol/v2/cost-estimation for user-facing documentation"
+    "Service-fee values reflect Pricing v3 v2.2 (shipped 2026-04-09) — single service-fee recipient, low-ADA fixed fees, plus a tiered commission percentage on project rewards.",
+    "Service fees synced from andamio-dev-kit-internal/configs/andamio-atlas/preprod/fee-config.json (atlas preprod config).",
+    "transactionCosts and minUtxoByType were captured from decoded preprod CBORs in 2025-12 — execution units, deposits, and walletDeltas are still valid empirical data. Where a transactionCosts entry embeds a serviceFee value, the top-level serviceFees / commissionTiers blocks are authoritative if they disagree.",
+    "Values are in lovelace unless noted (1 ADA = 1,000,000 lovelace).",
+    "Min UTxO depends on datum/token size — these are observed values, not constants.",
+    "Tx fees depend on script execution units — they vary by transaction.",
+    "walletDelta = actual change to wallet balance (positive = cost, negative = gain).",
+    "Mainnet may differ. Preprod is the reference here. Verify against mainnet fee-config before quoting production costs."
   ],
-  "treasuries": {
-    "protocol-treasury": {
-      "address": "addr_test1qz02cdjmf04d9dc2dk3s50y98zkm99yjgt7hyygykdfh3347uqpl75w90lk96ht83c2t4w7zrwrmr7z924q822svc3hstlm4js",
-      "description": "Receives fees from access token minting"
+  "provenance": {
+    "serviceFees": {
+      "source": "andamio-dev-kit-internal/configs/andamio-atlas/preprod/fee-config.json",
+      "sourceLastUpdated": "2026-03-25",
+      "syncedOn": "2026-05-14"
     },
-    "instance-treasury": {
-      "address": "addr_test1qpuptlg3kgtcq0rq8rq0z7w8pp0j7p98whvsg4wp6c0mngu7nalltfu076ak2qfw0p2ghn5svge4pm78gpfr6rl8rtrszh0nq3",
-      "description": "Receives fees from course operations"
+    "commissionTiers": {
+      "source": "andamio-dev-kit-internal/plans/PricingV3Plan.md",
+      "model": "Pricing v3 v2.2",
+      "shippedOn": "2026-04-09"
+    },
+    "transactionCosts": {
+      "source": "decoded preprod tx CBORs",
+      "lastFullSync": "2025-12-09",
+      "note": "Empirical exec-units and deposits remain valid; embedded serviceFee values may be stale and should be cross-checked against top-level serviceFees."
+    }
+  },
+  "serviceFeeRecipient": {
+    "address": "addr_test1qzk5fu5q6k5yvfysrg29xtzj4tfvwn45ne9p4vqmg98mucsdslc92zgwralq5ee6fy9u4y74lv4lcdevm9c45ekcy3kspztuln",
+    "description": "Unified service-fee recipient address in Pricing v3. All course and project service fees are paid here.",
+    "previousAddresses": {
+      "note": "Earlier versions of this registry referenced separate protocol-treasury and instance-treasury addresses. Those were deprecated when the v3 fee model shipped — a single recipient now handles both surfaces.",
+      "protocol-treasury-deprecated": "addr_test1qz02cdjmf04d9dc2dk3s50y98zkm99yjgt7hyygykdfh3347uqpl75w90lk96ht83c2t4w7zrwrmr7z924q822svc3hstlm4js",
+      "instance-treasury-deprecated": "addr_test1qpuptlg3kgtcq0rq8rq0z7w8pp0j7p98whvsg4wp6c0mngu7nalltfu076ak2qfw0p2ghn5svge4pm78gpfr6rl8rtrszh0nq3"
     }
   },
   "serviceFees": {
     "mint-access-token": {
-      "amount": 5000000,
-      "ada": "5 ADA",
-      "recipient": "protocol-treasury"
+      "amount": 0,
+      "ada": "0 ADA",
+      "recipient": null,
+      "note": "v3: no service fee output for access token minting. Confirmed in devkit/docs/tx-flows/access-token-mint.md.",
+      "previous": "5 ADA (v2 model)"
     },
     "course-create": {
-      "formula": "100 ADA base + 10 ADA × number of teachers",
-      "example": { "1-teacher": "110 ADA", "3-teachers": "130 ADA" },
-      "recipient": "instance-treasury",
-      "upcoming": {
-        "note": "First teacher will be free in upcoming update",
-        "newFormula": "100 ADA base + 10 ADA × (teachers - 1)",
-        "newExample": { "1-teacher": "100 ADA", "3-teachers": "120 ADA" }
-      }
+      "amount": 1000000,
+      "ada": "1 ADA",
+      "recipient": "serviceFeeRecipient",
+      "note": "v3: flat 1 ADA service fee. Previous '100 ADA base + 10 ADA × teachers' formula is gone.",
+      "previous": "100 ADA + 10 ADA × teachers"
     },
     "course-teachers-update": {
-      "amount": 10000000,
-      "ada": "10 ADA",
-      "recipient": "instance-treasury"
+      "amount": 1000000,
+      "ada": "1 ADA",
+      "recipient": "serviceFeeRecipient",
+      "note": "v3: flat 1 ADA service fee per teacher update.",
+      "previous": "10 ADA"
     },
     "course-modules-manage": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for module management"
+      "note": "No service fee."
     },
     "student-enroll": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for enrollment"
+      "note": "No service fee for enrollment."
     },
     "assignment-update": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for assignment updates"
+      "note": "No service fee for assignment updates."
     },
     "assignments-assess": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for assessments"
+      "note": "No service fee for assessments."
     },
     "credential-claim": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for credential claims"
+      "note": "No service fee for course credential claim."
     },
     "project-create": {
-      "formula": "100 ADA base + 10 ADA × number of managers",
-      "example": { "1-manager": "110 ADA", "2-managers": "120 ADA" },
-      "recipient": "instance-treasury",
-      "upcoming": {
-        "note": "First manager will be free in upcoming update",
-        "newFormula": "100 ADA base + 10 ADA × (managers - 1)",
-        "newExample": { "1-manager": "100 ADA", "2-managers": "110 ADA" }
-      }
+      "amount": 1000000,
+      "ada": "1 ADA",
+      "recipient": "serviceFeeRecipient",
+      "note": "v3: flat 1 ADA service fee. Previous '100 ADA base + 10 ADA × managers' formula is gone.",
+      "previous": "100 ADA + 10 ADA × managers"
     },
     "project-managers-update": {
-      "amount": 10000000,
-      "ada": "10 ADA",
-      "recipient": "instance-treasury",
-      "note": "Same fee structure as course-teachers-update"
+      "amount": 1000000,
+      "ada": "1 ADA",
+      "recipient": "serviceFeeRecipient",
+      "note": "v3: flat 1 ADA service fee. (Atlas calls this 'addProjectCreators'.)",
+      "previous": "10 ADA"
     },
     "project-blacklist-manage": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for blacklist management"
+      "note": "No service fee for blacklist management."
     },
     "project-tasks-manage": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for task management"
+      "note": "No service fee for task management."
     },
     "project-task-commit": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for task commitment"
+      "note": "No service fee on commit. Commission applies at reward claim — see commissionTiers."
     },
     "project-tasks-assess": {
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "No service fee for task assessment"
+      "note": "No service fee for task assessment."
     },
     "project-credential-claim": {
-      "amount": 1000000,
-      "ada": "1 ADA",
-      "recipient": "instance-treasury",
-      "note": "Protocol fee for project credential claim"
+      "formula": "max(1 ADA, commission_rate × reward_amount)",
+      "min": 1000000,
+      "minAda": "1 ADA",
+      "recipient": "serviceFeeRecipient",
+      "note": "v3: replaced flat 1 ADA fee with a minimum-plus-percentage model. commission_rate comes from the project's CommissionRate column (default 0.05). See commissionTiers."
+    }
+  },
+  "commissionTiers": {
+    "description": "Percentage commission applied on contributor reward claims. The percentage is stored on the project as a float (Project.CommissionRate, NUMERIC(5,4)). Tier names are display labels only.",
+    "shippedIn": "Pricing v3 v2.2 (2026-04-09)",
+    "default": 0.05,
+    "tiers": [
+      { "name": "free",       "rate": 0.05, "label": "5%" },
+      { "name": "developer",  "rate": 0.03, "label": "3%" },
+      { "name": "growth",     "rate": 0.02, "label": "2%" },
+      { "name": "enterprise", "rate": 0.01, "label": "1%" }
+    ],
+    "appliesTo": ["project-credential-claim"],
+    "powerUpFlow": {
+      "status": "v2.3 backlog — atlas#45, andamioscan#68, api#275",
+      "note": "Upgrade tier by paying an ADA TX to serviceFeeRecipient with metadata { type: 'power_up', project_id, target_tier }. Verified by gateway via andamioscan."
+    },
+    "apiInjection": {
+      "note": "Gateway intercepts /v2/project/task/commit and /v2/project/credential/claim, looks up commission_rate from db-api, and injects fee_rate into the Atlas request. Caller-supplied fee_rate is stripped.",
+      "shippedIn": "andamio-api PR #302"
     }
   },
   "transactionCosts": {
     "general.mint-access-token": {
       "txFee": 360000,
       "txFeeAda": "~0.36 ADA",
-      "serviceFee": 5000000,
-      "serviceFeeAda": "5 ADA",
-      "serviceFeeRecipient": "protocol-treasury",
+      "serviceFee": 0,
+      "serviceFeeAda": "0 ADA",
+      "serviceFeeRecipient": null,
+      "serviceFeeNote": "v3: no service fee on this route (previously 5 ADA to protocol-treasury).",
       "utxoFlow": {
         "spent": {
           "existing-index-node": 13710000,
@@ -141,10 +180,11 @@
         "notes": "Net = created - spent portion used for new UTxOs"
       },
       "walletDelta": {
-        "lovelace": 7870000,
-        "ada": "~7.9 ADA",
-        "breakdown": "txFee (0.36) + serviceFee (5.0) + netUtxoChange (2.51)",
-        "verified": "Confirmed against actual wallet delta from preprod tx"
+        "lovelace": 2870000,
+        "ada": "~2.87 ADA",
+        "breakdown": "txFee (0.36) + netUtxoChange (2.51) — service fee removed in v3",
+        "verified": "v3-adjusted from 2025-12 measurement; re-verify against current preprod",
+        "previous": "~7.9 ADA (with 5 ADA service fee)"
       },
       "executionUnits": {
         "spend": { "mem": 87883, "steps": 29307972 },
@@ -156,20 +196,22 @@
     "course.admin.create": {
       "txFee": 527195,
       "txFeeAda": "~0.53 ADA",
-      "serviceFeeFormula": "100 ADA base + 10 ADA × teachers",
-      "serviceFeeExample": "1 teacher = 110 ADA",
-      "serviceFeeRecipient": "instance-treasury",
+      "serviceFee": 1000000,
+      "serviceFeeAda": "1 ADA",
+      "serviceFeeRecipient": "serviceFeeRecipient",
+      "serviceFeeNote": "v3: flat 1 ADA, no longer scales with teacher count. Was '100 ADA + 10 ADA × teachers'.",
       "utxoDeposits": {
         "local-state-nft-validator": 1236970,
         "local-state-token-validator": 16584880,
         "course-governance-validator": 1331790,
         "total": 19153640,
-        "notes": "LocalStateToken includes embedded script_ref (~16.5 ADA)"
+        "notes": "LocalStateToken includes embedded script_ref (~16.5 ADA). Deposit does not scale with teacher count."
       },
       "totalCost": {
         "formula": "txFee + serviceFee + utxoDeposits",
-        "example": "1 teacher: ~0.53 + 110 + 19.15 = ~130 ADA",
-        "note": "Total scales with number of teachers (+10 ADA each)"
+        "example": "~0.53 + 1 + 19.15 = ~20.7 ADA",
+        "note": "v3 total is flat regardless of teacher count (deposits and fee both fixed).",
+        "previous": "1 teacher: ~130 ADA (v2 model)"
       },
       "executionUnits": {
         "mint_0_local_state_nft": { "mem": 27223, "steps": 10486084 },
@@ -182,17 +224,19 @@
     "course.admin.teachers-update": {
       "txFee": 300669,
       "txFeeAda": "~0.30 ADA",
-      "serviceFee": 10000000,
-      "serviceFeeAda": "10 ADA",
-      "serviceFeeRecipient": "instance-treasury",
+      "serviceFee": 1000000,
+      "serviceFeeAda": "1 ADA",
+      "serviceFeeRecipient": "serviceFeeRecipient",
+      "serviceFeeNote": "v3: flat 1 ADA (was 10 ADA).",
       "utxoDeposits": {
         "total": 0,
         "notes": "Spend-and-recreate pattern - no new UTxOs"
       },
       "totalCost": {
-        "lovelace": 10300669,
-        "ada": "~10.3 ADA",
-        "breakdown": "txFee (0.30) + serviceFee (10.0)"
+        "lovelace": 1300669,
+        "ada": "~1.30 ADA",
+        "breakdown": "txFee (0.30) + serviceFee (1.0)",
+        "previous": "~10.3 ADA (v2 model)"
       },
       "executionUnits": {
         "spend_0_local_state_nft": { "mem": 327793, "steps": 104422332 },
@@ -276,9 +320,10 @@
     "instance.owner.project.create": {
       "txFee": 1300865,
       "txFeeAda": "~1.30 ADA",
-      "serviceFeeFormula": "100 ADA base + 10 ADA × managers",
-      "serviceFeeExample": "2 managers = 120 ADA",
-      "serviceFeeRecipient": "instance-treasury",
+      "serviceFee": 1000000,
+      "serviceFeeAda": "1 ADA",
+      "serviceFeeRecipient": "serviceFeeRecipient",
+      "serviceFeeNote": "v3: flat 1 ADA, no longer scales with manager count. Was '100 ADA + 10 ADA × managers'.",
       "stakeRegistration": 2000000,
       "stakeRegistrationAda": "2 ADA",
       "utxoDeposits": {
@@ -294,8 +339,9 @@
       },
       "totalCost": {
         "formula": "txFee + serviceFee + stakeReg + utxoDeposits + deposit_value",
-        "example": "2 managers: ~1.3 + 120 + 2 + 45 + deposit = ~168 ADA + deposit",
-        "note": "Total scales with number of managers (+10 ADA each)"
+        "example": "~1.3 + 1 + 2 + 45 + deposit = ~49 ADA + deposit",
+        "note": "v3 total is flat regardless of manager count.",
+        "previous": "2 managers: ~168 ADA + deposit (v2 model)"
       },
       "executionUnits": {
         "mint_0_treasury_script": { "mem": 587159, "steps": 188113819, "policyId": "0d93b85fd1975e409be7c6308060ecc7623498474c4e43da4c83a5ad" },
@@ -308,22 +354,24 @@
         "withdraw_0_project_observer": { "mem": 409830, "steps": 129547187 },
         "withdraw_1_prereq_observer": { "mem": 532338, "steps": 178296764 }
       },
-      "notes": "Complex transaction with 6 mints, 2 observers, stake registration. Includes treasury system with embedded script references. Service fee uses same formula as course-create (100 + 10×participants). Last updated 2026-01-09."
+      "notes": "Complex transaction with 6 mints, 2 observers, stake registration. Includes treasury system with embedded script references."
     },
     "project.owner.managers.manage": {
       "txFee": 298863,
       "txFeeAda": "~0.30 ADA",
-      "serviceFee": 10000000,
-      "serviceFeeAda": "10 ADA",
-      "serviceFeeRecipient": "instance-treasury",
+      "serviceFee": 1000000,
+      "serviceFeeAda": "1 ADA",
+      "serviceFeeRecipient": "serviceFeeRecipient",
+      "serviceFeeNote": "v3: flat 1 ADA (was 10 ADA).",
       "utxoDeposits": {
         "total": 0,
         "notes": "Spend-and-recreate pattern - no new UTxOs"
       },
       "totalCost": {
-        "lovelace": 10298863,
-        "ada": "~10.3 ADA",
-        "breakdown": "txFee (0.30) + serviceFee (10.0)"
+        "lovelace": 1298863,
+        "ada": "~1.30 ADA",
+        "breakdown": "txFee (0.30) + serviceFee (1.0)",
+        "previous": "~10.3 ADA (v2 model)"
       },
       "executionUnits": {
         "spend_2_local_state_nft": { "mem": 311977, "steps": 102604429 },
@@ -432,24 +480,22 @@
         "reward_0_task_assess_observer": { "mem": 351341, "steps": 121839683 }
       },
       "collateral": 525039,
-      "notes": "No minting - spend and recreate pattern. Analogous to course.teacher.assignments.assess. Execution units scale with number of decisions."
+      "notes": "No minting - spend and recreate pattern. Analogous to course.teacher.assignments.assess."
     },
     "project.contributor.credential.claim": {
       "txFee": 348287,
       "txFeeAda": "~0.35 ADA",
-      "serviceFee": 1000000,
-      "serviceFeeAda": "1 ADA",
-      "serviceFeeRecipient": "instance-treasury",
+      "serviceFeeFormula": "max(1 ADA, commission_rate × reward_amount)",
+      "serviceFeeMin": 1000000,
+      "serviceFeeMinAda": "1 ADA",
+      "serviceFeeRecipient": "serviceFeeRecipient",
+      "serviceFeeNote": "v3: replaces flat 1 ADA with min-or-percentage. Default commission_rate is 0.05 (5%); see commissionTiers for tiers.",
       "walletDelta": {
         "lovelace": -13000000,
-        "ada": "~-13 ADA (NET GAIN)",
-        "breakdown": "depositRefund (~14.5) - txFee (~0.35) - protocolFee (1.0)",
-        "verified": true
-      },
-      "totalCost": {
-        "lovelace": "NET GAIN",
-        "ada": "~13+ ADA back to wallet",
-        "breakdown": "Contributor state deposit released minus fees"
+        "ada": "~-13 ADA (NET GAIN at default tier with no reward)",
+        "breakdown": "depositRefund (~14.5) - txFee (~0.35) - serviceFee (1.0 min)",
+        "verified": "Empirical from 2025-12; v3 fee dynamics may shift this when reward is non-trivial.",
+        "withReward": "Effective wallet delta = depositRefund + reward × (1 - commission_rate) - txFee - max(1 ADA, commission_rate × reward)"
       },
       "executionUnits": {
         "spend_1_global_state": { "mem": 189650, "steps": 66014459 },
@@ -457,7 +503,7 @@
         "mint_0_burn": { "mem": 134261, "steps": 47189915 }
       },
       "collateral": 522431,
-      "notes": "BURNS contributor-state token. Contributor gets NET GAIN from released deposit. 1 ADA protocol fee to instance-treasury."
+      "notes": "BURNS contributor-state token. Contributor gets NET GAIN from released deposit. Service fee is the larger of 1 ADA or commission_rate × reward."
     }
   },
   "minUtxoByType": {
@@ -523,7 +569,7 @@
             "credential-claim": "-1.03 ADA (refund)"
           },
           "netCost": "~1.11 ADA",
-          "notes": "Enrollment deposit partially recovered on credential claim"
+          "notes": "Enrollment deposit partially recovered on credential claim. No service fees on either side."
         },
         "teacher": {
           "transactions": ["assignments-assess"],
@@ -554,10 +600,10 @@
           "transactions": ["project-task-commit", "project-credential-claim"],
           "costs": {
             "project-task-commit": "~0.51 ADA fee + ~14.5 ADA state deposit",
-            "project-credential-claim": "~0.35 ADA fee + 1 ADA protocol fee - ~14.5 ADA deposit refund"
+            "project-credential-claim": "~0.35 ADA fee + max(1 ADA, commission × reward) - ~14.5 ADA deposit refund"
           },
-          "netCost": "~0.86 ADA fees + 1 ADA protocol fee - deposit refund = NET GAIN (~12.6 ADA back)",
-          "notes": "State deposit (~14.5 ADA) fully refunded at claim. Net positive after task reward minus 5% commission."
+          "netCost": "Net positive at claim due to deposit refund + reward × (1 - commission_rate)",
+          "notes": "State deposit (~14.5 ADA) fully refunded at claim. Commission rate defaults to 5% — see commissionTiers."
         },
         "manager": {
           "transactions": ["project-tasks-assess"],
@@ -565,13 +611,13 @@
             "project-tasks-assess": "~0.35 ADA"
           },
           "netCost": "~0.35 ADA",
-          "notes": "No protocol fee for assessment"
+          "notes": "No service fee for assessment"
         }
       },
-      "totalLoopCost": "~1.21 ADA in fees + 1 ADA protocol fee",
-      "breakdown": "contributor fees (~0.86) + protocol fee (1.0) + manager (~0.35). Contributor net positive due to deposit refund + task reward.",
+      "totalLoopCost": "~1.21 ADA in fees + max(1 ADA, commission × reward)",
+      "breakdown": "contributor fees (~0.86) + service fee (min 1 ADA) + manager (~0.35). Contributor net positive due to deposit refund + reward minus commission.",
       "prerequisite": "Contributor must hold course credential (prerequisite gating). Project must have funded treasury.",
-      "notes": "Task reward from treasury minus 5% commission. State deposit is ~14.5 ADA locked at commit, fully refunded at claim. See tx-loops.yaml loop #4 for full step sequence."
+      "notes": "Task reward from treasury, paid out minus commission. State deposit is ~14.5 ADA locked at commit, fully refunded at claim. See tx-loops.yaml loop #4 for full step sequence."
     }
   }
 }
