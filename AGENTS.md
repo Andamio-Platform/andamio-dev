@@ -57,6 +57,8 @@ knowledge/                # Compound knowledge base (YAML files)
   cost-scenarios.yaml     # Real-world cost calculations
 compiled/                 # Gitignored. Build output of `coach:compile` for `andamio course import-all`. Never edit.
 progress.json             # Gitignored. Per-learner state written by the /learn skill.
+docs/solutions/           # Documented solutions to past problems (bugs, conventions, patterns), by category with YAML frontmatter (module, tags, problem_type). Relevant when implementing or debugging in documented areas.
+CONCEPTS.md               # Shared domain vocabulary (entities, named processes, status concepts) — relevant when orienting to the codebase or discussing domain concepts.
 ```
 
 ## Bundled Assets
