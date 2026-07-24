@@ -6,9 +6,9 @@
 # BOUNDARY RULE (read before editing):
 #   This file is PUBLIC and describes only PUBLIC repos and PUBLIC GitHub state.
 #   It must carry NOTHING about how work is triaged, prioritized, delegated, or
-#   sequenced — that coordination is private (product-circle / board 29) and never
-#   appears here. Only add fields that map to data any GitHub user can already see
-#   on the public repo. No priority, no status-behind-the-work, no board references.
+#   sequenced — that coordination is private and never appears here. Only add
+#   fields that map to data any GitHub user can already see on the public repo.
+#   No priority, no status-behind-the-work, no internal-coordination references.
 #
 # Growth: add a repo by appending an entry with the same shape. The skill picks it
 #   up with no code change; keep CONTRIBUTING-TO-ANDAMIO.md in sync by hand.
@@ -43,5 +43,5 @@ repos:
       # Optional label filter for surfacing contribution-ready work. Leave empty to
       # show all open issues; set to a public label (e.g. "good first issue",
       # "help wanted") once the repo adopts one. These are PUBLIC GitHub labels —
-      # never a board-29-derived priority.
+      # never a priority derived from private coordination.
       labels: []
