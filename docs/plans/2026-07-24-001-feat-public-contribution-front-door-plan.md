@@ -1,7 +1,7 @@
 ---
 title: "feat: Public contribution front door for public-repo work"
 type: feat
-status: active
+status: completed
 date: 2026-07-24
 origin: docs/brainstorms/2026-07-24-andamio-dev-public-face-requirements.md
 ---
