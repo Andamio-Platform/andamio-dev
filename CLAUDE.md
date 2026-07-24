@@ -19,7 +19,7 @@ There is no build step, no test suite, no linter. "Testing" means invoking skill
 
 | System | Location | Purpose |
 |--------|----------|---------|
-| Portable skills | `skills/` (13 skills) | Learning and operations — `/learn`, lesson delivery, assessment, API exploration, CLI guide, auth setup, cost estimator, course/project ops, troubleshooting, compounding |
+| Portable skills | `skills/` (14 skills) | Learning and operations — `/learn`, lesson delivery, assessment, API exploration, CLI guide, auth setup, cost estimator, course/project ops, troubleshooting, compounding |
 | Codex/project discovery | `.agents/skills/` | Relative symlinks to `skills/` |
 | Claude compatibility | `.claude/skills/` | Thin wrappers that point to canonical skills in `skills/` |
 

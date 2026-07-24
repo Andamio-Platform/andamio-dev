@@ -1,0 +1,47 @@
+# Andamio Public Repos — Contribution Registry
+# The single curated source for andamio-dev's public contribution front door.
+# Both surfaces derive from this file: the `/contribute` skill reads it directly,
+# and CONTRIBUTING-TO-ANDAMIO.md manually mirrors it (this file is authoritative).
+#
+# BOUNDARY RULE (read before editing):
+#   This file is PUBLIC and describes only PUBLIC repos and PUBLIC GitHub state.
+#   It must carry NOTHING about how work is triaged, prioritized, delegated, or
+#   sequenced — that coordination is private and never appears here. Only add
+#   fields that map to data any GitHub user can already see on the public repo.
+#   No priority, no status-behind-the-work, no internal-coordination references.
+#
+# Growth: add a repo by appending an entry with the same shape. The skill picks it
+#   up with no code change; keep CONTRIBUTING-TO-ANDAMIO.md in sync by hand.
+#
+# Created: 2026-07-24
+# Source: docs/plans/2026-07-24-001-feat-public-contribution-front-door-plan.md (U1)
+
+version: 1
+last_updated: 2026-07-24
+
+repos:
+  - name: credential-badges
+    owner: Andamio-Platform
+    repo: credential-badges
+    # `gh -R {owner}/{repo}` targets this repo for both listing and filing issues.
+    purpose: >-
+      Verifiable credential badges for Andamio — the on-chain credential surface
+      that turns course and project completion into portable, verifiable NFTs.
+    contribution_docs:
+      readme: https://github.com/Andamio-Platform/credential-badges/blob/main/README.md
+      contributing: https://github.com/Andamio-Platform/credential-badges/blob/main/CONTRIBUTING.md
+      roadmap: https://github.com/Andamio-Platform/credential-badges/blob/main/ROADMAP.md
+      code_of_conduct: https://github.com/Andamio-Platform/credential-badges/blob/main/CODE_OF_CONDUCT.md
+    plug_in_notes: >-
+      Start by reading the repo's own CONTRIBUTING and ROADMAP. Pick an open issue
+      below (or file a new one), then do the work in the repo's own
+      compound-engineering flow. Code-quality and security review stay with the
+      Andamio Development team on every public repo.
+    issues:
+      # Open-issue query for the live "what's possible" view. Public GitHub only.
+      state: open
+      # Optional label filter for surfacing contribution-ready work. Leave empty to
+      # show all open issues; set to a public label (e.g. "good first issue",
+      # "help wanted") once the repo adopts one. These are PUBLIC GitHub labels —
+      # never a priority derived from private coordination.
+      labels: []

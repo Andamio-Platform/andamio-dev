@@ -56,7 +56,7 @@ cd andamio-dev
 
 ## For developers — operational skills
 
-Ten skills for day-to-day Andamio development. Works standalone without the course.
+Eleven skills for day-to-day Andamio development. Works standalone without the course.
 
 | Skill              | Command           | What it does                                                           |
 | ------------------ | ----------------- | ---------------------------------------------------------------------- |
@@ -70,6 +70,7 @@ Ten skills for day-to-day Andamio development. Works standalone without the cour
 | **Project Ops**    | `/project-ops`    | Project lifecycle: create, tasks, contributors, treasury.              |
 | **Troubleshoot**   | `/troubleshoot`   | Debug API errors, CLI failures, and transaction rejections.            |
 | **Compound**       | `/compound`       | Extract patterns from sessions to improve future guidance.             |
+| **Contribute**     | `/contribute`     | Front door for contributing to Andamio's public repos — see what's open, file work. |
 
 ## For learners — the course
 
@@ -158,6 +159,7 @@ Built to the [Agent Skills](https://agent-skills.cc) open standard. Developed an
 - **[SETUP.md](SETUP.md)** — Windows, WSL, and Codex setup guide with skill symlink instructions
 - **[CLAUDE.md](CLAUDE.md)** — guidance for Claude Code sessions in this repo
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — how to contribute skills, knowledge entries, and spec updates
+- **[CONTRIBUTING-TO-ANDAMIO.md](CONTRIBUTING-TO-ANDAMIO.md)** — contribute to Andamio's public repos (start with `/contribute`)
 - **[CHANGELOG.md](CHANGELOG.md)** — release notes
 
 ## License
