@@ -59,12 +59,35 @@ When the contributor asks what they can work on:
 | `gh` present but not logged in | `gh auth status` reports no account / the command returns an auth error | Guide the contributor to `gh auth login` **as themselves**. This is a fixable auth gap, not GitHub being down. |
 | `gh` missing or GitHub unreachable | `gh` not found, or a network/API failure | Say you can't reach live state right now and link the issues page directly: `https://github.com/<owner>/<repo>/issues`. Do not show cached or invented work. |
 
+### File a new issue
+
+When the contributor has a piece of work that isn't tracked yet, help them file it as a real GitHub issue in the target repo (v1: credential-badges).
+
+1. **Shape it.** Help the contributor draft a clear `title` and `body`. If the target repo defines issue templates (`.github/ISSUE_TEMPLATE/`), prefer them and prompt for the minimum fields they expect. (credential-badges has no templates today, so a plain title + body is fine.) Do **not** add any label that reflects priority, urgency, or private coordination — only labels the contributor explicitly chooses from the repo's public labels, if any.
+2. **Confirm identity before filing.** Resolve which GitHub account `gh` will file as and show it to the contributor before creating anything:
+
+   ```bash
+   gh api user --jq .login
+   ```
+
+   State plainly: "This will file under **<login>** — go ahead?" and wait for confirmation. This prevents a stale or shared `gh` session from silently filing under the wrong identity. Issues are always filed under the contributor's **own** GitHub account — never a shared or Andamio-dev bot account.
+
+   If `gh` reports no authenticated account, guide the contributor to `gh auth login` **as themselves** first. Never fall back to another account.
+
+3. **File it** under the confirmed identity and return the link:
+
+   ```bash
+   gh issue create -R <owner>/<repo> --title "<title>" --body "<body>"
+   ```
+
+   Report the returned issue URL. What happens next — triage, prioritization — is coordinated privately and is not this skill's concern; the contributor's job was to surface the work publicly, which is now done.
+
 ### Offer Next Steps
 
 After orienting a contributor:
 
 - If they found an issue to take on → point them at the repo's `contribution_docs` and the repo's own compound-engineering flow to do the work.
-- If they have a new idea not yet tracked → offer to file it as an issue (see "File a new issue" below).
+- If they have a new idea not yet tracked → offer to file it as an issue (see "File a new issue" above).
 - If they want to learn Andamio first → suggest `/start` or `/learn`.
 - If they want to build against the API → suggest `/explore-api` or `/cli-guide`.
 
