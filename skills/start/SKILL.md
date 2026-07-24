@@ -48,6 +48,9 @@ What are you working on?
     require.
 
  5. Debugging — I hit an error and need help figuring it out.
+
+ 6. Contributing — I want to help build Andamio's public repos:
+    find open work and plug in.
 ```
 
 ### 2. Detect Existing Auth
@@ -78,6 +81,7 @@ The developer's selection implies their mode:
 | 3 (Building) | **Operational** | Getting things done with the CLI |
 | 4 (Costs) | **Learning** | Reference information, no operations |
 | 5 (Debugging) | **Operational** | Fixing something specific |
+| 6 (Contributing) | **Operational** | Finding and filing real public-repo work |
 
 **Mode is not a setting — it's a detection.** Throughout the session, the developer may switch between learning ("how does this work?") and operating ("do it for me"). Follow the cues:
 
@@ -98,6 +102,7 @@ The developer's selection implies their mode:
 | | | — Unsure → ask clarifying question |
 | 4 (Costs) | No | `/cost-estimator` |
 | 5 (Debugging) | No | `/troubleshoot` |
+| 6 (Contributing) | No | `/contribute` |
 
 If auth is needed but missing, route through `/auth-setup` first, then continue to the target skill. The transition should be seamless.
 

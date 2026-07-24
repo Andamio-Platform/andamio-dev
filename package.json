@@ -33,7 +33,8 @@
     "CLAUDE.md",
     "SETUP.md",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CONTRIBUTING-TO-ANDAMIO.md"
   ],
   "pi": {
     "skills": [

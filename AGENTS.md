@@ -11,7 +11,7 @@ This is **not a code project**. There is no build step, no test suite, no linter
 ## Directory Structure
 
 ```
-skills/                   # Portable agent skills (Agent Skills standard, 13 skills)
+skills/                   # Portable agent skills (Agent Skills standard, 14 skills)
   orientation/            # First-run experience — 15-minute guided walkthrough with hands-on exercises
   start/                  # Entry point — detect intent and mode, route to the right skill
   learn/                  # Course orchestrator — lessons, assignments, progress tracking
@@ -25,6 +25,7 @@ skills/                   # Portable agent skills (Agent Skills standard, 13 ski
   project-ops/            # Project lifecycle: create, tasks, contributors, treasury
   troubleshoot/           # Debug API errors, CLI failures, transaction rejections
   compound/               # Extract patterns from sessions into knowledge files
+  contribute/             # Public contribution front door — see/file public-repo work
 .agents/                  # Agent compatibility layer
   skills/                 # Relative symlinks to portable skills
 courses/                  # Course source of truth (authored markdown)
@@ -46,6 +47,7 @@ specs/                    # Bundled API specifications (read-only reference)
 reference/                # Bundled reference documentation
   andamio-cli-context.md  # CLI agent context (commands, auth, composability)
   tx-loops.yaml           # Canonical transaction workflows (source of truth for tx flows)
+  public-repos.yaml       # Curated registry of public repos for the /contribute front door
   acceptance-test-prerequisites.md
 knowledge/                # Compound knowledge base (YAML files)
   index.yaml              # Master index and aggregate stats
