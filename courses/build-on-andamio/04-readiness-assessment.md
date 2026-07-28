@@ -124,7 +124,7 @@
 
 ### 700.1 — choose integration strategy
 - **Weak/Partial dimensions:** Assessment (Partial)
-- **What I would need:** Read the `andamio-app-template` repo (path: `~/projects/01-projects/andamio-platform/andamio-app-template/`) to understand its structure and capabilities, so my trade-off analysis between CLI / direct API / app template is complete.
+- **What I would need:** Read the `andamio-app-template` repo (path: `$REPOS/andamio-app-template/`) to understand its structure and capabilities, so my trade-off analysis between CLI / direct API / app template is complete.
 - **Risk if coached without context:** Missing a real option; misstating what the template provides.
 
 ### 700.3 — handle TX failures in code
