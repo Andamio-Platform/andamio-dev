@@ -18,7 +18,7 @@ You need **two wallets** with different roles:
 | Owner | granted | Wallet A | standing up the course or project | course_create, project_create |
 | Teacher | granted | Wallet A | `/v2/tx/course/owner/teachers/manage`, run by the Owner | modules_manage, assessment_assess |
 | Manager | granted | Wallet A | `/v2/tx/project/owner/managers/manage`, run by the Owner | tasks_manage, task_assess |
-| Student | participant | Wallet B | nothing — committing makes you one | assignment_commit, credential_claim |
+| Student | participant | Wallet B | nothing — committing makes you one | assignment_submit, credential_claim |
 | Contributor | participant | Wallet B | nothing — committing makes you one | project_join, project_credential_claim |
 
 **Granted** roles are established by an on-chain transaction and must exist before the loops

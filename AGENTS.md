@@ -79,17 +79,28 @@ The public-facing Andamio API. 79 paths across these groups (the public contract
 
 | Group | Operations | Auth | Purpose |
 |-------|-----------|------|---------|
-| Courses | 28 | API key + JWT | Course discovery, modules, teachers, learner commitments, assessment |
-| Transactions | 22 | API key + JWT | Build, register, and track Cardano transactions |
-| Projects | 21 | API key + JWT | Project CRUD, tasks, contributors, treasury |
+| Courses | 28 | API key (+ JWT for role-scoped) | Course discovery, modules, teachers, learner commitments, assessment |
+| Transactions | 22 | API key | Build, register, and track Cardano transactions |
+| Projects | 21 | API key (+ JWT for role-scoped) | Project CRUD, tasks, contributors, treasury |
 | Platform Auth | 3 | varies | Wallet login, session management, user profile |
-| Keys | 3 | API key | Access-token key operations |
-| Verify | 2 | varies | Credential and task-commitment verification |
-| Public | 1 | none | Public read |
+| Keys | 3 | JWT | Developer API key CRUD |
+| Verify | 2 | API key | Credential and task-commitment verification |
+| Public | 1 | API key | Public read |
 
-**80 operations across 79 paths.** Counts derive from the contract's own tag groups — regenerate `reference/api-endpoints-by-use-case.md` to see the current breakdown per group.
+**80 operations across 79 paths.** Counts and Auth values derive from the contract's own tag groups and per-operation `security` blocks — regenerate `reference/api-endpoints-by-use-case.md` to see the current breakdown per group and the auth requirement per endpoint.
 
-**Endpoint filtering is no longer something skills must do.** Developer-portal concerns (registration, API-key lifecycle, billing) and administrative operations are not in this spec at all — they were removed when the vendored copy was replaced with the generated public contract on 2026-07-28. If an operation is absent, that is the contract, not a gap in the file.
+The role-scoped path prefixes that require **both** `X-API-Key` and `Authorization: Bearer` in the same request are `/v2/course/owner`, `/v2/course/student`, `/v2/course/teacher`, `/v2/project/contributor`, `/v2/project/manager`, `/v2/project/owner`, and `/v2/user/dashboard`. `/v2/keys` requires the JWT only. Everything else takes the API key alone.
+
+**Endpoint filtering is no longer something skills must do.** Developer-portal concerns (registration, API-key lifecycle, billing) and administrative operations are not in this spec at all — they were removed when the vendored copy was replaced with the generated public contract on 2026-07-28. If an operation is absent, treat that as the contract rather than as a gap in the file — but absence is not proof that a route is dead.
+
+**Live but not in the contract.** A few routes work in production yet do not appear in `specs/andamio-api.yaml`. Annotate them where they are used rather than assuming they were removed:
+
+| Route | Why it is absent | Where it is used here |
+|-------|------------------|-----------------------|
+| `GET /.well-known/jwks.json` | Served at the gateway service root, outside the spec's `basePath: /api` | `courses/build-on-andamio/lessons/m200/assignment.md`, lesson 200.4 |
+| `POST /v2/course/student/commitment/create` | Duplicates the in-contract builder `POST /v2/tx/course/student/assignment/commit`; which becomes canonical is an open decision | `skills/course-ops/SKILL.md`, `skills/explore-api/SKILL.md` |
+
+If you find another route that is live but absent, verify it against the spec before adding it to this table.
 
 ### Cost Registry (`specs/cost-registry.json`)
 

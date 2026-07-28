@@ -29,12 +29,7 @@ The Gateway API is the single entry point for all Andamio operations. It proxies
 
 ### Endpoint Filtering
 
-**Exclude from results** (internal/admin endpoints that external developers cannot use):
-- `/v1/admin/*` — Admin-only endpoints
-- `/v2/billing/webhook` — Internal webhook receiver
-- Endpoints tagged with `x-rate-limit-tier: admin`
-
-**Include everything else.** When an endpoint requires specific auth, note it clearly.
+**None needed.** The bundled spec is already the filtered public surface, so present everything in it.
 
 ### Answering Developer Questions
 

@@ -41,7 +41,7 @@ There is no build step, no test suite, no linter. "Testing" means invoking skill
 - **CLI-first in operational mode**: Always use the Andamio CLI for operations. Direct API calls are for learning mode only.
 - **Agent Skills standard**: All skill definitions use YAML frontmatter (`name`, `description`, `license`, `metadata`).
 - **Modules are sequentially gated**: A module's assignment must pass before the next module unlocks.
-- **Exclude admin endpoints**: Skills should filter out `/v1/admin/*` and internal state management endpoints when presenting to developers.
+- **The bundled spec is the public contract only**: Administrative and internal operations are excluded from `specs/andamio-api.yaml` by design, so skills do not need to filter results — present everything the spec contains.
 - **Preprod first**: Always target `preprod.api.andamio.io`. Mainnet uses real ADA.
 
 ## Working with Skills

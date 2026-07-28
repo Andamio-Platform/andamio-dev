@@ -15,3 +15,12 @@ A public repo where contribution work actually lands and executes in its own flo
 
 ### External-only content
 The rule that everything shipped in the andamio-dev package must be derivable from public specs, docs, and the CLI — no internal-only details, internal coordination names, or internal policy IDs in shipped files (`skills/`, `reference/`, and root docs listed in `package.json`).
+
+## Roles
+
+### Granted role
+A role established by an on-chain transaction: **owner**, **teacher**, **manager**. There is something to provision, and it must be in place before any step that uses it will run. Owning a course or project grants neither teacher nor manager — the relevant `manage` transaction (`/v2/tx/course/owner/teachers/manage`, `/v2/tx/project/owner/managers/manage`) is a separate step. In `reference/tx-loops.yaml`, granted roles are the only ones that appear under `role_prereqs`.
+
+### Participant role
+A role held by virtue of having made a commitment: **student**, **contributor**. Nobody grants these and there is no roster, so there is nothing to provision — committing is what makes you one. Participant roles never appear under `role_prereqs` in `reference/tx-loops.yaml`, and acceptance-test setup for a participant wallet is just the wallet checks.
+*Avoid:* treating "not yet enrolled" as a missing grant — there is no grant to be missing.

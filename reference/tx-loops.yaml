@@ -6,9 +6,14 @@
 # Dependencies reference loop numbers, not names.
 #
 # Roles: named for readability, and they come in two kinds.
-#   GRANTED — owner, teacher, manager. Established by an on-chain transaction and required
-#     before the loop can run. Where a loop needs one, `role_prereqs` names the transaction
-#     that establishes it. Ownership alone grants neither teacher nor manager.
+#   GRANTED — owner, teacher, manager. Established by an on-chain transaction. Where a loop
+#     needs one, `role_prereqs` names the transaction that establishes it. Ownership alone
+#     grants neither teacher nor manager.
+#     For most loops the grant must already be in place before the loop starts. The two setup
+#     loops (1 course.setup, 2 project.setup) are the exception: they create the very course or
+#     project the grant is scoped to, so the grant happens *inside* the loop — after the create
+#     step, before the first step that needs the granted role. Those entries carry a `note:`
+#     saying so. Read `role_prereqs` as "what must be granted", and the note as "when".
 #   PARTICIPANT — student, contributor. Nobody grants these and there is no roster; a person
 #     holds one by having made a commitment. Nothing to provision, so they never appear in
 #     `role_prereqs`.
@@ -57,6 +62,10 @@ loops:
     role_prereqs:
       - role: teacher
         established_by: /v2/tx/course/owner/teachers/manage
+        note: >
+          Granted inside this loop, not before it — the course this grant is scoped to is
+          created by step 1 (course_create). Run teachers/manage after course_create and
+          before the first teacher step.
     prereqs: [general.access-token]
     steps:
       - tx: course_create
@@ -120,6 +129,10 @@ loops:
     role_prereqs:
       - role: manager
         established_by: /v2/tx/project/owner/managers/manage
+        note: >
+          Granted inside this loop, not before it — the project this grant is scoped to is
+          created by step 1 (project_create). Run managers/manage after project_create and
+          before the first manager step.
     prereqs: [general.access-token, course.setup]
     prereq_note: Project requires a course module credential as prerequisite.
     steps:

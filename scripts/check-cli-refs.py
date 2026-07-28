@@ -32,30 +32,55 @@ SKIP_PREFIXES = ("docs/plans/", "docs/brainstorms/")
 
 
 def tracked_files():
+    # -z / NUL split: paths containing spaces (this repo has one) must survive.
     out = subprocess.run(
-        ["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True
-    ).stdout.split()
+        ["git", "-C", str(ROOT), "ls-files", "-z"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split("\0")
     return [
         f
         for f in out
-        if not f.startswith(SKIP_PREFIXES) and f != "reference/cli-retirements.yaml"
+        if f
+        and not f.startswith(SKIP_PREFIXES)
+        and f != "reference/cli-retirements.yaml"
     ]
 
 
-def scan(commands):
-    """Return {command: {file: count}} for `andamio <command> ...` references."""
-    patterns = {c: re.compile(r"andamio\s+" + r"\s+".join(map(re.escape, c.split())) + r"\b") for c in commands}
-    found = {c: {} for c in commands}
+def load_files():
+    """Read every tracked file once. Returns [(relpath, text)]."""
+    loaded = []
     for rel in tracked_files():
-        path = ROOT / rel
         try:
-            text = path.read_text(encoding="utf-8", errors="ignore")
+            loaded.append((rel, (ROOT / rel).read_text(encoding="utf-8", errors="ignore")))
         except (OSError, UnicodeDecodeError):
             continue
-        for cmd, rx in patterns.items():
-            n = len(rx.findall(text))
-            if n:
-                found[cmd][rel] = n
+    return loaded
+
+
+def scan(commands, files):
+    """Return {command: {file: (prefixed, bare)}}.
+
+    `prefixed` counts full `andamio <command> ...` invocations. `bare` counts
+    mentions of the command path without the binary name — the shape used by the
+    command tables in reference/andamio-cli-context.md and skills/cli-guide, which
+    go just as stale on retirement but are invisible to a prefix-anchored match.
+    """
+    patterns = {}
+    for c in commands:
+        tail = r"\s+".join(map(re.escape, c.split()))
+        patterns[c] = (
+            re.compile(r"andamio\s+" + tail + r"\b"),
+            re.compile(r"(?:andamio\s+)?\b" + tail + r"\b"),
+        )
+    found = {c: {} for c in commands}
+    for rel, text in files:
+        for cmd, (rx_prefixed, rx_any) in patterns.items():
+            prefixed = len(rx_prefixed.findall(text))
+            bare = len(rx_any.findall(text)) - prefixed
+            if prefixed or bare:
+                found[cmd][rel] = (prefixed, bare)
     return found
 
 
@@ -70,13 +95,16 @@ def main():
 
     cfg = yaml.safe_load(CONFIG.read_text())
     failed = False
+    files = load_files()
 
     for entry in cfg.get("releases", []):
         rel = entry["release"]
         status = entry.get("status", "unreleased")
         cmds = entry.get("retired_commands", [])
-        found = scan(cmds)
-        total = sum(sum(v.values()) for v in found.values())
+        found = scan(cmds, files)
+        total_prefixed = sum(p for v in found.values() for p, _ in v.values())
+        total_bare = sum(b for v in found.values() for _, b in v.values())
+        total = total_prefixed + total_bare
 
         print(f"CLI {rel} ({status}) — retires: {', '.join(cmds)}")
         if entry.get("tracking"):
@@ -86,11 +114,17 @@ def main():
             print("  no references remain\n")
             continue
 
-        print(f"  {total} reference(s) across "
+        print(f"  {total} reference(s) "
+              f"({total_prefixed} invocation, {total_bare} bare mention) across "
               f"{len({f for v in found.values() for f in v})} file(s):")
         for cmd in cmds:
-            for f, n in sorted(found[cmd].items(), key=lambda kv: -kv[1]):
-                print(f"    {n:3}  {f}   (andamio {cmd} ...)")
+            for f, (p, b) in sorted(found[cmd].items(), key=lambda kv: -sum(kv[1])):
+                shape = f"{p:3} inv"
+                if b:
+                    shape += f" + {b:3} bare"
+                else:
+                    shape += " " * 10
+                print(f"    {shape}  {f}   ({cmd})")
 
         if status == "released":
             print(f"  FAIL: {rel} has shipped; these references are stale.\n")
