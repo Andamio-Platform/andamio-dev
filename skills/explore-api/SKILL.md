@@ -90,6 +90,9 @@ This is a multi-step process:
    Gateway API: POST /v2/course/student/commitment/create
    Auth: API Key + JWT
    Body: { course_id, course_module_code }
+   NOTE: live and working, but not in the published contract — do not expect to
+   find it in specs/andamio-api.yaml. It duplicates the in-contract builder
+   POST /v2/tx/course/student/assignment/commit; the canonical path is undecided.
 
 2. Student submits the commitment:
    Gateway API: POST /v2/course/student/commitment/submit
