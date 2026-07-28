@@ -1,0 +1,25 @@
+# Command paths retired from the Andamio CLI, by release.
+#
+# Consumed by scripts/check-cli-refs.py. Kept as data rather than baked into the
+# script so that recording a future retirement is a one-line edit.
+#
+# IMPORTANT — what this file is and is not:
+#   These are retirements of *CLI commands*. They are not removals of platform
+#   capability. The API routes behind these commands remain part of the public
+#   contract; what changes is which client exposes them. Do not use this file to
+#   mark endpoints, transaction loops, or roles as retired.
+
+version: 1
+last_updated: 2026-07-28
+
+releases:
+  - release: "1.0.0"
+    status: unreleased          # flip to `released` when the tag ships
+    tracking: Andamio-Platform/andamio-cli#129
+    note: >
+      1.0 scopes the CLI to Owner, Teacher and Manager. Learner and contributor
+      work moves to the Andamio app, which signs and submits in one flow. The
+      gateway routes these commands used are unaffected and remain public.
+    retired_commands:
+      - "course student"
+      - "project contributor"

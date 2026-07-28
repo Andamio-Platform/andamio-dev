@@ -9,7 +9,7 @@ Read [AGENTS.md](AGENTS.md) for full project context — API specs, authenticati
 **andamio-dev** is an Agent Skills package originally built as a Claude Code plugin (not a code project). It provides:
 1. **A 7-module course** ("Build on Andamio") delivered by AI agent skills
 2. **Operational skills** for day-to-day Andamio development (API exploration, CLI guidance, cost estimation)
-3. **Bundled specs and reference** for the Andamio Gateway API (123 endpoints), cost registry, and CLI
+3. **Bundled specs and reference** for the Andamio Gateway API (79 paths, public contract only), cost registry, and CLI
 
 There is no build step, no test suite, no linter. "Testing" means invoking skills in an agent harness such as Claude Code or Codex and verifying behavior.
 
