@@ -31,7 +31,7 @@
 
 **Status:** Ready. Unblocked by a pedagogy brief authored directly into the team's shared AI context repo.
 
-**Source:** `andamio-ai-context/02-strategy/contribution-centered-learning.md` (full path on James's machine: `~/projects/02-areas/andamio-circles/andamio-ai-context/02-strategy/contribution-centered-learning.md`)
+**Source:** `andamio-ai-context/02-strategy/contribution-centered-learning.md` (full path on James's machine: `$REPOS/andamio-ai-context/02-strategy/contribution-centered-learning.md`)
 
 **What the brief covers:**
 
