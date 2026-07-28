@@ -23,7 +23,7 @@ Interactive CLI guidance from the bundled agent reference. Developers ask what t
 
 ### Pre-Execution Knowledge Check
 
-1. Read `reference/andamio-cli-context.md` — complete CLI command reference (v0.10.1).
+1. Read `reference/andamio-cli-context.md` — complete CLI command reference (synced against CLI v0.12.1).
 2. If knowledge files exist, read `knowledge/gotchas.yaml` for CLI-related gotchas (category: cli). Proceed without it if missing.
 
 ### Answering Developer Questions

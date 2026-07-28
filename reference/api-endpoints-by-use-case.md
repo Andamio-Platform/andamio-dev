@@ -1,133 +1,225 @@
-# Andamio API Endpoints by Use Case
+<!-- GENERATED FILE — DO NOT EDIT BY HAND.
+     Regenerate with: python3 scripts/gen-endpoint-index.py
+     Source: specs/andamio-api.yaml (the public API contract). -->
 
-> "I want to ___" → endpoint(s). Quick navigator into the OpenAPI spec at `specs/andamio-api.yaml`.
+# Andamio API endpoints by use case
 
-For full request/response schemas, query the spec directly with the `/explore-api` skill or open it in your editor. This doc indexes use cases to v2 endpoint groups, not every endpoint.
+> "I want to ___" → endpoint. Generated from the public contract in `specs/andamio-api.yaml`, so it cannot drift from it.
 
-**Last updated**: 2026-05-14
+**80 operations across 79 paths.** All paths are relative to `/api`. This is the public surface only — administrative and internal operations are not part of the contract and do not appear here.
 
----
+For full request and response schemas, read the spec directly or use the `/explore-api` skill.
 
-## Auth & API keys
+## Platform Auth
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Register a developer account | `POST /v2/auth/developer/account/register` | Public |
-| Log in as a developer | `POST /v2/auth/developer/account/login` | Public |
-| Refresh a JWT | `POST /v2/auth/developer/token/refresh` | JWT |
-| Verify my email | `POST /v2/auth/developer/verify-email` | JWT |
-| Request a new API key | `POST /v2/apikey/developer/key/request` | JWT |
-| Rotate my API key | `POST /v2/apikey/developer/key/rotate` | JWT |
-| Get my developer profile | `GET /v2/apikey/developer/profile/get` | JWT |
-| Get my API usage | `GET /v2/apikey/developer/usage/get` | JWT or API key |
-| Delete my developer account | `POST /v2/apikey/developer/account/delete` | JWT |
+### User Auth
 
-## User identity & access token
+End-users authenticate to Andamio apps by signing a message from a wallet that holds an Andamio Access Token. Once authenticated, end-users can edit content and make commitments.
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Get the current user | `GET /v2/user/me` | API key + user JWT |
-| Get my daily usage | `GET /v1/user/usage/daily` | API key |
-| Delete a user | `POST /v1/user/delete` | API key |
-| Mint a user's access token | (TX type `access_token_mint`) — `POST /v2/token/access/mint` | API key + wallet sig |
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Initiate login session | `POST /v2/auth/login/session` | API key |
+| Validate wallet signature | `POST /v2/auth/login/validate` | API key |
 
-## Course creation & management
+### User Profile
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Create a new course | `POST /v2/course/create` | API key + wallet sig |
-| Add or update modules | `POST /v2/course/modules/manage` | API key + wallet sig |
-| Update a module's status (DRAFT ↔ APPROVED → PENDING_TX) | `POST /v2/course/module/status` | API key + wallet sig |
-| Update teachers | `POST /v2/course/teachers/manage` | API key + wallet sig |
-| List my courses | `GET /v2/course/list` | API key |
-| Get a course by ID | `GET /v2/course/{course_id}` | API key |
+User profile and account management - view profile, usage stats, and account settings.
 
-## Student enrollment & credentials
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Get dashboard | `POST /v2/user/dashboard` | API key + JWT |
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Enroll a student in a course | `POST /v2/course/enroll` | API key + wallet sig |
-| Commit to an assignment | `POST /v2/course/assignment/commit` | API key + wallet sig |
-| Submit an assignment | `POST /v2/course/assignment/submit` | API key + wallet sig |
-| Assess (accept/refuse) a submission | `POST /v2/course/assessment/assess` | API key + wallet sig (teacher) |
-| Claim a credential NFT | `POST /v2/course/credential/claim` | API key + wallet sig |
-| Leave a course | `POST /v2/course/leave` | API key + wallet sig |
+## Courses
 
-## Project creation & management
+### Course Discovery
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Create a project | `POST /v2/project/create` | API key + wallet sig |
-| Update managers | `POST /v2/project/managers/manage` | API key + wallet sig |
-| Add/update/cancel tasks | `POST /v2/project/tasks/manage` (uses `BatchUpdateTaskStatusRequest`) | API key + wallet sig |
-| Fund the project treasury | `POST /v2/project/treasury/fund` | API key + wallet sig |
-| List my projects | `GET /v2/project/list` | API key |
+Course discovery and enrollment - browse courses, view details, and check enrollment status.
 
-## Project contribution & rewards
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Get assignment | `GET /v2/course/user/assignment/{course_id}/{course_module_code}` | API key |
+| Get course detail | `GET /v2/course/user/course/get/{course_id}` | API key |
+| List courses | `GET /v2/course/user/courses/list` | API key |
+| Get introduction | `GET /v2/course/user/introduction/{course_id}/{course_module_code}` | API key |
+| Get lesson | `GET /v2/course/user/lesson/{course_id}/{course_module_code}/{slt_index}` | API key |
+| List course modules | `GET /v2/course/user/modules/{course_id}` | API key |
+| List SLTs | `GET /v2/course/user/slts/{course_id}/{course_module_code}` | API key |
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Join a project as a contributor | `POST /v2/project/join` | API key + wallet sig |
-| Commit to a task | `POST /v2/project/task/commit` | API key + wallet sig |
-| Submit task work | `POST /v2/project/task/submit` | API key + wallet sig |
-| Assess a task submission | `POST /v2/project/task/assess` | API key + wallet sig (manager) |
-| Claim a project credential | `POST /v2/project/credential/claim` | API key + wallet sig |
-| Update the project blacklist | `POST /v2/project/blacklist/update` | API key + wallet sig |
+### Student Actions
 
-## Transaction lifecycle
+Student course actions - enroll, submit assignments, track progress, and view grades.
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Get the state of a pending TX | `GET /v2/tx/{tx_hash}` | API key |
-| List my pending TXs | `GET /v2/tx/list` | API key |
-| Subscribe to TX state events (SSE) | `GET /v2/tx/events/{tx_hash}` | API key |
-| Submit a signed TX | `POST /v2/tx/submit` | API key + wallet sig |
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Get commitment | `POST /v2/course/student/assignment-commitment/get` | API key + JWT |
+| List my commitments | `POST /v2/course/student/assignment-commitments/list` | API key + JWT |
+| Leave commitment | `POST /v2/course/student/commitment/leave` | API key + JWT |
+| Submit commitment | `POST /v2/course/student/commitment/submit` | API key + JWT |
+| Update commitment evidence | `POST /v2/course/student/commitment/update` | API key + JWT |
+| List my courses | `POST /v2/course/student/courses/list` | API key + JWT |
+| List my credentials | `POST /v2/course/student/credentials/list` | API key + JWT |
 
-State machine: `pending → confirmed → updated` (happy path); `failed` or `expired` (failure paths). See [status-enums.md](./status-enums.md#tx-lifecycle-status).
+### Teacher Actions
 
-## Billing (Stripe)
+Teacher course actions - grade assignments, manage students, and view course analytics.
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Get my subscription tier | `GET /v2/billing/subscription` | JWT |
-| Start a checkout session | `POST /v2/billing/checkout` | JWT |
-| Manage billing portal | `POST /v2/billing/portal` | JWT |
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Review commitment | `POST /v2/course/teacher/assignment-commitment/review` | API key + JWT |
+| List pending reviews | `POST /v2/course/teacher/assignment-commitments/list` | API key + JWT |
+| Create course module | `POST /v2/course/teacher/course-module/create` | API key + JWT |
+| Delete course module | `POST /v2/course/teacher/course-module/delete` | API key + JWT |
+| Publish course module | `POST /v2/course/teacher/course-module/publish` | API key + JWT |
+| Register course module from chain | `POST /v2/course/teacher/course-module/register` | API key + JWT |
+| Update course module | `POST /v2/course/teacher/course-module/update` | API key + JWT |
+| Update course module status | `POST /v2/course/teacher/course-module/update-status` | API key + JWT |
+| List course modules | `POST /v2/course/teacher/course-modules/list` | API key + JWT |
+| List my courses | `POST /v2/course/teacher/courses/list` | API key + JWT |
 
-## Verification (third-party)
+### Course Management
 
-| I want to... | Endpoint(s) | Auth |
-|--------------|-------------|------|
-| Verify an on-chain credential | `POST /v2/verify/credential` | Public or API key |
-| Verify a task commitment | `POST /v2/verify/task-commitment` | Public or API key |
+Course owner operations - create courses, manage content, configure settings, and manage teachers.
 
-## Admin / internal
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Create course | `POST /v2/course/owner/course/create` | API key + JWT |
+| Register course | `POST /v2/course/owner/course/register` | API key + JWT |
+| Update course | `POST /v2/course/owner/course/update` | API key + JWT |
+| List my courses | `POST /v2/course/owner/courses/list` | API key + JWT |
 
-These require admin role on the API key — used for ops, not for app integrations.
+## Projects
 
-- `GET /v2/admin/tx/stats` — aggregate TX state machine stats.
-- `POST /v1/admin/set-user-role` — promote/demote user roles.
-- `GET /v2/admin/users/orphan-cleanup/candidates` — orphaned user cleanup.
-- `GET /v1/admin/usage/any-user-daily-api-usage` — per-user usage for billing audits.
+### Project Discovery
 
----
+Project discovery and membership - browse projects, view details, and check membership status.
 
-## Authentication summary
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Get project detail | `GET /v2/project/user/project/{project_id}` | API key |
+| List projects | `GET /v2/project/user/projects/list` | API key |
+| List tasks | `POST /v2/project/user/tasks/list` | API key |
 
-Most endpoints accept one or more of:
+### Contributor Actions
 
-- **API key** (`Authorization: Bearer <key>`): grants read + write-on-behalf of the developer account. Required for almost all v2 endpoints.
-- **User JWT** (`Authorization: Bearer <jwt>`): identifies a developer account. Used for billing, key management, and account admin.
-- **Wallet signature**: required for any TX-emitting endpoint. Submitted as part of the request body alongside the unsigned TX.
+Contributor project actions - commit to tasks, submit work, and claim rewards.
 
-The `andamio-app-template` (path 2) holds the API key server-side and exposes only the user-side flows to the browser. Path 3 (custom apps) should follow the same pattern.
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Create commitment | `POST /v2/project/contributor/commitment/create` | API key + JWT |
+| Delete commitment | `POST /v2/project/contributor/commitment/delete` | API key + JWT |
+| Get commitment | `POST /v2/project/contributor/commitment/get` | API key + JWT |
+| Submit commitment | `POST /v2/project/contributor/commitment/submit` | API key + JWT |
+| Update commitment | `POST /v2/project/contributor/commitment/update` | API key + JWT |
+| List my commitments | `POST /v2/project/contributor/commitments/list` | API key + JWT |
+| List my projects | `POST /v2/project/contributor/projects/list` | API key + JWT |
 
----
+### Manager Actions
 
-## Cross-links
+Project manager actions - assign tasks, review submissions, and manage contributors.
 
-- Full OpenAPI spec: `specs/andamio-api.yaml` (123 endpoints).
-- [Integration paths](./integration-paths.md) — CLI / app-template / custom.
-- [Status enums](./status-enums.md) — return values you'll encounter.
-- [TX loops](./tx-loops.yaml) — composed workflows that chain these endpoints.
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| List project commitments (manager view) | `POST /v2/project/manager/commitments/list` | API key + JWT |
+| Get qualified contributors | `GET /v2/project/manager/contributors/get-qualified` | API key + JWT |
+| List my projects | `POST /v2/project/manager/projects/list` | API key + JWT |
+| Create task | `POST /v2/project/manager/task/create` | API key + JWT |
+| Delete task | `POST /v2/project/manager/task/delete` | API key + JWT |
+| Update task | `POST /v2/project/manager/task/update` | API key + JWT |
+| List tasks | `POST /v2/project/manager/tasks/list` | API key + JWT |
 
-> **Note on freshness**: This index is hand-maintained and covers all 12 v2 resource groups. If an endpoint is missing, check `specs/andamio-api.yaml` directly — that file is regenerated from API source and is always canonical.
+### Project Management
+
+Project owner operations - create projects, manage treasury, and configure settings.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Create project | `POST /v2/project/owner/project/create` | API key + JWT |
+| Register project | `POST /v2/project/owner/project/register` | API key + JWT |
+| Update project | `POST /v2/project/owner/project/update` | API key + JWT |
+| List my projects | `POST /v2/project/owner/projects/list` | API key + JWT |
+
+## Transactions
+
+### Tx State
+
+Transaction state management - track pending transactions and handle confirmations.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Get pending transactions | `GET /v2/tx/pending` | API key |
+| Register pending transaction | `POST /v2/tx/register` | API key |
+| Get transaction status | `GET /v2/tx/status/{tx_hash}` | API key |
+| Stream transaction status | `GET /v2/tx/stream/{tx_hash}` | API key |
+| Get valid transaction types | `GET /v2/tx/types` | API key |
+
+### Global TX
+
+Global transaction operations - mint access tokens and manage global state.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Mint access token | `POST /v2/tx/global/user/access-token/mint` | API key |
+
+### Instance TX
+
+Instance-level transactions - initialize and configure Andamio instances.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Create course | `POST /v2/tx/instance/owner/course/create` | API key |
+| Create project | `POST /v2/tx/instance/owner/project/create` | API key |
+
+### Course TX
+
+Course transactions - on-chain course creation, enrollment, and assignment management.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Manage teachers | `POST /v2/tx/course/owner/teachers/manage` | API key |
+| Commit to assignment | `POST /v2/tx/course/student/assignment/commit` | API key |
+| Update assignment | `POST /v2/tx/course/student/assignment/update` | API key |
+| Claim course credential | `POST /v2/tx/course/student/credential/claim` | API key |
+| Assess assignments | `POST /v2/tx/course/teacher/assignments/assess` | API key |
+| Manage course modules | `POST /v2/tx/course/teacher/modules/manage` | API key |
+
+### Project TX
+
+Project transactions - on-chain project creation, task commits, and reward distribution.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Claim project credential | `POST /v2/tx/project/contributor/credential/claim` | API key |
+| Task action | `POST /v2/tx/project/contributor/task/action` | API key |
+| Commit to task | `POST /v2/tx/project/contributor/task/commit` | API key |
+| Assess tasks | `POST /v2/tx/project/manager/tasks/assess` | API key |
+| Manage tasks | `POST /v2/tx/project/manager/tasks/manage` | API key |
+| Manage contributor blacklist | `POST /v2/tx/project/owner/contributor-blacklist/manage` | API key |
+| Manage managers | `POST /v2/tx/project/owner/managers/manage` | API key |
+| Add funds to treasury | `POST /v2/tx/project/user/treasury/add-funds` | API key |
+
+## Public
+
+### User Lookup
+
+Public user lookup - search and view public user profiles.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Check alias exists | `GET /v2/user/exists/{alias}` | API key |
+
+## Other
+
+### Keys
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| List API keys | `GET /v2/keys` | JWT |
+| Create API key | `POST /v2/keys` | JWT |
+| Delete API key | `DELETE /v2/keys/{id}` | JWT |
+
+### Verify
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Complete verification | `POST /v2/verify/complete` | API key |
+| Start verification session | `POST /v2/verify/session` | API key |

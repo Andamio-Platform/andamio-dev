@@ -4,7 +4,7 @@ Checklist for running Andamio transaction loop acceptance tests on preprod. Comp
 
 ## Environment
 
-- [ ] CLI installed: `andamio --version` (minimum v0.12.0 for chunked task hash fix)
+- [ ] CLI installed: `andamio --version` (minimum v0.13.3 — the current release)
 - [ ] CLI pointed at preprod: `andamio config set-url https://preprod.api.andamio.io`
 - [ ] API key configured: `andamio auth login --api-key <key>`
 - [ ] Cardano submit configured: `andamio config show` should show a submit URL (Blockfrost preprod) and `project_id` header
@@ -13,10 +13,21 @@ Checklist for running Andamio transaction loop acceptance tests on preprod. Comp
 
 You need **two wallets** with different roles:
 
-| Role | Wallet | Used for |
-|------|--------|----------|
-| Owner / Teacher / Manager | Wallet A | course_create, modules_manage, assessment_assess, project_create, tasks_manage, task_assess |
-| Student / Contributor | Wallet B | assignment_commit, credential_claim, project_join, project_credential_claim |
+| Role | Kind | Wallet | Established by | Used for |
+|------|------|--------|----------------|----------|
+| Owner | granted | Wallet A | standing up the course or project | course_create, project_create |
+| Teacher | granted | Wallet A | `/v2/tx/course/owner/teachers/manage`, run by the Owner | modules_manage, assessment_assess |
+| Manager | granted | Wallet A | `/v2/tx/project/owner/managers/manage`, run by the Owner | tasks_manage, task_assess |
+| Student | participant | Wallet B | nothing — committing makes you one | assignment_submit, credential_claim |
+| Contributor | participant | Wallet B | nothing — committing makes you one | project_join, project_credential_claim |
+
+**Granted** roles are established by an on-chain transaction and must exist before the loops
+that use them will run. Owning a course or project grants neither Teacher nor Manager — if
+Wallet A is to author or assess, run the relevant `manage` transaction first.
+
+**Participant** roles are not granted and there is no roster. A person is a learner or a
+contributor by virtue of having made a commitment, so there is nothing to set up for Wallet B
+beyond the wallet checks below.
 
 ### Per-wallet checklist
 

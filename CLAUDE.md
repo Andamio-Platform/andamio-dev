@@ -9,7 +9,7 @@ Read [AGENTS.md](AGENTS.md) for full project context — API specs, authenticati
 **andamio-dev** is an Agent Skills package originally built as a Claude Code plugin (not a code project). It provides:
 1. **A 7-module course** ("Build on Andamio") delivered by AI agent skills
 2. **Operational skills** for day-to-day Andamio development (API exploration, CLI guidance, cost estimation)
-3. **Bundled specs and reference** for the Andamio Gateway API (123 endpoints), cost registry, and CLI
+3. **Bundled specs and reference** for the Andamio Gateway API (79 paths, public contract only), cost registry, and CLI
 
 There is no build step, no test suite, no linter. "Testing" means invoking skills in an agent harness such as Claude Code or Codex and verifying behavior.
 
@@ -41,7 +41,7 @@ There is no build step, no test suite, no linter. "Testing" means invoking skill
 - **CLI-first in operational mode**: Always use the Andamio CLI for operations. Direct API calls are for learning mode only.
 - **Agent Skills standard**: All skill definitions use YAML frontmatter (`name`, `description`, `license`, `metadata`).
 - **Modules are sequentially gated**: A module's assignment must pass before the next module unlocks.
-- **Exclude admin endpoints**: Skills should filter out `/v1/admin/*` and internal state management endpoints when presenting to developers.
+- **The bundled spec is the public contract only**: Administrative and internal operations are excluded from `specs/andamio-api.yaml` by design, so skills do not need to filter results — present everything the spec contains.
 - **Preprod first**: Always target `preprod.api.andamio.io`. Mainnet uses real ADA.
 
 ## Working with Skills

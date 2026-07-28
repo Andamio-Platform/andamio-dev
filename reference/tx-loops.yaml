@@ -5,11 +5,33 @@
 # Status: validated (tested against live stack) | stubbed (defined, not yet tested) | blocked (tested, hit known issue)
 # Dependencies reference loop numbers, not names.
 #
+# Roles: named for readability, and they come in two kinds.
+#   GRANTED — owner, teacher, manager. Established by an on-chain transaction. Where a loop
+#     needs one, `role_prereqs` names the transaction that establishes it. Ownership alone
+#     grants neither teacher nor manager.
+#     For most loops the grant must already be in place before the loop starts. The two setup
+#     loops (1 course.setup, 2 project.setup) are the exception: they create the very course or
+#     project the grant is scoped to, so the grant happens *inside* the loop — after the create
+#     step, before the first step that needs the granted role. Those entries carry a `note:`
+#     saying so. Read `role_prereqs` as "what must be granted", and the note as "when".
+#   PARTICIPANT — student, contributor. Nobody grants these and there is no roster; a person
+#     holds one by having made a commitment. Nothing to provision, so they never appear in
+#     `role_prereqs`.
+#   Both are real roles for describing a workflow. Only granted roles need setting up.
+#
+# Scope: this file describes the Andamio platform, not any one client of it. Endpoints, loops
+#   and roles are platform facts and do not change when a client changes. CLI invocations are
+#   illustrations only and may lag the released tool — see the Andamio CLI docs for
+#   authoritative syntax.
+#   Separation is partial: learner and contributor steps carry their commands in a `cli:` list,
+#   separate from `note:`. Owner / teacher / manager steps still have commands inline in `note:`
+#   and have not been converted yet.
+#
 # Created: 2026-04-06
 # Source: orch task "andamio-dev - add each Tx Loop and build cost estimation into each.md"
 
-version: 3
-last_updated: 2026-04-08
+version: 4
+last_updated: 2026-07-28
 
 # Dependency graph:
 #   (15) general.access-token
@@ -37,6 +59,13 @@ loops:
     type: setup
     description: Create and publish a course with modules. Confirms all db-side operations (lesson content, etc).
     roles: [owner, teacher]
+    role_prereqs:
+      - role: teacher
+        established_by: /v2/tx/course/owner/teachers/manage
+        note: >
+          Granted inside this loop, not before it — the course this grant is scoped to is
+          created by step 1 (course_create). Run teachers/manage after course_create and
+          before the first teacher step.
     prereqs: [general.access-token]
     steps:
       - tx: course_create
@@ -97,6 +126,13 @@ loops:
     type: setup
     description: Create a project with funded treasury and published tasks. Requires a course module as prerequisite.
     roles: [owner, manager]
+    role_prereqs:
+      - role: manager
+        established_by: /v2/tx/project/owner/managers/manage
+        note: >
+          Granted inside this loop, not before it — the project this grant is scoped to is
+          created by step 1 (project_create). Run managers/manage after project_create and
+          before the first manager step.
     prereqs: [general.access-token, course.setup]
     prereq_note: Project requires a course module credential as prerequisite.
     steps:
@@ -194,14 +230,18 @@ loops:
     type: credential
     description: Student earns a single course credential. Commit, teacher assesses, student claims.
     roles: [student, teacher]
+    role_prereqs:
+      - role: teacher
+        established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     steps:
       - action: create_commitment
         role: student
         note: >
           REQUIRED before enrollment TX. Create off-chain commitment record.
-          CLI: andamio course student create --course-id <id> --module-code 100
           Creates AWAITING_SUBMISSION record. Fails if module has no assignment content.
+        cli:
+          - andamio course student create --course-id <id> --module-code 100
       - tx: assignment_submit
         role: student
         endpoint: /v2/tx/course/student/assignment/commit
@@ -213,11 +253,12 @@ loops:
         role: student
         note: >
           Off-chain evidence submission. Links rich evidence (Markdown) to the on-chain commitment.
-          CLI: andamio course student submit --course-id <id> --slt-hash <hash> --evidence "evidence text"
-          Or: andamio course student submit --course-id <id> --module-code <code> --evidence "evidence text"
           Transitions: AWAITING_SUBMISSION → SUBMITTED.
           NOTE: --module-code lookup requires the module to have content.course_module_code in the API response.
           If --module-code fails, use --slt-hash as fallback.
+        cli:
+          - andamio course student submit --course-id <id> --slt-hash <hash> --evidence "evidence text"
+          - andamio course student submit --course-id <id> --module-code <code> --evidence "evidence text"
       - tx: assessment_assess
         role: teacher
         endpoint: /v2/tx/course/teacher/assignments/assess
@@ -249,6 +290,9 @@ loops:
     type: credential
     description: Contributor earns a project credential and ADA rewards. Requires both a project and the prerequisite course credential.
     roles: [contributor, manager]
+    role_prereqs:
+      - role: manager
+        established_by: /v2/tx/project/owner/managers/manage
     prereqs: [project.setup, course.credential]
     prereq_note: Contributor must hold course credential (prerequisite) and project must exist with funded tasks.
     steps:
@@ -256,10 +300,11 @@ loops:
         role: contributor
         note: >
           Create off-chain commitment record before the on-chain TX.
-          CLI: andamio project contributor commit --project-id <id> --task-hash <hash>
-          Or: andamio project contributor commit --project-id <id> --task-index <index>
           NOTE: task must exist in DB (merged source) for --task-index to work.
           For chain-only tasks, use --task-hash.
+        cli:
+          - andamio project contributor commit --project-id <id> --task-hash <hash>
+          - andamio project contributor commit --project-id <id> --task-index <index>
       - tx: project_join
         role: contributor
         endpoint: /v2/tx/project/contributor/task/commit
@@ -280,7 +325,8 @@ loops:
         role: contributor
         note: >
           Off-chain evidence submission (optional — enriches evidence beyond the 140-char on-chain field).
-          CLI: andamio project contributor update --project-id <id> --task-hash <hash> --evidence "evidence text"
+        cli:
+          - andamio project contributor update --project-id <id> --task-hash <hash> --evidence "evidence text"
       - tx: task_assess
         role: manager
         endpoint: /v2/tx/project/manager/tasks/assess
@@ -319,21 +365,29 @@ loops:
     type: credential
     description: Same as project.credential but treasury is funded with native assets (tokens), not just ADA/lovelace. Tests multi-asset treasury and reward distribution.
     roles: [contributor, manager, owner]
+    role_prereqs:
+      - role: manager
+        established_by: /v2/tx/project/owner/managers/manage
     prereqs: [project.setup, course.credential]
     prereq_note: Project treasury must be funded with native assets. Contributor must hold prerequisite credential.
     steps:
       - tx: project_create
         role: owner
+        endpoint: /v2/tx/instance/owner/project/create
         note: Treasury funded with native asset + ADA
       - tx: tasks_manage
         role: manager
+        endpoint: /v2/tx/project/manager/tasks/manage
         note: Task rewards denominated in native asset
       - tx: project_join
         role: contributor
+        endpoint: /v2/tx/project/contributor/task/commit
       - tx: task_assess
         role: manager
+        endpoint: /v2/tx/project/manager/tasks/assess
       - tx: project_credential_claim
         role: contributor
+        endpoint: /v2/tx/project/contributor/credential/claim
         note: Receives native asset reward from treasury
     cost_estimate: TBD — native asset handling may differ
     script: null
@@ -344,25 +398,34 @@ loops:
     type: credential
     description: Multi-module course where each module is a prerequisite for the next. Student must earn module N before starting module N+1.
     roles: [student, teacher]
+    role_prereqs:
+      - role: teacher
+        established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     prereq_note: Course must have modules configured with sequential prerequisites.
     steps:
       - tx: assignment_submit
         role: student
+        endpoint: /v2/tx/course/student/assignment/commit
         note: Module 1 commit
       - tx: assessment_assess
         role: teacher
+        endpoint: /v2/tx/course/teacher/assignments/assess
         note: Module 1 accept
       - tx: credential_claim
         role: student
+        endpoint: /v2/tx/course/student/credential/claim
         note: Module 1 credential — unlocks Module 2
       - tx: assignment_submit
         role: student
+        endpoint: /v2/tx/course/student/assignment/commit
         note: Module 2 commit (requires Module 1 credential)
       - tx: assessment_assess
         role: teacher
+        endpoint: /v2/tx/course/teacher/assignments/assess
       - tx: credential_claim
         role: student
+        endpoint: /v2/tx/course/student/credential/claim
         note: Module 2 credential — repeat for N modules
     cost_estimate: ~1.32 ADA × N modules
     script: null
@@ -379,13 +442,17 @@ loops:
     variant_of: course.credential
     description: Teacher refuses submission. Student resubmits. Teacher accepts. Student claims. Tests the "try again" path.
     roles: [student, teacher]
+    role_prereqs:
+      - role: teacher
+        established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     steps:
       - action: create_commitment
         role: student
         note: >
           Off-chain commitment must exist before enrollment TX.
-          CLI: andamio course student create --course-id <id> --module-code <code>
+        cli:
+          - andamio course student create --course-id <id> --module-code <code>
       - tx: assignment_submit
         role: student
         endpoint: /v2/tx/course/student/assignment/commit
@@ -442,6 +509,9 @@ loops:
     variant_of: project.credential
     description: Manager refuses contribution. Contributor recommits. Manager accepts. Contributor claims.
     roles: [contributor, manager]
+    role_prereqs:
+      - role: manager
+        established_by: /v2/tx/project/owner/managers/manage
     prereqs: [project.setup, course.credential]
     steps:
       - tx: project_join
@@ -469,9 +539,11 @@ loops:
           The protocol does not have a clean refuse → recommit → re-assess path for projects.
       - tx: task_assess
         role: manager
+        endpoint: /v2/tx/project/manager/tasks/assess
         note: "BLOCKED — cannot assess contributor who used task/action after refuse"
       - tx: project_credential_claim
         role: contributor
+        endpoint: /v2/tx/project/contributor/credential/claim
         note: "BLOCKED — depends on successful assessment"
     protocol_note: >
       KNOWN ISSUE (2026-04-07): The project refuse → recommit flow is blocked by an andamioscan
@@ -504,6 +576,9 @@ loops:
     variant_of: project.credential
     description: Terminal expulsion. Manager denies contributor. Contributor removed, treasury assets clawed back.
     roles: [contributor, manager]
+    role_prereqs:
+      - role: manager
+        established_by: /v2/tx/project/owner/managers/manage
     prereqs: [project.setup, course.credential]
     steps:
       - tx: project_join
@@ -544,6 +619,9 @@ loops:
     variant_of: project.setup
     description: Manager removes a task and adds a replacement in a single tasks_manage TX. Only possible before any contributor commits to the task.
     roles: [manager]
+    role_prereqs:
+      - role: manager
+        established_by: /v2/tx/project/owner/managers/manage
     prereqs: [project.setup]
     steps:
       - tx: tasks_manage
@@ -586,6 +664,9 @@ loops:
     variant_of: course.setup
     description: Add, update, or remove modules after initial course setup. Uses the same modules_manage TX as initial setup.
     roles: [teacher]
+    role_prereqs:
+      - role: teacher
+        established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     steps:
       - action: create_module_draft
@@ -665,16 +746,22 @@ loops:
     type: multi-party
     description: N students earn credentials from the same course. Batch assessment.
     roles: [students, teacher]
+    role_prereqs:
+      - role: teacher
+        established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     steps:
       - tx: assignment_submit
         role: student
+        endpoint: /v2/tx/course/student/assignment/commit
         note: "× N students"
       - tx: assessment_assess
         role: teacher
+        endpoint: /v2/tx/course/teacher/assignments/assess
         note: "batch assignment_decisions for N students"
       - tx: credential_claim
         role: student
+        endpoint: /v2/tx/course/student/credential/claim
         note: "× N students"
     cost_estimate: ~1.32 ADA × N (linear per student)
     cost_scaling: linear
@@ -693,7 +780,12 @@ loops:
         note: All task assessments complete, credentials claimed
       - tx: treasury_drawdown
         role: owner
-        note: "Open question: is this a protocol tx or implicit via last UTxO?"
+        endpoint: null
+        note: >
+          Open question: is this a protocol tx or implicit via last UTxO?
+          No endpoint recorded — deliberately left unset. `treasury_drawdown` is not a
+          registered tx_type (the API registry lists treasury_fund, not drawdown) and no
+          public route serves it. Do not infer one; resolve the open question first.
     script: null
     status: stubbed
 

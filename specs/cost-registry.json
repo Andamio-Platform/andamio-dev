@@ -152,7 +152,7 @@
       "note": "Upgrade tier by paying an ADA TX to serviceFeeRecipient with metadata { type: 'power_up', project_id, target_tier }. Verified by gateway via andamioscan."
     },
     "apiInjection": {
-      "note": "Gateway intercepts /v2/project/task/commit and /v2/project/credential/claim, looks up commission_rate from db-api, and injects fee_rate into the Atlas request. Caller-supplied fee_rate is stripped.",
+      "note": "Gateway intercepts /v2/tx/project/contributor/task/commit and /v2/tx/project/contributor/credential/claim, looks up commission_rate from db-api, and injects fee_rate into the Atlas request. Caller-supplied fee_rate is stripped.",
       "shippedIn": "andamio-api PR #302"
     }
   },

@@ -3,7 +3,7 @@
 # Updated by /compound skill
 
 version: 2
-last_updated: "2026-05-14"
+last_updated: "2026-07-28"
 
 # Aggregate statistics (seed data)
 stats:
@@ -43,7 +43,20 @@ files:
 #   5. Bump last_updated above and commit.
 #
 # Cadence target: every 30 days, or after any breaking API change.
-# Last sync: 2026-05-14 (reference/ pass — status-enums, integration-paths,
+#
+# Sync log — append a new entry, never edit an existing one.
+#
+# Last sync: 2026-07-28 (spec replacement — the vendored specs/andamio-api.yaml
+#            was swapped for the generated PUBLIC contract from andamio-api:
+#            123 paths -> 79 paths / 80 operations. Developer-portal routes
+#            (registration, API-key lifecycle, billing) and all administrative
+#            and internal operations are now absent by design, so skills no
+#            longer filter results. reference/api-endpoints-by-use-case.md is
+#            regenerated from the new contract by scripts/gen-endpoint-index.py;
+#            reference/cli-retirements.yaml + scripts/check-cli-refs.py added to
+#            track CLI command retirements. Public developer reference layer
+#            refreshed across AGENTS.md, CLAUDE.md, reference/ and courses/.).
+# 2026-05-14 (reference/ pass — status-enums, integration-paths,
 #            api-endpoints-by-use-case added; cli-context header de-hardcoded;
 #            cost-registry.json bumped to v0.4.0 — service fees synced from
 #            devkit/configs/andamio-atlas/preprod/fee-config.json, commission

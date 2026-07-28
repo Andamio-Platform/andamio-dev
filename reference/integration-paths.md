@@ -70,16 +70,30 @@ You already have an app, or you're on a stack `andamio-app-template` doesn't cov
 Use the public API directly.
 
 ```bash
-# Bearer auth: get an API key from https://app.andamio.io/api-setup
-curl -H "Authorization: Bearer $ANDAMIO_API_KEY" \
-  https://preprod.api.andamio.io/v2/user/me
+# Get an API key from https://preprod.app.andamio.io/api-setup
+# (mainnet: https://app.andamio.io/api-setup — start on preprod).
+#
+# Most read routes accept the API key alone, as below. Role-scoped routes under
+# /v2/course/owner, /v2/course/student, /v2/course/teacher, /v2/project/owner,
+# /v2/project/manager, /v2/project/contributor, plus /v2/user/dashboard, require
+# BOTH headers in the same request:
+#   -H "X-API-Key: $ANDAMIO_API_KEY" -H "Authorization: Bearer $ANDAMIO_JWT"
+# The /v2/keys routes are the exception — they take the JWT only, no API key.
+curl -H "X-API-Key: $ANDAMIO_API_KEY" \
+  https://preprod.api.andamio.io/api/v2/course/user/courses/list
 ```
+
+The API key and the end-user JWT are different credentials, not alternatives: the
+key identifies your integration, the JWT identifies the wallet acting through it.
+See the per-endpoint **Auth** column in
+[api-endpoints-by-use-case.md](./api-endpoints-by-use-case.md) for the exact
+requirement of any route.
 
 **What you need to build yourself**:
 - API key storage (server-side only — never ship to the browser).
 - Wallet signing flow (CIP-30 for web, mobile-specific SDK for native).
 - TX submission to Cardano (Blockfrost, Maestro, or your own submit endpoint).
-- TX state polling (or websocket to `/v2/tx/events/{tx_hash}`).
+- TX state tracking — poll `GET /v2/tx/status/{tx_hash}`, or stream it with `GET /v2/tx/stream/{tx_hash}`.
 
 **When to use**:
 - You have an existing app that needs Andamio credentialing.

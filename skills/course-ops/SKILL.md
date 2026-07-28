@@ -127,6 +127,7 @@ Costs ~10.3 ADA per update transaction. The governance token tracks the teacher 
 Students interact through the app or API:
 
 1. **Create commitment** (draft): `POST /v2/course/student/commitment/create`
+   — live and working, but **not in the published contract** (`specs/andamio-api.yaml`), so you will not find it there. It duplicates the in-contract builder `POST /v2/tx/course/student/assignment/commit`; which of the two becomes canonical is an open decision.
 2. **Submit commitment**: `POST /v2/course/student/commitment/submit`
 3. **Build enrollment tx**: `POST /v2/tx/course/student/assignment/commit` (~2.14 ADA)
 4. **Update evidence**: `POST /v2/course/student/commitment/update` (~0.33 ADA per update)

@@ -42,13 +42,23 @@ examples/                 # Runnable scripts demonstrating full tx state machine
   course-lifecycle.sh     # Course: create → module → enroll → submit → assess → claim
   project-lifecycle.sh    # Project: create → task → commit → assess → claim
 specs/                    # Bundled API specifications (read-only reference)
-  andamio-api.yaml        # Andamio Gateway API (Swagger 2.0, 123 endpoints — single entry point)
+  andamio-api.yaml        # Andamio Gateway API — the PUBLIC contract (Swagger 2.0, 79 paths).
+                          # Synced from the generated public artifact in andamio-api; the header
+                          # records the source commit and sync date. Administrative and internal
+                          # operations are not in it, by design. Do not hand-edit.
   cost-registry.json      # Transaction cost data (fees, min UTXO, execution units)
 reference/                # Bundled reference documentation
   andamio-cli-context.md  # CLI agent context (commands, auth, composability)
   tx-loops.yaml           # Canonical transaction workflows (source of truth for tx flows)
+  api-endpoints-by-use-case.md  # GENERATED from specs/andamio-api.yaml — do not hand-edit
+  cli-retirements.yaml    # CLI command paths retired per release (data for check-cli-refs.py)
   public-repos.yaml       # Curated registry of public repos for the /contribute front door
   acceptance-test-prerequisites.md
+scripts/                  # Maintenance checks. Both are safe to run any time.
+  gen-endpoint-index.py   # Regenerates reference/api-endpoints-by-use-case.md from the contract.
+                          # `--check` exits 1 when it is out of date.
+  check-cli-refs.py       # Reports references to CLI commands a release retires.
+                          # `--check` exits 1 once that release is marked `released`.
 knowledge/                # Compound knowledge base (YAML files)
   index.yaml              # Master index and aggregate stats
   gotchas.yaml            # Known errors with root causes and fixes
@@ -65,20 +75,32 @@ CONCEPTS.md               # Shared domain vocabulary (entities, named processes,
 
 ### Andamio API (`specs/andamio-api.yaml`)
 
-The public-facing Andamio API. 123 endpoints across these groups:
+The public-facing Andamio API. 79 paths across these groups (the public contract only — administrative and internal operations are excluded by design):
 
-| Group | Endpoints | Auth | Purpose |
+| Group | Operations | Auth | Purpose |
 |-------|-----------|------|---------|
-| Auth | 7 | varies | Developer registration, wallet login, session management |
-| API Key | 6 | JWT | Key lifecycle: request, rotate, revoke, usage |
-| Courses | 24 | API key + JWT | Course CRUD, modules, teachers, student enrollment |
-| Projects | 22 | API key + JWT | Project CRUD, tasks, contributors, treasury |
-| Transactions | 24 | JWT | Build, sign, submit, register, track Cardano transactions |
-| Users | 12 | varies | Profile, dashboard, access tokens |
-| Billing | 4 | JWT | Subscription management |
-| System | 2 | none | Health check, JWKS |
+| Courses | 28 | API key (+ JWT for role-scoped) | Course discovery, modules, teachers, learner commitments, assessment |
+| Transactions | 22 | API key | Build, register, and track Cardano transactions |
+| Projects | 21 | API key (+ JWT for role-scoped) | Project CRUD, tasks, contributors, treasury |
+| Platform Auth | 3 | varies | Wallet login, session management, user profile |
+| Keys | 3 | JWT | Developer API key CRUD |
+| Verify | 2 | API key | Credential and task-commitment verification |
+| Public | 1 | API key | Public read |
 
-**Endpoint filtering**: Skills should exclude admin endpoints (`/v1/admin/*`) and internal state management endpoints when presenting options to developers.
+**80 operations across 79 paths.** Counts and Auth values derive from the contract's own tag groups and per-operation `security` blocks — regenerate `reference/api-endpoints-by-use-case.md` to see the current breakdown per group and the auth requirement per endpoint.
+
+The role-scoped path prefixes that require **both** `X-API-Key` and `Authorization: Bearer` in the same request are `/v2/course/owner`, `/v2/course/student`, `/v2/course/teacher`, `/v2/project/contributor`, `/v2/project/manager`, `/v2/project/owner`, and `/v2/user/dashboard`. `/v2/keys` requires the JWT only. Everything else takes the API key alone.
+
+**Endpoint filtering is no longer something skills must do.** Developer-portal concerns (registration, API-key lifecycle, billing) and administrative operations are not in this spec at all — they were removed when the vendored copy was replaced with the generated public contract on 2026-07-28. If an operation is absent, treat that as the contract rather than as a gap in the file — but absence is not proof that a route is dead.
+
+**Live but not in the contract.** A few routes work in production yet do not appear in `specs/andamio-api.yaml`. Annotate them where they are used rather than assuming they were removed:
+
+| Route | Why it is absent | Where it is used here |
+|-------|------------------|-----------------------|
+| `GET /.well-known/jwks.json` | Served at the gateway service root, outside the spec's `basePath: /api` | `courses/build-on-andamio/lessons/m200/assignment.md`, lesson 200.4 |
+| `POST /v2/course/student/commitment/create` | Duplicates the in-contract builder `POST /v2/tx/course/student/assignment/commit`; which becomes canonical is an open decision | `skills/course-ops/SKILL.md`, `skills/explore-api/SKILL.md` |
+
+If you find another route that is live but absent, verify it against the spec before adding it to this table.
 
 ### Cost Registry (`specs/cost-registry.json`)
 
