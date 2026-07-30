@@ -235,13 +235,10 @@ loops:
         established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     steps:
-      - action: create_commitment
-        role: student
-        note: >
-          REQUIRED before enrollment TX. Create off-chain commitment record.
-          Creates AWAITING_SUBMISSION record. Fails if module has no assignment content.
-        cli:
-          - andamio course student create --course-id <id> --module-code 100
+      # The off-chain create step that used to open this loop is GONE. It called
+      # POST /v2/course/student/commitment/create, removed from the API on 2026-07-30.
+      # No replacement is needed: the commitment record is now upserted when the
+      # assignment_submit TX is confirmed (see the note on that step).
       - tx: assignment_submit
         role: student
         endpoint: /v2/tx/course/student/assignment/commit
@@ -249,11 +246,18 @@ loops:
         note: >
           Body: {"alias":"<student>","course_id":"<id>","slt_hash":"<hash>","assignment_info":"<evidence>"}
           On-chain enrollment + initial evidence. assignment_info is stored on-chain (max 140 chars).
+          This endpoint is a pure TX builder — it writes nothing to the DB. The commitment
+          record is created when the TX is registered and confirmed: the assignment_submit
+          confirmation handler upserts it (creates if absent, updates if present) and sets
+          network_status ON_CHAIN. Register with tx_type assignment_submit.
+          Evidence may ride along in the register call's metadata["evidence"].
       - action: submit_evidence
         role: student
         note: >
-          Off-chain evidence submission. Links rich evidence (Markdown) to the on-chain commitment.
-          Transitions: AWAITING_SUBMISSION → SUBMITTED.
+          Off-chain evidence submission — links rich evidence (Markdown) to the commitment.
+          Optional for the CLI path, where evidence can instead travel in the register
+          metadata; the two paths converge at the same confirm call and the on-chain hash
+          is source of truth.
           NOTE: --module-code lookup requires the module to have content.course_module_code in the API response.
           If --module-code fails, use --slt-hash as fallback.
         cli:
@@ -279,11 +283,21 @@ loops:
       assessment_assess: { fee_ada: 0.274, paid_by: teacher }
       credential_claim: { fee_ada: 0.356, paid_by: student }
     script: examples/course-lifecycle.sh (partial — also covers loop 1)
-    status: validated
-    validated_date: 2026-04-06
+    status: needs_revalidation
+    validated_date: 2026-04-06        # last end-to-end run, against the pre-2026-07-30 flow
+    revalidation_note: >
+      The step list was corrected on 2026-07-30 from the API implementation, not from a
+      run. The removed create step and the upsert-on-confirmation behaviour are verified;
+      the resulting commitment_status values and the fees below are NOT — they date from
+      the old flow. Re-run end-to-end on preprod before trusting them.
     known_gotchas:
-      - "Off-chain commitment MUST be created before enrollment TX — gateway confirm returns 404 without it"
-      - "Module MUST have assignment content before student can create commitment"
+      - "Module MUST be published on-chain with assignment content — the confirm handler
+         treats a 404 from the DB API as a permanent module-not-found failure and gives up
+         on the TX. This is now the only hard prerequisite for the loop."
+      - "Pre-creating the off-chain commitment is NO LONGER required, and no longer possible.
+         The old gotcha here said confirm returns 404 without it; that premise is dead —
+         confirmation upserts the record. A 404 now means the module is missing, not the
+         commitment."
 
   - id: 4
     name: project.credential
@@ -296,15 +310,12 @@ loops:
     prereqs: [project.setup, course.credential]
     prereq_note: Contributor must hold course credential (prerequisite) and project must exist with funded tasks.
     steps:
-      - action: create_task_commitment
-        role: contributor
-        note: >
-          Create off-chain commitment record before the on-chain TX.
-          NOTE: task must exist in DB (merged source) for --task-index to work.
-          For chain-only tasks, use --task-hash.
-        cli:
-          - andamio project contributor commit --project-id <id> --task-hash <hash>
-          - andamio project contributor commit --project-id <id> --task-index <index>
+      # The off-chain create step that used to open this loop is GONE. It called
+      # POST /v2/project/contributor/commitment/create, removed from the API on 2026-07-30.
+      # As on the course side, the project_join confirmation handler upserts the commitment
+      # record, so nothing needs to exist beforehand. The `andamio project contributor commit`
+      # command still targets the removed route and fails; that command group is retiring in
+      # CLI 1.0 (see cli-retirements.yaml).
       - tx: project_join
         role: contributor
         endpoint: /v2/tx/project/contributor/task/commit
@@ -349,12 +360,18 @@ loops:
       project_credential_claim: { fee_ada: 0.361, paid_by: contributor, note: "net positive: deposit refund + task reward - fee - 5% commission" }
     reward: ADA from treasury (minus 5% commission)
     script: examples/project-lifecycle.sh (partial — also covers loop 2)
-    status: validated
-    validated_date: 2026-04-06
+    status: needs_revalidation
+    validated_date: 2026-04-06        # last end-to-end run, against the pre-2026-07-30 flow
+    revalidation_note: >
+      Step list corrected on 2026-07-30 from the API implementation, not from a run.
+      The removed create step and the upsert-on-confirmation behaviour are verified;
+      resulting statuses and the fees below are NOT — they date from the old flow.
     known_gotchas:
       - "task_hash must be in registration metadata — CLI auto-injects it since andamio-cli commit after 4ccd87e"
       - "contributor_state_id discovered via project get response"
       - "Treasury must be funded (loop 2 treasury_fund step) before contributor can join"
+      - "Pre-creating the off-chain commitment is no longer required or possible — the
+         project_join confirmation upserts the record, same as the course side."
 
   # ===========================================================================
   # HAPPY PATH — Variants
@@ -447,12 +464,7 @@ loops:
         established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     steps:
-      - action: create_commitment
-        role: student
-        note: >
-          Off-chain commitment must exist before enrollment TX.
-        cli:
-          - andamio course student create --course-id <id> --module-code <code>
+      # Off-chain create step removed — see loop 3. The record is upserted on confirmation.
       - tx: assignment_submit
         role: student
         endpoint: /v2/tx/course/student/assignment/commit

@@ -222,10 +222,9 @@ echo "  Mints CourseState token, locks enrollment deposit."
 echo "  Deposit is refunded when credential is claimed."
 echo ""
 
-# First create a draft commitment (off-chain)
-andamio course student commitment create \
-  --course-id "$COURSE_ID" \
-  --module-code 100 >/dev/null 2>&1 || true
+# No off-chain draft commitment is created here. That step used to call
+# POST /v2/course/student/commitment/create, removed from the API on 2026-07-30.
+# The commitment record is upserted when the assignment_submit TX is confirmed.
 
 ENROLL_TX=$(do_transaction \
   "/v2/tx/course/student/assignment/commit" \
