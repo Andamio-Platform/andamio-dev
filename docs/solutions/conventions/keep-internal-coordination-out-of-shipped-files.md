@@ -38,7 +38,11 @@ Describe the concept generically instead — say *what the boundary is*, not *wh
 Two operational habits:
 
 1. **Treat boundary-enforcing files as the first place to check.** A skill that exists to keep private things out is exactly where private names appear as exclusion rules.
-2. **Grep the shipped surface before merge** for internal identifiers (board/circle names, policy-ID patterns) across `skills/`, `reference/`, and the root docs in `package.json` `files`.
+2. **Grep the whole shipped surface before merge** for internal identifiers (board/circle names, ticket/policy-ID patterns) across *every* path in `package.json` `files` — not just the ones you think of as prose.
+
+**A reference to a ticket in a PUBLIC repo is fine.** The rule is about identifiers an external reader cannot resolve. `cli#129` points at a public issue anyone can open; `api#275` points into a private repo and reads as noise plus a signal that a process they cannot see exists. Check repo visibility before scrubbing, and scrub only the non-public ones.
+
+**Generated files are the upstream's problem, not yours.** If a leak sits inside a file carrying a "do not hand-edit, re-sync from source" header, hand-scrubbing it silently reverts on the next sync. Fix the annotation upstream and let the sync carry it; note the leak in the PR rather than editing the artifact.
 
 Also mind the wider blast radius: the **public git repo is broader than the npm package**. Files under `docs/` (plans, brainstorms) are world-readable on a public repo even when they are not shipped to npm. Decide deliberately whether process artifacts that name internal mechanisms belong in a public repo at all.
 
@@ -86,9 +90,15 @@ After (plain description):
 Pre-merge guard — run over the shipped surface and expect no hits:
 
 ```bash
-grep -rniE "<internal-board-pattern>|<internal-circle-pattern>|<internal-policy-id-pattern>" \
-  skills/ reference/ $(node -e "console.log(require('./package.json').files.filter(f=>!f.includes('*')).join(' '))")
+# Covers EVERY shipped path. The first version of this guard dropped any entry
+# containing a wildcard, so it never looked at specs/, knowledge/, examples/, or
+# .claude-plugin/ — and an internal ticket ID sat in specs/cost-registry.json
+# through several reviews because of it. Map `dir/**` to `dir/`; don't filter it out.
+grep -rniE "<internal-board-pattern>|<internal-circle-pattern>|<internal-ticket-id-pattern>" \
+  $(node -e "console.log((require('./package.json').files||[]).map(f=>f.replace(/\/\*\*$/,'')).join(' '))")
 ```
+
+Expect hits only for public-repo issue refs and for generated files pending an upstream fix. Anything else is a leak.
 
 ## Related
 

@@ -3,9 +3,9 @@
 # This is the PUBLIC API surface: the operations available to integrators. It is not every
 # route the server exposes. Administrative and internal operations are deliberately absent.
 #
-# Source: andamio-api docs/swagger.public.json @ d54cd256
-# Synced: 2026-07-28
-# Paths:  79
+# Source: andamio-api docs/swagger.public.json @ ca38a9e4
+# Synced: 2026-07-30
+# Paths:  77
 #
 # Do not hand-edit. Re-sync from the generated public artifact in andamio-api.
 basePath: /api
@@ -75,109 +75,6 @@ definitions:
     - is_active
     - name
     type: object
-  APIUsage:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        type: string
-      api_version:
-        example: v1
-        type: string
-      authentication_method:
-        example: API_KEY
-        type: string
-      cache_hit:
-        example: false
-        type: boolean
-      created_at:
-        example: '2023-01-01T12:34:56Z'
-        type: string
-      data_transfer_in_bytes:
-        example: 1024
-        type: integer
-      data_transfer_out_bytes:
-        example: 2048
-        type: integer
-      endpoint:
-        example: /v1/data
-        type: string
-      error_count:
-        example: 0
-        type: integer
-      http_method:
-        example: GET
-        type: string
-      id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-      ip_address:
-        example: 192.168.1.1
-        type: string
-      latency_to_db_ms:
-        example: 20
-        type: integer
-      quota_exceeded:
-        example: false
-        type: boolean
-      rate_limit_type:
-        example: minute
-        type: string
-      rate_limited:
-        example: false
-        type: boolean
-      remaining_quota:
-        example: 999
-        type: integer
-      remaining_rate_limit:
-        example: 99
-        type: integer
-      request_body_size_bytes:
-        example: 100
-        type: integer
-      request_count:
-        example: 1
-        type: integer
-      request_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-      response_body_size_bytes:
-        example: 500
-        type: integer
-      response_time_ms:
-        example: 150
-        type: integer
-      status_code:
-        example: 200
-        type: integer
-      tier_id:
-        example: 1
-        type: integer
-      tier_name:
-        example: Free
-        type: string
-      timestamp:
-        example: '2023-01-01T12:34:56Z'
-        type: string
-      updated_at:
-        example: '2023-01-01T12:34:56Z'
-        type: string
-      user_agent:
-        example: Mozilla/5.0
-        type: string
-      user_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-    type: object
-  APIUsageMetric:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        type: string
-      usage_metrics:
-        items:
-          $ref: '#/definitions/APIUsage'
-        type: array
-    type: object
   AddFundsTxRequest:
     properties:
       alias:
@@ -196,15 +93,6 @@ definitions:
       project_id:
         description: Hash of a minting policy script.
         example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
-        type: string
-    type: object
-  AddTeachersV2Request:
-    properties:
-      aliases:
-        items:
-          type: string
-        type: array
-      course_id:
         type: string
     type: object
   AggregateAssignmentInput:
@@ -463,32 +351,6 @@ definitions:
       used:
         type: integer
     type: object
-  AnyUserDailyApiUsageRequest:
-    properties:
-      end_date:
-        example: '2023-01-31'
-        type: string
-      start_date:
-        example: '2023-01-01'
-        type: string
-      user_infos:
-        items:
-          $ref: '#/definitions/UserInfo'
-        maxItems: 64
-        minItems: 1
-        type: array
-    required:
-    - end_date
-    - start_date
-    type: object
-  AnyUserDailyApiUsageResponse:
-    properties:
-      users_usages:
-        description: A list of usage data, aggregated by user.
-        items:
-          $ref: '#/definitions/UserUsage'
-        type: array
-    type: object
   AssessAssignmentsTxRequest:
     properties:
       alias:
@@ -724,15 +586,6 @@ definitions:
         allOf:
         - $ref: '#/definitions/SponsorData'
         description: Sponsored path (Path A) — API caller needs to handle sponsorship tank.
-    type: object
-  ClaimCredentialV2Request:
-    properties:
-      course_id:
-        type: string
-      course_module_code:
-        type: string
-      pending_tx_hash:
-        type: string
     type: object
   ClaimProjectCredentialsTxRequest:
     properties:
@@ -1156,13 +1009,6 @@ definitions:
       cross_env_operation_id:
         type: string
     type: object
-  CreateAssignmentCommitmentV2Request:
-    properties:
-      course_id:
-        type: string
-      course_module_code:
-        type: string
-    type: object
   CreateCourseRequest:
     properties:
       content:
@@ -1252,17 +1098,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  CreateTaskCommitmentRequest:
-    properties:
-      evidence:
-        additionalProperties: true
-        type: object
-      task_hash:
-        example: hash_abc123
-        type: string
-    required:
-    - task_hash
     type: object
   CreateTaskRequest:
     properties:
@@ -1527,22 +1362,6 @@ definitions:
     - contributor_state_id
     - index
     type: object
-  DeleteUserRequest:
-    properties:
-      alias:
-        example: johndoe
-        maxLength: 50
-        minLength: 3
-        type: string
-    required:
-    - alias
-    type: object
-  DeleteUserResponse:
-    properties:
-      message:
-        example: User deleted successfully.
-        type: string
-    type: object
   EmailVerificationStatusResponse:
     properties:
       can_resend:
@@ -1769,15 +1588,6 @@ definitions:
       name:
         type: string
     type: object
-  LeaveAssignmentCommitmentV2Request:
-    properties:
-      course_id:
-        type: string
-      course_module_code:
-        type: string
-      pending_tx_hash:
-        type: string
-    type: object
   LessonV2:
     properties:
       content_json:
@@ -1897,41 +1707,6 @@ definitions:
     required:
     - session_id
     - signature
-    type: object
-  LoginRequest:
-    properties:
-      alias:
-        example: johndoe
-        maxLength: 32
-        minLength: 1
-        type: string
-      wallet_address:
-        example: addr1q...
-        maxLength: 108
-        minLength: 103
-        type: string
-    required:
-    - alias
-    - wallet_address
-    type: object
-  LoginResponse:
-    properties:
-      alias:
-        example: johndoe
-        type: string
-      jwt:
-        $ref: '#/definitions/JWTResponse'
-      tier:
-        example: Free
-        type: string
-      user_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-    required:
-    - alias
-    - jwt
-    - tier
-    - user_id
     type: object
   LoginSession:
     properties:
@@ -2240,14 +2015,6 @@ definitions:
     - created_at
     - tier
     - user_id
-    type: object
-  MeResponseEnvelope:
-    description: Standard API response envelope for user profile
-    properties:
-      data:
-        $ref: '#/definitions/MeResponse'
-    required:
-    - data
     type: object
   MergedAssignmentContent:
     properties:
@@ -3589,28 +3356,6 @@ definitions:
       title:
         type: string
     type: object
-  RegisterRequest:
-    properties:
-      alias:
-        example: johndoe
-        maxLength: 32
-        minLength: 1
-        type: string
-      email:
-        example: john.doe@example.com
-        maxLength: 254
-        minLength: 1
-        type: string
-      wallet_address:
-        example: addr1q...
-        maxLength: 108
-        minLength: 103
-        type: string
-    required:
-    - alias
-    - email
-    - wallet_address
-    type: object
   RegisterResponse:
     properties:
       alias:
@@ -3688,15 +3433,6 @@ definitions:
         type: integer
       slt_text:
         description: The SLT content
-        type: string
-    type: object
-  RemoveTeachersV2Request:
-    properties:
-      aliases:
-        items:
-          type: string
-        type: array
-      course_id:
         type: string
     type: object
   ResendVerificationResponse:
@@ -3827,48 +3563,6 @@ definitions:
     required:
     - message
     - status_code
-    type: object
-  SetUserRoleRequest:
-    properties:
-      tier_id:
-        example: 1
-        type: integer
-      tier_name:
-        example: pro
-        type: string
-      user_id:
-        example: 123e4567-e89b-12d3-a456-426614174000
-        type: string
-    required:
-    - user_id
-    type: object
-  SetUserRoleResponse:
-    properties:
-      message:
-        example: User role updated successfully.
-        type: string
-      tier_id:
-        example: 1
-        minimum: 1
-        type: integer
-      tier_name:
-        example: pro
-        minLength: 1
-        type: string
-      user_id:
-        example: 123e4567-e89b-12d3-a456-426614174000
-        type: string
-    required:
-    - tier_id
-    - tier_name
-    type: object
-  SetUserRoleResponseEnvelope:
-    description: Standard API response envelope for setting user role
-    properties:
-      data:
-        $ref: '#/definitions/SetUserRoleResponse'
-    required:
-    - data
     type: object
   SignatureData:
     description: CIP-30 signature data from a Cardano wallet, containing the COSE_Sign1 signature and
@@ -4651,130 +4345,6 @@ definitions:
     - contributor_state_id
     - index
     type: object
-  UpdateTeachersV2Request:
-    properties:
-      add:
-        description: Add Aliases to add as teachers
-        items:
-          type: string
-        type: array
-      course_id:
-        type: string
-      remove:
-        description: Remove Aliases to remove as teachers
-        items:
-          type: string
-        type: array
-    type: object
-  UpdateTeachersV2Response:
-    properties:
-      course_id:
-        type: string
-      success:
-        type: boolean
-      teachers_added:
-        items:
-          type: string
-        type: array
-      teachers_current:
-        description: TeachersCurrent Final list of teachers after updates
-        items:
-          type: string
-        type: array
-      teachers_removed:
-        items:
-          type: string
-        type: array
-    type: object
-  UsageData:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        type: string
-      api_versions:
-        example:
-        - '["v1"]'
-        items:
-          type: string
-        type: array
-      authentication_methods:
-        example:
-        - '["API_KEY"]'
-        items:
-          type: string
-        type: array
-      date:
-        example: '2023-01-01T00:00:00Z'
-        type: string
-      endpoints:
-        example:
-        - '["/v1/data"]'
-        items:
-          type: string
-        type: array
-      http_methods:
-        example:
-        - '["GET"]'
-        items:
-          type: string
-        type: array
-      max_response_time_ms:
-        example: 500
-        type: integer
-      min_response_time_ms:
-        example: 10
-        type: integer
-      tier_id:
-        example: 1
-        type: integer
-      tier_name:
-        example: Free
-        type: string
-      total_cache_hit_count:
-        example: 100
-        type: integer
-      total_data_transfer_in_bytes:
-        example: 1024000
-        type: integer
-      total_data_transfer_out_bytes:
-        example: 2048000
-        type: integer
-      total_error_count:
-        example: 50
-        type: integer
-      total_quota_exceeded_count:
-        example: 2
-        type: integer
-      total_rate_limited_count:
-        example: 5
-        type: integer
-      total_requests:
-        example: 1000
-        type: integer
-      total_response_time_ms:
-        example: 50000
-        type: integer
-      user_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-      user_ips:
-        description: Added UserIPs
-        example:
-        - '["192.168.1.1"]'
-        items:
-          type: string
-        type: array
-    type: object
-  UsagePerApiKeyName:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        type: string
-      usage_data:
-        items:
-          $ref: '#/definitions/UsageData'
-        type: array
-    type: object
   UsageResponse:
     properties:
       daily_quota_consumed:
@@ -4809,157 +4379,6 @@ definitions:
       subscription_tier:
         example: Free
         type: string
-    type: object
-  UsageResponseEnvelope:
-    description: Standard API response envelope for usage metrics
-    properties:
-      data:
-        $ref: '#/definitions/UsageResponse'
-    required:
-    - data
-    type: object
-  UserAPIUsageRequest:
-    properties:
-      alias:
-        example: johndoe
-        maxLength: 64
-        minLength: 1
-        type: string
-      api_key_names:
-        example:
-        - '["MyFirstKey"'
-        - ' "AnotherKey"]'
-        items:
-          type: string
-        type: array
-      end_date:
-        example: '2023-01-31'
-        type: string
-      start_date:
-        example: '2023-01-01'
-        type: string
-    required:
-    - alias
-    - end_date
-    - start_date
-    type: object
-  UserAPIUsageResponse:
-    properties:
-      alias:
-        example: johndoe
-        type: string
-      api_usage_metrics:
-        items:
-          $ref: '#/definitions/APIUsageMetric'
-        type: array
-    type: object
-  UserDailyApiUsageRequest:
-    properties:
-      api_key_names:
-        example:
-        - '["MyFirstKey"'
-        - ' "AnotherKey"]'
-        items:
-          type: string
-        type: array
-      end_date:
-        example: '2023-01-31'
-        type: string
-      start_date:
-        example: '2023-01-01'
-        type: string
-    required:
-    - end_date
-    - start_date
-    type: object
-  UserDailyApiUsageResponse:
-    properties:
-      user_usages:
-        items:
-          $ref: '#/definitions/UserUsagePerApiKeyName'
-        type: array
-    type: object
-  UserInfo:
-    properties:
-      alias:
-        example: johndoe
-        maxLength: 64
-        minLength: 1
-        type: string
-      api_key_names:
-        example:
-        - '["MyFirstKey"'
-        - ' "AnotherKey"]'
-        items:
-          type: string
-        type: array
-    required:
-    - alias
-    type: object
-  UserUsage:
-    properties:
-      alias:
-        example: johndoe
-        type: string
-      usages:
-        items:
-          $ref: '#/definitions/UsagePerApiKeyName'
-        type: array
-    type: object
-  UserUsageData:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        type: string
-      api_versions:
-        example:
-        - '["v1"]'
-        items:
-          type: string
-        type: array
-      authentication_methods:
-        example:
-        - '["API_KEY"]'
-        items:
-          type: string
-        type: array
-      date:
-        example: '2023-01-01'
-        type: string
-      endpoints:
-        example:
-        - '["/v1/data"]'
-        items:
-          type: string
-        type: array
-      http_methods:
-        example:
-        - '["GET"]'
-        items:
-          type: string
-        type: array
-      tier_id:
-        example: 1
-        type: integer
-      tier_name:
-        example: Free
-        type: string
-      total_error_count:
-        example: 50
-        type: integer
-      total_requests:
-        example: 1000
-        type: integer
-    type: object
-  UserUsagePerApiKeyName:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        type: string
-      usage_Data:
-        items:
-          $ref: '#/definitions/UserUsageData'
-        type: array
     type: object
   ValidTxTypesResponse:
     description: List of valid transaction types that can be registered with the TX State Machine.
@@ -5356,41 +4775,6 @@ paths:
       - ApiKeyAuth: []
         BearerAuth: []
       summary: List my commitments
-      tags:
-      - Course/Student
-      x-access-level: public
-  /v2/course/student/commitment/leave:
-    post:
-      consumes:
-      - application/json
-      description: Abandons an assignment commitment using V2 schema.
-      operationId: v2-course-student-leave-commitment
-      parameters:
-      - description: Leave commitment request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/LeaveAssignmentCommitmentV2Request'
-      produces:
-      - application/json
-      responses:
-        '200':
-          description: Updated commitment
-          schema:
-            $ref: '#/definitions/AssignmentCommitment'
-        '400':
-          description: Invalid request body
-          schema:
-            $ref: '#/definitions/BadRequestResponse'
-        '502':
-          description: DB API request failed
-          schema:
-            $ref: '#/definitions/BadGatewayErrorResponse'
-      security:
-      - ApiKeyAuth: []
-        BearerAuth: []
-      summary: Leave commitment
       tags:
       - Course/Student
       x-access-level: public
@@ -6318,41 +5702,6 @@ paths:
       summary: Delete API key
       tags:
       - Keys
-      x-access-level: public
-  /v2/project/contributor/commitment/create:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new DRAFT commitment for a project task.
-      operationId: v2-db-contributor-create-commitment
-      parameters:
-      - description: Commitment creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/CreateTaskCommitmentRequest'
-      produces:
-      - application/json
-      responses:
-        '200':
-          description: Created commitment
-          schema:
-            $ref: '#/definitions/TaskCommitment'
-        '400':
-          description: Invalid request body
-          schema:
-            $ref: '#/definitions/BadRequestResponse'
-        '502':
-          description: DB API request failed
-          schema:
-            $ref: '#/definitions/BadGatewayErrorResponse'
-      security:
-      - ApiKeyAuth: []
-        BearerAuth: []
-      summary: Create commitment
-      tags:
-      - Project/Contributor
       x-access-level: public
   /v2/project/contributor/commitment/delete:
     post:
@@ -7449,7 +6798,9 @@ paths:
       x-access-level: public
   /v2/tx/pending:
     get:
-      description: 'Returns all pending and recently completed transactions for the authenticated user.
+      description: 'Returns all pending and recently completed transactions scoped to the calling API
+        key''s owner — not the end-user identified by an optional Authorization JWT, if one was presented
+        on the requests that created these transactions.
 
         Useful for displaying a transaction history or checking multiple pending transactions at once.
 

@@ -24,7 +24,7 @@ The Gateway API is the single entry point for all Andamio operations. It proxies
 
 ### Pre-Execution Knowledge Check
 
-1. Read `specs/andamio-api.yaml` — the Andamio Gateway API public contract (Swagger 2.0, 79 paths). It is the public surface only; administrative and internal operations are absent by design, so their absence is not a gap.
+1. Read `specs/andamio-api.yaml` — the Andamio Gateway API public contract (Swagger 2.0, 77 paths). It is the public surface only; administrative and internal operations are absent by design, so their absence is not a gap.
 2. If knowledge files exist, read `knowledge/endpoint-usage.yaml` for previously discovered patterns. Proceed without it if the file is empty or missing.
 
 ### Endpoint Filtering
@@ -81,23 +81,25 @@ When endpoints return or accept rich content fields (lessons, assignments, task 
 ```
 This is a multi-step process:
 
-1. Student creates a commitment (draft):
-   Gateway API: POST /v2/course/student/commitment/create
+1. Build the enrollment transaction:
+   Gateway API: POST /v2/tx/course/student/assignment/commit
    Auth: API Key + JWT
-   Body: { course_id, course_module_code }
-   NOTE: live and working, but not in the published contract — do not expect to
-   find it in specs/andamio-api.yaml. It duplicates the in-contract builder
-   POST /v2/tx/course/student/assignment/commit; the canonical path is undecided.
+   Body: { alias, course_id, slt_hash, assignment_info }
 
-2. Student submits the commitment:
+2. Student submits evidence off-chain:
    Gateway API: POST /v2/course/student/commitment/submit
    Auth: API Key + JWT
    Body: { course_id, slt_hash, evidence: <Tiptap JSON>, evidence_hash }
 
-3. Build the enrollment transaction:
-   Gateway API: POST /v2/tx/course/student/assignment/commit
-   Auth: API Key + JWT
-   Body: { alias, course_id, slt_hash, assignment_info }
+NOTE: POST /v2/course/student/commitment/create is gone. It was removed from the
+API in the 2026-07-30 contract sync, so it is absent from specs/andamio-api.yaml
+and calls to it fail — the tx builder above is the sole supported path. The CLI
+has not caught up: `andamio course student create` still targets the removed
+route, so it fails today. That command group is already slated for retirement in
+CLI 1.0 (see reference/cli-retirements.yaml), so use the API path rather than
+waiting on a CLI fix. The same applies to the project side —
+POST /v2/project/contributor/commitment/create was removed in the same sync, and
+`andamio project contributor commit` still targets it.
 
 Note: Enrollment involves a Cardano transaction (~2.14 ADA).
 Use /cost-estimator for a full cost breakdown.

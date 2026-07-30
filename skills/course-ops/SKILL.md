@@ -126,13 +126,13 @@ Costs ~10.3 ADA per update transaction. The governance token tracks the teacher 
 
 Students interact through the app or API:
 
-1. **Create commitment** (draft): `POST /v2/course/student/commitment/create`
-   — live and working, but **not in the published contract** (`specs/andamio-api.yaml`), so you will not find it there. It duplicates the in-contract builder `POST /v2/tx/course/student/assignment/commit`; which of the two becomes canonical is an open decision.
+1. **Build enrollment tx**: `POST /v2/tx/course/student/assignment/commit` (~2.14 ADA)
 2. **Submit commitment**: `POST /v2/course/student/commitment/submit`
-3. **Build enrollment tx**: `POST /v2/tx/course/student/assignment/commit` (~2.14 ADA)
-4. **Update evidence**: `POST /v2/course/student/commitment/update` (~0.33 ADA per update)
-5. **Teacher assesses**: `POST /v2/tx/course/teacher/assignments/assess` (~0.21 ADA)
-6. **Claim credential**: `POST /v2/tx/course/student/credential/claim` (nets +1.03 ADA)
+3. **Update evidence**: `POST /v2/course/student/commitment/update` (~0.33 ADA per update)
+4. **Teacher assesses**: `POST /v2/tx/course/teacher/assignments/assess` (~0.21 ADA)
+5. **Claim credential**: `POST /v2/tx/course/student/credential/claim` (nets +1.03 ADA)
+
+> `POST /v2/course/student/commitment/create` was removed from the API in the 2026-07-30 contract sync — it is absent from `specs/andamio-api.yaml` and calls to it now fail. The tx builder in step 1 is the sole supported path. The CLI has not caught up: `andamio course student create` still targets the removed route, so it fails today. That command group is already slated for retirement in CLI 1.0 (see `reference/cli-retirements.yaml`), so use the API path rather than waiting on a CLI fix. Same story on the project side for `POST /v2/project/contributor/commitment/create` and `andamio project contributor commit`.
 
 #### 6. Publish Module
 

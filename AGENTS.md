@@ -42,7 +42,7 @@ examples/                 # Runnable scripts demonstrating full tx state machine
   course-lifecycle.sh     # Course: create → module → enroll → submit → assess → claim
   project-lifecycle.sh    # Project: create → task → commit → assess → claim
 specs/                    # Bundled API specifications (read-only reference)
-  andamio-api.yaml        # Andamio Gateway API — the PUBLIC contract (Swagger 2.0, 79 paths).
+  andamio-api.yaml        # Andamio Gateway API — the PUBLIC contract (Swagger 2.0, 77 paths).
                           # Synced from the generated public artifact in andamio-api; the header
                           # records the source commit and sync date. Administrative and internal
                           # operations are not in it, by design. Do not hand-edit.
@@ -75,19 +75,19 @@ CONCEPTS.md               # Shared domain vocabulary (entities, named processes,
 
 ### Andamio API (`specs/andamio-api.yaml`)
 
-The public-facing Andamio API. 79 paths across these groups (the public contract only — administrative and internal operations are excluded by design):
+The public-facing Andamio API. 77 paths across these groups (the public contract only — administrative and internal operations are excluded by design):
 
 | Group | Operations | Auth | Purpose |
 |-------|-----------|------|---------|
-| Courses | 28 | API key (+ JWT for role-scoped) | Course discovery, modules, teachers, learner commitments, assessment |
+| Courses | 27 | API key (+ JWT for role-scoped) | Course discovery, modules, teachers, learner commitments, assessment |
 | Transactions | 22 | API key | Build, register, and track Cardano transactions |
-| Projects | 21 | API key (+ JWT for role-scoped) | Project CRUD, tasks, contributors, treasury |
+| Projects | 20 | API key (+ JWT for role-scoped) | Project CRUD, tasks, contributors, treasury |
 | Platform Auth | 3 | varies | Wallet login, session management, user profile |
 | Keys | 3 | JWT | Developer API key CRUD |
 | Verify | 2 | API key | Credential and task-commitment verification |
 | Public | 1 | API key | Public read |
 
-**80 operations across 79 paths.** Counts and Auth values derive from the contract's own tag groups and per-operation `security` blocks — regenerate `reference/api-endpoints-by-use-case.md` to see the current breakdown per group and the auth requirement per endpoint.
+**78 operations across 77 paths.** Counts and Auth values derive from the contract's own tag groups and per-operation `security` blocks — regenerate `reference/api-endpoints-by-use-case.md` to see the current breakdown per group and the auth requirement per endpoint.
 
 The role-scoped path prefixes that require **both** `X-API-Key` and `Authorization: Bearer` in the same request are `/v2/course/owner`, `/v2/course/student`, `/v2/course/teacher`, `/v2/project/contributor`, `/v2/project/manager`, `/v2/project/owner`, and `/v2/user/dashboard`. `/v2/keys` requires the JWT only. Everything else takes the API key alone.
 
@@ -98,9 +98,10 @@ The role-scoped path prefixes that require **both** `X-API-Key` and `Authorizati
 | Route | Why it is absent | Where it is used here |
 |-------|------------------|-----------------------|
 | `GET /.well-known/jwks.json` | Served at the gateway service root, outside the spec's `basePath: /api` | `courses/build-on-andamio/lessons/m200/assignment.md`, lesson 200.4 |
-| `POST /v2/course/student/commitment/create` | Duplicates the in-contract builder `POST /v2/tx/course/student/assignment/commit`; which becomes canonical is an open decision | `skills/course-ops/SKILL.md`, `skills/explore-api/SKILL.md` |
 
 If you find another route that is live but absent, verify it against the spec before adding it to this table.
+
+**Re-verify this table on every spec sync.** It previously carried `POST /v2/course/student/commitment/create` as live-but-undocumented, with canonicality framed as an open decision. That decision was settled upstream and the route was deleted, but the row stayed — so two skills went on telling developers to call a route that no longer exists. "Absence from the contract is not proof a route is dead" cuts both ways: a past verification is not proof it is still alive.
 
 ### Cost Registry (`specs/cost-registry.json`)
 
