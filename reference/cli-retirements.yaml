@@ -18,8 +18,14 @@ releases:
     tracking: Andamio-Platform/andamio-cli#129
     note: >
       1.0 scopes the CLI to Owner, Teacher and Manager. Learner and contributor
-      work moves to the Andamio app, which signs and submits in one flow. The
-      gateway routes these commands used are unaffected and remain public.
+      work moves to the Andamio app, which signs and submits in one flow. This
+      retirement removes CLI surface, not platform capability.
+      Tracked separately: two routes these commands call — the course and project
+      `commitment/create` pair — were removed from the public contract in the
+      2026-07-30 spec sync. That is an unrelated API change, not part of this
+      retirement, and it lands before 1.0 ships, so those two commands fail now
+      rather than at retirement. The canonical path for both is the corresponding
+      `/v2/tx/...` builder.
     retired_commands:
       - "course student"
       - "project contributor"

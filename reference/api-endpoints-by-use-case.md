@@ -6,7 +6,7 @@
 
 > "I want to ___" → endpoint. Generated from the public contract in `specs/andamio-api.yaml`, so it cannot drift from it.
 
-**80 operations across 79 paths.** All paths are relative to `/api`. This is the public surface only — administrative and internal operations are not part of the contract and do not appear here.
+**78 operations across 77 paths.** All paths are relative to `/api`. This is the public surface only — administrative and internal operations are not part of the contract and do not appear here.
 
 For full request and response schemas, read the spec directly or use the `/explore-api` skill.
 
@@ -53,7 +53,6 @@ Student course actions - enroll, submit assignments, track progress, and view gr
 |---|---|---|
 | Get commitment | `POST /v2/course/student/assignment-commitment/get` | API key + JWT |
 | List my commitments | `POST /v2/course/student/assignment-commitments/list` | API key + JWT |
-| Leave commitment | `POST /v2/course/student/commitment/leave` | API key + JWT |
 | Submit commitment | `POST /v2/course/student/commitment/submit` | API key + JWT |
 | Update commitment evidence | `POST /v2/course/student/commitment/update` | API key + JWT |
 | List my courses | `POST /v2/course/student/courses/list` | API key + JWT |
@@ -105,7 +104,6 @@ Contributor project actions - commit to tasks, submit work, and claim rewards.
 
 | I want to... | Endpoint | Auth |
 |---|---|---|
-| Create commitment | `POST /v2/project/contributor/commitment/create` | API key + JWT |
 | Delete commitment | `POST /v2/project/contributor/commitment/delete` | API key + JWT |
 | Get commitment | `POST /v2/project/contributor/commitment/get` | API key + JWT |
 | Submit commitment | `POST /v2/project/contributor/commitment/submit` | API key + JWT |
