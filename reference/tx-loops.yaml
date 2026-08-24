@@ -860,9 +860,23 @@ loops:
           must match the payment key hash in:
             cardano-cli conway address info --address <addr>
 
-          To discover which alias a wallet owns, check its native tokens:
-            Look for tokens under the access-token policy (starts with 'u' prefix).
-            Token name 'ualice' means the alias is 'alice'.
+          A wallet can hold MORE THAN ONE access token, and login succeeds for every
+          one of them — `andamio user status` shows an active session whichever alias
+          you passed, so it proves a session exists, not that you picked the right
+          identity. Roles hang off the alias, not the wallet.
+
+          To discover which aliases a wallet owns, enumerate ALL its native tokens
+          under the access-token policy (each starts with a 'u' prefix). Token name
+          'ualice' means the alias is 'alice'. See reference/acceptance-test-prerequisites.md
+          for a Blockfrost one-liner and the shared-wallet alias map.
+
+          To verify you logged in as the identity you meant, check the role rather
+          than the session:
+            andamio teacher courses --output json    (teacher)
+            andamio manager projects --output json   (manager)
+            andamio course owner list --output json  (course owner)
+            andamio project owner list --output json (project owner)
+          An empty list means the wrong alias or an ungranted role — not a pass.
       - action: verify_session
         note: >
           Confirm authenticated operations work.
@@ -887,6 +901,7 @@ loops:
     validated_date: 2026-04-07
     known_gotchas:
       - "All three flags required for headless login: --skey, --alias, --address. Missing --address gives clear error."
+      - "Login succeeds for ANY access token the wallet holds. A wallet with several aliases will authenticate as whichever one you name, and `user status` looks the same for all of them — verify the role (e.g. `andamio teacher courses`), not the session."
       - "skey permissions warning (444 vs 0600) is informational, does not block login"
       - "user me returns large dashboard JSON, not a simple alias/role object"
       - "No JWT refresh command — session expires silently, re-login is the recovery path"
