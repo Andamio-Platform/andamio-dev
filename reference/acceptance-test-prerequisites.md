@@ -101,9 +101,14 @@ For each wallet, verify:
 <a id="shared-preprod-wallets"></a>
 ### Shared preprod wallets
 
+The map below covers the Andamio team's internal shared preprod wallets. If you are running
+acceptance tests from your own wallets it will not apply — enumerate your own tokens with the
+one-liner above and build the equivalent map before starting. The shape is the point: one wallet,
+several aliases, a different set of roles and fixtures on each.
+
 Accurate as of **2026-08-24**. Re-verify before relying on it — aliases and fixtures drift.
 
-`preprod-wallets/andamio-preprod-001` holds **three** access tokens under policy
+The internal shared wallet `andamio-preprod-001` holds **three** access tokens under policy
 `aa1cbea2524d369768283d7c8300755880fd071194a347cf0a4e274f`, all signable with the same `payment.skey`:
 
 | Alias | Teacher courses | Commitments awaiting review |
