@@ -90,7 +90,7 @@ andamio course import-all <course-id>
 
 **File format rules:**
 - `outline.md`: Title from YAML frontmatter, SLTs listed as numbered items
-- `lesson-N.md`: Must start with `# H1` title, content below
+- `lesson-N.md`: `# H1` title, content below. May open with YAML frontmatter holding `video_url` (CLI v1.1.1+): a URL sets the lesson's video, `""` clears it, no key keeps the stored value. Any other key fails the import. The app embeds YouTube links only
 - `introduction.md`: `# H1` becomes intro title
 - `assignment.md`: `# H1` becomes assignment title
 

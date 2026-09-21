@@ -160,8 +160,8 @@ Stable error codes preserved verbatim in error messages: `tier_limit_exceeded` (
 | Command | Auth | Description |
 |---------|------|-------------|
 | `course create-module [path] --course-id <id>` | jwt | Create a new module. With path, reads title/code from outline.md. Flags: `--code`, `--title`, `--sort-order`, `--slt` (repeatable), `--approve` (auto-computes slt_hash) |
-| `course export [course-id] <module-code>` | jwt | Export module to local files. Alt: `--course "Name"` instead of course-id |
-| `course import <path> --course-id <id>` | jwt | Import local files to update module. Computes SLT hash automatically. `--create` to create if missing. `--dry-run` supported. Alt: `--course "Name"` |
+| `course export [course-id] <module-code>` | jwt | Export module to local files. Writes `video_url` frontmatter for each lesson that has a video (v1.1.1+). Alt: `--course "Name"` instead of course-id |
+| `course import <path> --course-id <id>` | jwt | Import local files to update module. Computes SLT hash automatically. Reads optional `video_url` frontmatter from each `lesson-N.md` (v1.1.1+, see [Lesson video frontmatter](#lesson-video-frontmatter)). `--create` to create if missing. `--dry-run` supported. Alt: `--course "Name"` |
 | `course import-all <dir> --course-id <id>` | jwt | Import all modules. Computes SLT hashes. `--create`, `--dry-run`, `--continue-on-error`, `--sort-order-start`. Alt: `--course "Name"` |
 
 ### course owner — Course administration (owner role)
@@ -576,14 +576,39 @@ The CLI converts between Markdown and Tiptap JSON for import/export. When using 
 
 ```
 compiled/<course-slug>/<module-code>/
-  outline.md          # No H1 — title from YAML frontmatter. Start with ## SLTs
+  outline.md          # No H1 — YAML frontmatter holds title and code only. Start with ## SLTs
   introduction.md     # H1 becomes intro title
-  lesson-1.md         # H1 becomes lesson title
+  lesson-1.md         # H1 becomes lesson title. Optional video_url frontmatter
   lesson-N.md         # One file per SLT
   assignment.md       # H1 becomes assignment title
-  assets/             # Images (auto-uploaded on import)
+  assets/             # Images only: PNG, JPG, GIF, WebP, 5MB each (auto-uploaded on import)
   .image-manifest.json  # Local filename → CDN URL mapping
 ```
+
+### Lesson video frontmatter
+
+Requires CLI v1.1.1 or later. A `lesson-N.md` may open with a YAML frontmatter block. `video_url` is the only supported key:
+
+```markdown
+---
+video_url: "https://www.youtube.com/watch?v=<id>"
+---
+
+# Lesson title
+```
+
+| Frontmatter | On import |
+|---|---|
+| `video_url: "<url>"` | Sets the lesson's video, replacing the stored one |
+| `video_url: ""` | Clears the lesson's video |
+| no `video_url` key, or no frontmatter | Leaves the stored video unchanged |
+
+- The value must be an absolute `http` or `https` URL. Any other key, or an invalid URL, fails the import before any request and names the file.
+- The Andamio app embeds YouTube links only (`youtube.com`, `youtu.be`, `youtube-nocookie.com`). Import warns on stderr for any other URL, in every output mode including `--output json`, and still sends it.
+- `course export` writes the block for every lesson that has a video, so export followed by import leaves the module unchanged.
+- A lesson that opens with a `---` thematic break is still read as Markdown. A leading `---` … `---` block counts as frontmatter only when it parses as YAML keys.
+- This is a URL, not an upload. The CLI does not upload video files; `assets/` accepts images only.
+- Module and assignment `video_url` have no CLI input. Import preserves whatever is stored.
 
 ## Key Identifiers
 
