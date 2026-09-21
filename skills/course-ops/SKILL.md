@@ -132,7 +132,7 @@ Students interact through the app or API:
 4. **Teacher assesses**: `POST /v2/tx/course/teacher/assignments/assess` (~0.21 ADA)
 5. **Claim credential**: `POST /v2/tx/course/student/credential/claim` (nets +1.03 ADA)
 
-> `POST /v2/course/student/commitment/create` was removed from the API in the 2026-07-30 contract sync — it is absent from `specs/andamio-api.yaml` and calls to it now fail. The tx builder in step 1 is the sole supported path. The CLI has not caught up: `andamio course student create` still targets the removed route, so it fails today. That command group is already slated for retirement in CLI 1.0 (see `reference/cli-retirements.yaml`), so use the API path rather than waiting on a CLI fix. Same story on the project side for `POST /v2/project/contributor/commitment/create` and `andamio project contributor commit`.
+> `POST /v2/course/student/commitment/create` was removed from the API in the 2026-07-30 contract sync — it is absent from `specs/andamio-api.yaml` and calls to it now fail. The tx builder in step 1 is the sole supported path. Same story on the project side for `POST /v2/project/contributor/commitment/create`. CLI 1.0 removed the learner and contributor command groups altogether (see `reference/cli-retirements.yaml`): learners and contributors work in the Andamio app, and from the CLI these steps are reachable only through `andamio tx run` / `tx build` on the `/v2/tx/...` endpoints.
 
 #### 6. Publish Module
 
@@ -154,13 +154,14 @@ Course operations that modify on-chain state require Cardano transactions:
 
 ```bash
 # 1. Build (returns unsigned tx hex)
-TX_HEX=$(andamio tx build /v2/tx/instance/owner/course/create \
+UNSIGNED=$(andamio tx build /v2/tx/instance/owner/course/create \
   --body '{"alias":"my-alias","teachers":["teacher1"]}' \
-  --output json | jq -r '.tx_hex')
+  --output json | jq -r '.unsigned_tx')
 
-# 2. Sign
-SIGNED=$(andamio tx sign --tx "$TX_HEX" --skey payment.skey \
-  --output json | jq -r '.tx_hex')
+# 2. Sign (returns signed_tx and tx_hash)
+SIGN=$(andamio tx sign --tx "$UNSIGNED" --skey payment.skey --output json)
+SIGNED=$(jq -r '.signed_tx' <<<"$SIGN")
+TX_HASH=$(jq -r '.tx_hash' <<<"$SIGN")
 
 # 3. Submit
 andamio tx submit --tx "$SIGNED"

@@ -10,11 +10,11 @@
 #   mark endpoints, transaction loops, or roles as retired.
 
 version: 1
-last_updated: 2026-07-28
+last_updated: 2026-09-21
 
 releases:
   - release: "1.0.0"
-    status: unreleased          # flip to `released` when the tag ships
+    status: released            # v1.0.0 tagged 2026-08-27
     tracking: Andamio-Platform/andamio-cli#129
     note: >
       1.0 scopes the CLI to Owner, Teacher and Manager. Learner and contributor

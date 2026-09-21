@@ -45,17 +45,23 @@ Parse the error to determine the source:
 | 401 Unauthorized | Missing or expired credentials | Check API key and JWT. JWT expires ~24h. |
 | 403 Forbidden | Insufficient permissions for this endpoint | Endpoint may require JWT (not just API key), or a specific role (owner, teacher, manager). |
 | 404 Not Found | Resource doesn't exist | Verify the course_id, project_id, or module_code. Use `andamio course list --output json` to discover valid IDs. |
-| 409 Conflict | Duplicate operation | Usually safe to ignore — idempotent retry hit an existing resource. |
-| 429 Too Many Requests | Rate limit or quota exceeded | Check `andamio apikey usage`. Wait for window reset or upgrade tier. |
+| 409 Conflict | Duplicate operation | Usually safe to ignore — idempotent retry hit an existing resource. CLI exit 6 (`conflict`). |
+| 429 Too Many Requests | Rate limit or quota exceeded | Check `andamio apikey usage` (needs API key and `dev login`). Wait for window reset. With error code `tier_limit_exceeded` the CLI exits 7: revoke a key or upgrade, retrying won't help. |
 | 500 Internal Server Error | Server-side issue | Retry after a moment. If persistent, check service health: `GET /health`. |
 
 **CLI Exit Codes → CLI issues:**
 
 | Code | Meaning | Quick Fix |
 |------|---------|-----------|
-| 1 | Generic error | Check stderr output for details. Usually network or server issue. |
-| 2 | Not found | Resource doesn't exist. Verify IDs with `andamio course list --output json`. |
-| 3 | Auth required | No credentials or invalid credentials. Run `andamio auth status` and `andamio user status`. |
+| 1 | `error` / `server` / `backpressure` / `canceled` / `verify` | Check stderr, or `.kind` with `--output json`. `verify` means the write was applied but the read-back did not confirm it: inspect, don't retry blindly. |
+| 2 | `not_found` | Resource doesn't exist. Verify IDs with `andamio course list --output json`. |
+| 3 | `auth` | No credentials, invalid or expired. Run `andamio auth status` and `andamio user status`. An expired session: just run `andamio user login` again. |
+| 4 | `removed_command` | The command was retired in CLI 1.0 (learner and contributor groups). Use the Andamio app, or the `/v2/tx/...` endpoint through `tx run`. |
+| 5 | `unreachable` | The request never reached the service. Check network and `andamio config show`. |
+| 6 | `conflict` | 409. Was exit 1 before CLI 1.0. |
+| 7 | `tier_limit` | The plan does not permit the action. `andamio dev keys list`, `andamio dev keys delete <id>`, or upgrade. |
+
+Full table: `andamio help exit-codes`.
 
 **Transaction Errors → Cardano issues:**
 

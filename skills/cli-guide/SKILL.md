@@ -2,7 +2,7 @@
 name: cli-guide
 description: Get exact CLI commands for any Andamio operation. Translates developer questions to commands with flags, exit codes, and composability patterns.
 license: MIT
-compatibility: Requires the Andamio CLI binary (v0.10.1+). Install via brew install andamio-platform/tap/andamio.
+compatibility: Requires the Andamio CLI binary (v1.0.0+; v1.1.1 for quiz assignments and lesson video). Install via brew install andamio-platform/tap/andamio.
 metadata:
   author: Andamio
   version: 0.2.0
@@ -23,7 +23,7 @@ Interactive CLI guidance from the bundled agent reference. Developers ask what t
 
 ### Pre-Execution Knowledge Check
 
-1. Read `reference/andamio-cli-context.md` — complete CLI command reference (synced against CLI v0.12.1).
+1. Read `reference/andamio-cli-context.md` — complete CLI command reference (synced against CLI v1.1.1).
 2. If knowledge files exist, read `knowledge/gotchas.yaml` for CLI-related gotchas (category: cli). Proceed without it if missing.
 
 ### Answering Developer Questions
@@ -63,22 +63,25 @@ Cover the full CLI surface:
 | `config` | show, set-url, set-submit-url, set-submit-header, remove-submit-header | none |
 | `user` | login (browser + headless), logout, status, me, exists | varies |
 | `course` (read) | list, get, modules, slts, lesson, assignment, intro | either |
-| `course` (write) | create-module, export, import, import-all | jwt |
+| `course` (write) | create-module, export, import, import-all, import-assignment | jwt |
 | `course owner` | list, create, register, update, teachers | jwt |
 | `course teacher` | commitments, review, register-module, publish-module, delete-module, update-module-status | jwt |
-| `course student` | courses, credentials, commitments, commitment, create, submit, update, claim, leave | jwt |
-| `course credential` | verify-hash | either |
-| `teacher` | courses, assignments list/get | jwt |
+| `course credential` | verify-hash, compute-hash | either / none |
+| `teacher` | courses, assignments list/get, assessment build | jwt |
 | `project` (read) | list, get, tasks | either |
 | `project owner` | list, create, register, update | jwt |
-| `project task` | list, get, create, update, delete, export, import, verify-hash | jwt |
-| `project contributor` | list, commitments, commitment, commit, update, delete | jwt |
-| `project manager` | commitments | jwt |
+| `project task` | list, get, create, update, delete, export, import, verify-hash, compute-hash | jwt |
+| `project manager` | commitments, qualified-contributors | jwt |
 | `manager` | projects | jwt |
 | `token` | list | either |
 | `tx` | run, build, sign, submit, register, pending, types, status | varies |
-| `apikey` | usage, profile | api-key |
+| `dev` | login (browser + headless), refresh, logout, status | api-key |
+| `dev keys` | list, create, delete | api-key + dev-jwt |
+| `apikey` | usage, profile | api-key + dev-jwt |
 | `spec` | fetch, paths | none |
+| `help` | exit-codes | none |
+
+**CLI 1.0 scope:** the CLI serves course Owners and Teachers and project Managers. The learner and contributor command groups were removed in 1.0; those users work in the Andamio app. A removed command exits 4 with `kind: removed_command`. The learner-side `/v2/tx/...` endpoints are still reachable through `tx run` and `tx build`.
 
 ### Composability Patterns
 
@@ -92,11 +95,14 @@ andamio course modules "$COURSE_ID" --output json
 # Pipe to jq for field extraction
 andamio course slts "$COURSE_ID" 100 --output json | jq '.data[].slt_text'
 
-# Check exit codes in scripts
-if ! andamio user status >/dev/null 2>&1; then
+# Probe session liveness: branch on session_expired, not on a read command
+if [ "$(andamio user status --output json | jq -r '.session_expired // true')" = "true" ]; then
   echo "Auth required" >&2
   andamio user login
 fi
+
+# Branch on exit code, or on .kind in the JSON error envelope
+# 2 not_found · 3 auth · 5 unreachable · 6 conflict · 7 tier_limit (andamio help exit-codes)
 ```
 
 **Key rules:**
@@ -151,11 +157,13 @@ For advanced use, show the individual steps:
 
 ```bash
 # 1. Build unsigned transaction
-TX_HEX=$(andamio tx build /v2/tx/course/teacher/assignments/assess \
-  --body-file payload.json --output json | jq -r '.tx_hex')
+UNSIGNED=$(andamio tx build /v2/tx/course/teacher/assignments/assess \
+  --body-file payload.json --output json | jq -r '.unsigned_tx')
 
-# 2. Sign with local key
-SIGNED=$(andamio tx sign --tx "$TX_HEX" --skey payment.skey --output json | jq -r '.tx_hex')
+# 2. Sign with local key (returns signed_tx and tx_hash)
+SIGN=$(andamio tx sign --tx "$UNSIGNED" --skey payment.skey --output json)
+SIGNED=$(jq -r '.signed_tx' <<<"$SIGN")
+TX_HASH=$(jq -r '.tx_hash' <<<"$SIGN")
 
 # 3. Submit to network
 andamio tx submit --tx "$SIGNED"
