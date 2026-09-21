@@ -93,13 +93,12 @@ This is a multi-step process:
 
 NOTE: POST /v2/course/student/commitment/create is gone. It was removed from the
 API in the 2026-07-30 contract sync, so it is absent from specs/andamio-api.yaml
-and calls to it fail — the tx builder above is the sole supported path. The CLI
-has not caught up: `andamio course student create` still targets the removed
-route, so it fails today. That command group is already slated for retirement in
-CLI 1.0 (see reference/cli-retirements.yaml), so use the API path rather than
-waiting on a CLI fix. The same applies to the project side —
-POST /v2/project/contributor/commitment/create was removed in the same sync, and
-`andamio project contributor commit` still targets it.
+and calls to it fail — the tx builder above is the sole supported path. The same
+applies to the project side: POST /v2/project/contributor/commitment/create was
+removed in the same sync. CLI 1.0 removed the learner and contributor command
+groups altogether (see reference/cli-retirements.yaml), so there is no CLI
+wrapper for these steps: use the app, the API, or `andamio tx run` on the
+/v2/tx/... endpoints.
 
 Note: Enrollment involves a Cardano transaction (~2.14 ADA).
 Use /cost-estimator for a full cost breakdown.

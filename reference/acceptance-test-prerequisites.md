@@ -170,8 +170,8 @@ After each tx, verify with:
 |------|---------|
 | TX status | `andamio tx status <hash> --output json` |
 | Course modules | `andamio course modules <course-id> --output json` |
-| Student commitments | `andamio course student commitments --output json` |
-| Student credentials | `andamio course student credentials --output json` |
+| Student commitments | `POST /v2/course/student/assignment-commitments/list` (no CLI command since 1.0), or the teacher view: `andamio teacher assignments list --course <course-id> --output json` |
+| Student credentials | `POST /v2/course/student/credentials/list` (no CLI command since 1.0) |
 | Project details | `andamio project get <project-id> --output json` |
 | Project tasks | `andamio project tasks <project-id> --output json` |
-| Contributor commitments | `andamio project contributor commitments --output json` |
+| Contributor commitments | `POST /v2/project/contributor/commitments/list` (no CLI command since 1.0), or the manager view: `andamio project manager commitments --project-id <project-id> --output json` |
