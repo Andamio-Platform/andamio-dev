@@ -19,8 +19,9 @@ The Gateway API is the single entry point for all Andamio operations. It proxies
 
 ### Path Resolution
 
-- **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): Read specs from `${CLAUDE_PLUGIN_ROOT}/specs/`.
-- **Clone/symlink context** (default): Read specs at `specs/` relative to project root.
+Bundled paths in this skill (`specs/`, `reference/`, `knowledge/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `specs/andamio-api.yaml` is `../../specs/andamio-api.yaml`.
+
+Knowledge files are developer data. Read them from the state directory first — `${CLAUDE_PLUGIN_DATA}/knowledge/` when `${CLAUDE_PLUGIN_DATA}` is set, otherwise `knowledge/` in the current working directory — and fall back to the package's seed `knowledge/`.
 
 ### Pre-Execution Knowledge Check
 

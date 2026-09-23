@@ -18,8 +18,7 @@ Walks developers through authenticating with the Andamio API. Covers API key (re
 
 ### Path Resolution
 
-- **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): Read reference from `${CLAUDE_PLUGIN_ROOT}/reference/`.
-- **Clone/symlink context** (default): Read reference at `reference/` relative to project root.
+Bundled paths in this skill (`reference/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `reference/andamio-cli-context.md` is `../../reference/andamio-cli-context.md`.
 
 ### Pre-Execution Check
 

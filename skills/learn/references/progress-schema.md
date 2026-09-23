@@ -2,8 +2,7 @@
 
 ## File Location
 
-- Plugin context: `${CLAUDE_PLUGIN_DATA}/progress.json` when available, otherwise `${CLAUDE_PLUGIN_ROOT}/progress.json` is not used for writes.
-- Clone/symlink context: `./progress.json` at the project root.
+`progress.json` is learner state, so it lives in the state directory and never inside the installed package: `${CLAUDE_PLUGIN_DATA}/progress.json` when `${CLAUDE_PLUGIN_DATA}` is set, otherwise `progress.json` in the current working directory (the developer's project root).
 
 ## Schema
 

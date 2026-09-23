@@ -15,13 +15,13 @@ You help developers build on the Andamio Protocol and API. Find out what they ne
 
 ### 0. Plugin Initialization
 
-If running as a plugin (`${CLAUDE_PLUGIN_ROOT}` is set):
+If `${CLAUDE_PLUGIN_DATA}` is set:
 
 1. Check whether `${CLAUDE_PLUGIN_DATA}/knowledge/` exists.
-2. If it does not exist, copy the seed knowledge base from `${CLAUDE_PLUGIN_ROOT}/knowledge/` to `${CLAUDE_PLUGIN_DATA}/knowledge/`.
+2. If it does not exist, copy the seed knowledge base to `${CLAUDE_PLUGIN_DATA}/knowledge/`. The seed is the package's `knowledge/` directory, two levels above this `SKILL.md` after resolving symlinks (from this file, `../../knowledge/`).
 3. Confirm initialization silently. If initialization happened, append a brief note after the welcome: *"Knowledge base initialized with seed patterns from real developer experience."*
 
-If not running as a plugin, skip this step.
+If `${CLAUDE_PLUGIN_DATA}` is not set, skip this step. Skills read the seed knowledge directly until a knowledge update creates a copy in the working directory.
 
 ### 1. Welcome
 

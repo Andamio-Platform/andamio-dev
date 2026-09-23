@@ -13,8 +13,7 @@ Present a "Build on Andamio" lesson to a learner. This skill is agent-neutral: u
 
 ## Path Resolution
 
-- Plugin context (`${CLAUDE_PLUGIN_ROOT}` is set): read course content from `${CLAUDE_PLUGIN_ROOT}/courses/`.
-- Clone/symlink context: read course content from `courses/` relative to the project root.
+Bundled paths in this skill (`courses/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `courses/build-on-andamio/01-slts.md` is `../../courses/build-on-andamio/01-slts.md`.
 
 ## Lesson Delivery Protocol
 

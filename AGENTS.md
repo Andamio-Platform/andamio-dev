@@ -137,9 +137,9 @@ Both headers are sent simultaneously when both credentials exist. JWT lifetime i
 
 **Skill source of truth**: `skills/` is the portable source of truth for all agent skills, including the learning course harness. `.agents/skills/` may contain relative symlinks back to `skills/` for agents that discover project skills there. Do not copy skill directories into `.agents/skills/`. `.claude/skills/` is a compatibility surface only; keep canonical course behavior in `skills/`.
 
-**Path resolution**: Skills resolve paths based on execution context:
-- **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): Read specs/reference from `${CLAUDE_PLUGIN_ROOT}`. Read/write knowledge at `${CLAUDE_PLUGIN_DATA}/knowledge/`.
-- **Clone context** (default): All paths relative to project root.
+**Path resolution**: Skills resolve paths the same way in every host (Claude Code plugin, Codex, Pi, a clone):
+- **Bundled files** (`specs/`, `reference/`, `knowledge/` seed, `courses/`, `examples/`, `skills/`) are relative to the package root — two levels above each `SKILL.md`, after resolving symlinks. Never resolve them from the working directory, which is the developer's own project.
+- **Developer data** (`progress.json`, knowledge updates) goes to the state directory: `${CLAUDE_PLUGIN_DATA}` when set, otherwise the current working directory. It is never written inside an installed package. Knowledge reads check the state directory first and fall back to the seed.
 
 **Knowledge updates**: Append-only. Increment counts, don't overwrite. Deduplicate entries. Always update `knowledge/index.yaml` stats after extraction.
 
@@ -154,4 +154,4 @@ Skills with both paths should use `### When Learning` / `### When Operating` sec
 
 ## Plugin Context
 
-When running as a Claude Code plugin, the `/start` skill initializes `${CLAUDE_PLUGIN_DATA}/knowledge/` from seed data on first run. The `/compound` skill writes to `${CLAUDE_PLUGIN_DATA}/knowledge/`. Clone/symlink users are unaffected — paths default to project-relative.
+When running as a Claude Code plugin, the `/start` skill initializes `${CLAUDE_PLUGIN_DATA}/knowledge/` from seed data on first run, and `/compound` writes there. Without `${CLAUDE_PLUGIN_DATA}`, developer data goes to the working directory — in a clone of this repo that is the package root, so `/compound` updates the repo's own `knowledge/`.

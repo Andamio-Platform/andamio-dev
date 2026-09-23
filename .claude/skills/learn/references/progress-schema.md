@@ -2,8 +2,7 @@
 
 ## File Location
 
-- Plugin context: `${CLAUDE_PLUGIN_DATA}/progress.json`
-- Clone context: `./progress.json` (project root)
+`progress.json` is learner state, so it lives in the state directory and never inside the installed package: `${CLAUDE_PLUGIN_DATA}/progress.json` when `${CLAUDE_PLUGIN_DATA}` is set, otherwise `progress.json` in the current working directory (the developer's project root).
 
 ## Schema
 
