@@ -34,8 +34,8 @@ Andamio operations are organized into named **transaction loops** — multi-step
 
 | Loop | Dotted Name | Total Cost | Notes |
 |------|-------------|------------|-------|
-| Course Setup | `course.setup` | ~21 ADA + ~1.86 ADA/module | course_create (~20.7 flat) + modules_manage |
-| Project Setup | `project.setup` | ~49 ADA + treasury deposit | project_create + treasury_fund + tasks_manage |
+| Course Setup | `course.setup` | ~119.3 ADA + ~1.86 ADA/module | course_create (~119.3, incl. 100 ADA service fee) + modules_manage |
+| Project Setup | `project.setup` | ~148 ADA + treasury deposit | project_create (~148, incl. 100 ADA service fee) + treasury_fund + tasks_manage |
 | Course Credential | `course.credential` | ~1.32 ADA | Per student: enroll → assess → claim |
 | Project Credential | `project.credential` | ~1.21 ADA + max(1 ADA, commission × reward) | Contributor net positive (deposit refund + reward minus commission) |
 | Access Token | `general.access-token` | ~2.87 ADA | Prerequisite for course/project creation (no service fee in v3) |
@@ -55,13 +55,13 @@ Every Andamio transaction has up to four cost components:
 | Component | Recoverable? | Description |
 |-----------|-------------|-------------|
 | **Transaction Fee** | No | Network fee to stake pool operators. Varies by script complexity: 0.27–1.30 ADA |
-| **Service Fee** | No | Protocol fee to Andamio's serviceFeeRecipient. Pricing v3: flat 1 ADA on most write txs; `project-credential-claim` is `max(1 ADA, commission_rate × reward)`. |
+| **Service Fee** | No | Protocol fee to Andamio's serviceFeeRecipient: 100 ADA to create a course or project, 10 ADA per teacher or manager added, and `max(1 ADA, commission_rate × reward)` at project credential claim. Every other transaction: none. |
 | **Min UTXO Deposits** | Partially | Minimum ADA locked in validator UTxOs. Released when UTxOs are consumed. |
 | **Recoverable Deposits** | Yes | ADA locked in state UTxOs. Refunded when credentials are claimed. |
 
 ### Transaction Cost Reference
 
-> **Pricing v3 (shipped 2026-04-09).** All service fees below reflect the post-v3 model: flat 1 ADA where charged, no per-participant scaling, commission-based fee at credential claim. Service fees are paid to a single `serviceFeeRecipient` (see `specs/cost-registry.json`).
+> **Service fees are measured on preprod** (2026-09-23, gateway API 2.5.2) and paid to a single `serviceFeeRecipient`. Each figure in `specs/cost-registry.json` carries the transaction it was read from. Mainnet may differ.
 
 #### Global
 
@@ -73,8 +73,8 @@ Every Andamio transaction has up to four cost components:
 
 | Transaction | Tx Fee | Service Fee | Min UTXO | Notes |
 |-------------|--------|-------------|----------|-------|
-| Create Course | ~0.55 ADA | 1 ADA | ~19 ADA | ~20.7 ADA flat (does not scale with teachers in v3) |
-| Update Teachers | ~0.30 ADA | 1 ADA | 0 | Spend-and-recreate |
+| Create Course | ~0.56 ADA | 100 ADA | ~18.8 ADA | ~119.3 ADA total, measured with one initial teacher |
+| Update Teachers | ~0.30 ADA | 10 ADA per teacher added; 0 to remove | 0 | Spend-and-recreate. ~10.33 ADA to add one teacher |
 | Manage Modules | ~0.27 ADA | 0 (free) | ~1.59 ADA/module | Scales linearly |
 | Student Enroll | ~0.40 ADA | 0 | ~1.74 ADA | ~2.14 ADA total |
 | Update Assignment | ~0.28 ADA | 0 | ~0.05 ADA | Datum grows |
@@ -85,8 +85,8 @@ Every Andamio transaction has up to four cost components:
 
 | Transaction | Tx Fee | Service Fee | Min UTXO | Notes |
 |-------------|--------|-------------|----------|-------|
-| Create Project | ~1.30 ADA | 1 ADA | ~45 ADA + treasury deposit | ~49 ADA flat + treasury deposit (does not scale with managers in v3) |
-| Update Managers | ~0.30 ADA | 1 ADA | 0 | Spend-and-recreate |
+| Create Project | ~1.30 ADA | 100 ADA | ~44.6 ADA (incl. 5 ADA treasury reserve) + 2 ADA stake registration | ~148 ADA total, measured with one initial manager; treasury funded separately |
+| Update Managers | ~0.30 ADA | 10 ADA per manager added; 0 to remove | 0 | Spend-and-recreate. ~10.35 ADA to add one manager |
 | Manage Blacklist | ~0.34 ADA | 0 | 0 | — |
 | Create Tasks | ~0.43 ADA | 0 | task reward amount | Reward locked in escrow |
 | First Task Commit | ~0.51 ADA | 0 | ~14.5 ADA | State deposit (recoverable) |
@@ -102,10 +102,11 @@ When the developer describes a scenario, calculate the total:
 **Example: "Course with 3 teachers and 10 modules, expecting 50 students doing 5 assignments each"**
 
 ```
-Course Setup (one-time, v3 pricing):
-  Create course (any # teachers): 1 + 0.55 + 19         = ~20.55 ADA
+Course Setup (one-time):
+  Create course, all 3 teachers named at create:
+                                  100 + 0.56 + 18.8     = ~119.36 ADA
   Create 10 modules:              10 × 1.86             = ~18.60 ADA
-  Setup subtotal:                                       = ~39.15 ADA
+  Setup subtotal:                                       = ~137.96 ADA
 
 Per Student (50 students × 5 assignments each):
   Enroll (per student):           2.14 × 50             = ~107.00 ADA
@@ -114,14 +115,14 @@ Per Student (50 students × 5 assignments each):
   Claim (per student):           -1.03 × 50             = ~-51.50 ADA
   Student/teacher subtotal:                             = ~190.50 ADA
 
-TOTAL: ~229.65 ADA
-  One-time costs:     ~39.15 ADA (non-recoverable)
+TOTAL: ~328.46 ADA
+  One-time costs:     ~137.96 ADA (non-recoverable)
   Operational costs:  ~190.50 ADA (partially recoverable via claims)
 
 Cost per student: ~3.81 ADA net (across 5 assignments)
 ```
 
-> The v2 model charged 100 ADA + 10 ADA/teacher for course-create — under v3 this is a flat 1 ADA regardless of teacher count. The same flattening applies to project-create.
+> course_create was measured with one initial teacher. Whether naming more teachers at creation raises its fee has not been measured; say so when a scenario depends on it. Teachers added *after* creation pay 10 ADA each (~10.33 ADA with the tx fee).
 
 ### Output Format
 
@@ -145,8 +146,8 @@ Always include:
 
 Offer when relevant:
 
-- Course/project create flat fee (1 ADA) does not scale with participants in v3 — no incentive to delay teacher/manager additions for cost reasons
-- Each teacher/manager update still costs ~1.30 ADA (1 ADA service fee + tx fee), so batch updates when practical
+- Creation is the largest one-time cost: a 100 ADA service fee plus ~19 ADA (course) or ~47 ADA (project) in deposits and fees
+- Name every teacher or manager in the create transaction — each one added later costs ~10.3 ADA (10 ADA service fee + tx fee). Removing one costs only the tx fee (~0.25 ADA)
 - Module management has no service fee — batch or individual is similar cost
 - Assignment submission and assessment are free (no service fee)
 - Credential claims are net positive — students/contributors get deposits back

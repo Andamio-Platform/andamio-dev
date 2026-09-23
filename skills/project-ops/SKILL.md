@@ -39,7 +39,7 @@ If no JWT is detected, redirect to `/auth-setup`.
 
 The most complex Andamio transaction. Creates 6 validator UTxOs, a stake account, and mints 6 tokens.
 
-**Cost**: ~143 ADA base (1 manager) + treasury deposit. See /cost-estimator for precise breakdown.
+**Cost**: ~148 ADA with one manager (100 ADA service fee + ~47 ADA in deposits, stake registration and tx fee), plus whatever you later add to the treasury. See /cost-estimator for the breakdown.
 
 **Via CLI:**
 ```bash
@@ -170,7 +170,7 @@ Auth: API Key + JWT
 Body: { project_id, add_managers: [alias], remove_managers: [alias] }
 ```
 
-Costs ~10.3 ADA per update transaction.
+Each manager added costs ~10.35 ADA (10 ADA service fee + tx fee); removing one costs only the tx fee (~0.24 ADA).
 
 #### 6. Blacklist Management
 

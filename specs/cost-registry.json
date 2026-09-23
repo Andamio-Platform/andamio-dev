@@ -1,10 +1,10 @@
 {
-  "version": "0.4.0",
-  "lastUpdated": "2026-05-14",
+  "version": "0.5.0",
+  "lastUpdated": "2026-09-23",
   "network": "preprod",
   "notes": [
-    "Service-fee values reflect Pricing v3 v2.2 (shipped 2026-04-09) — single service-fee recipient, low-ADA fixed fees, plus a tiered commission percentage on project rewards.",
-    "Service fees synced from andamio-dev-kit-internal/configs/andamio-atlas/preprod/fee-config.json (atlas preprod config).",
+    "Service fees are measured from preprod transactions against the live gateway (API 2.5.2) on 2026-09-23: 100 ADA to create a course or a project, 10 ADA to add a teacher or a manager, nothing to remove one, and a commission of max(1 ADA, commission_rate × reward) when a contributor claims a project credential. Every other route measured charges no service fee. Each serviceFees entry carries the transaction it was measured from.",
+    "Service fees are read from the chain, not from fee configuration. When configuration and a measured transaction disagree, the transaction wins.",
     "transactionCosts and minUtxoByType were captured from decoded preprod CBORs in 2025-12 — execution units, deposits, and walletDeltas are still valid empirical data. Where a transactionCosts entry embeds a serviceFee value, the top-level serviceFees / commissionTiers blocks are authoritative if they disagree.",
     "Values are in lovelace unless noted (1 ADA = 1,000,000 lovelace).",
     "Min UTxO depends on datum/token size — these are observed values, not constants.",
@@ -14,12 +14,12 @@
   ],
   "provenance": {
     "serviceFees": {
-      "source": "andamio-dev-kit-internal/configs/andamio-atlas/preprod/fee-config.json",
-      "sourceLastUpdated": "2026-03-25",
-      "syncedOn": "2026-05-14"
+      "source": "preprod transactions, decoded output by output",
+      "gatewayVersion": "2.5.2",
+      "measuredOn": "2026-09-23"
     },
     "commissionTiers": {
-      "source": "andamio-dev-kit-internal/plans/PricingV3Plan.md",
+      "source": "Pricing v3 commission model; the 1 ADA minimum at the 5% default rate was observed on preprod on 2026-09-23",
       "model": "Pricing v3 v2.2",
       "shippedOn": "2026-04-09"
     },
@@ -30,10 +30,11 @@
     }
   },
   "serviceFeeRecipient": {
-    "address": "addr_test1qzk5fu5q6k5yvfysrg29xtzj4tfvwn45ne9p4vqmg98mucsdslc92zgwralq5ee6fy9u4y74lv4lcdevm9c45ekcy3kspztuln",
-    "description": "Unified service-fee recipient address in Pricing v3. All course and project service fees are paid here.",
+    "address": "addr_test1qz32rd2uja0jhdwv0m75rqt6h89llk4dg9ssm33hckh4mygx3h4pr9cmjas9qe6jaxsplmv2264zmvupe7h5w7qp7hdstzrj95",
+    "description": "The address that received every service fee and commission measured on preprod on 2026-09-23 — course and project creation, teacher and manager additions, and project credential claims. A single recipient serves both surfaces.",
     "previousAddresses": {
-      "note": "Earlier versions of this registry referenced separate protocol-treasury and instance-treasury addresses. Those were deprecated when the v3 fee model shipped — a single recipient now handles both surfaces.",
+      "note": "Addresses earlier versions of this registry named as the recipient. No fee measured on 2026-09-23 was paid to any of them.",
+      "earlier-unified-recipient": "addr_test1qzk5fu5q6k5yvfysrg29xtzj4tfvwn45ne9p4vqmg98mucsdslc92zgwralq5ee6fy9u4y74lv4lcdevm9c45ekcy3kspztuln",
       "protocol-treasury-deprecated": "addr_test1qz02cdjmf04d9dc2dk3s50y98zkm99yjgt7hyygykdfh3347uqpl75w90lk96ht83c2t4w7zrwrmr7z924q822svc3hstlm4js",
       "instance-treasury-deprecated": "addr_test1qpuptlg3kgtcq0rq8rq0z7w8pp0j7p98whvsg4wp6c0mngu7nalltfu076ak2qfw0p2ghn5svge4pm78gpfr6rl8rtrszh0nq3"
     }
@@ -43,22 +44,24 @@
       "amount": 0,
       "ada": "0 ADA",
       "recipient": null,
-      "note": "v3: no service fee output for access token minting. Confirmed in devkit/docs/tx-flows/access-token-mint.md.",
-      "previous": "5 ADA (v2 model)"
+      "note": "Not re-measured on 2026-09-23. The last measurement found no service-fee output. Other preprod fees did not match their earlier recorded values, so measure before quoting this one."
     },
     "course-create": {
-      "amount": 1000000,
-      "ada": "1 ADA",
+      "amount": 100000000,
+      "ada": "100 ADA",
       "recipient": "serviceFeeRecipient",
-      "note": "v3: flat 1 ADA service fee. Previous '100 ADA base + 10 ADA × teachers' formula is gone.",
-      "previous": "100 ADA + 10 ADA × teachers"
+      "note": "Flat — measured with one initial teacher. Paid once, at course_create.",
+      "evidence": "49d8f2a1199c84fefe4baa99552b5774cbe0f2ac4de89e89bccf19915fc0891d"
     },
     "course-teachers-update": {
-      "amount": 1000000,
-      "ada": "1 ADA",
+      "amount": 10000000,
+      "ada": "10 ADA per teacher added",
       "recipient": "serviceFeeRecipient",
-      "note": "v3: flat 1 ADA service fee per teacher update.",
-      "previous": "10 ADA"
+      "note": "Charged for each teacher added. Removing a teacher charges nothing.",
+      "evidence": {
+        "add": "501e6c44817c4847f291ee3f4812a1ca3a3ad367f087803f22029dcb914dfd00",
+        "remove": "3914a36c2ba31ffeff1016e191ccad265ac46a811c039301b28135d581a8d739"
+      }
     },
     "course-modules-manage": {
       "amount": 0,
@@ -91,18 +94,21 @@
       "note": "No service fee for course credential claim."
     },
     "project-create": {
-      "amount": 1000000,
-      "ada": "1 ADA",
+      "amount": 100000000,
+      "ada": "100 ADA",
       "recipient": "serviceFeeRecipient",
-      "note": "v3: flat 1 ADA service fee. Previous '100 ADA base + 10 ADA × managers' formula is gone.",
-      "previous": "100 ADA + 10 ADA × managers"
+      "note": "Flat — measured with one initial manager. Paid once, at project_create.",
+      "evidence": "4ab99e16856002c1b6937be5afac0b4c21b2d82592641f753abfef07f5623f5a"
     },
     "project-managers-update": {
-      "amount": 1000000,
-      "ada": "1 ADA",
+      "amount": 10000000,
+      "ada": "10 ADA per manager added",
       "recipient": "serviceFeeRecipient",
-      "note": "v3: flat 1 ADA service fee. (Atlas calls this 'addProjectCreators'.)",
-      "previous": "10 ADA"
+      "note": "Charged for each manager added. Removing a manager charges nothing. (Atlas calls this 'addProjectCreators'.)",
+      "evidence": {
+        "add": "ad25d9e9885df8400389085f9c2d2751fc8002b246c31c8ff2b8520d4a8e4c62",
+        "remove": "bd90c1483aa48bb422d7c392e0839697a09dbbaed398b1c8d7dff5fc990dfa7a"
+      }
     },
     "project-blacklist-manage": {
       "amount": 0,
@@ -133,7 +139,8 @@
       "min": 1000000,
       "minAda": "1 ADA",
       "recipient": "serviceFeeRecipient",
-      "note": "v3: replaced flat 1 ADA fee with a minimum-plus-percentage model. commission_rate comes from the project's CommissionRate column (default 0.05). See commissionTiers."
+      "note": "commission_rate comes from the project's CommissionRate column (default 0.05). See commissionTiers. A 5 ADA reward at the default rate paid the 1 ADA minimum.",
+      "evidence": "dc837cd2d4686e1f76b996d7fc859eeb96b526b6dba44ca185645d38f351bc68"
     }
   },
   "commissionTiers": {
@@ -196,10 +203,10 @@
     "course.admin.create": {
       "txFee": 527195,
       "txFeeAda": "~0.53 ADA",
-      "serviceFee": 1000000,
-      "serviceFeeAda": "1 ADA",
+      "serviceFee": 100000000,
+      "serviceFeeAda": "100 ADA",
       "serviceFeeRecipient": "serviceFeeRecipient",
-      "serviceFeeNote": "v3: flat 1 ADA, no longer scales with teacher count. Was '100 ADA + 10 ADA × teachers'.",
+      "serviceFeeNote": "Flat 100 ADA, measured with one initial teacher.",
       "utxoDeposits": {
         "local-state-nft-validator": 1236970,
         "local-state-token-validator": 16584880,
@@ -209,9 +216,8 @@
       },
       "totalCost": {
         "formula": "txFee + serviceFee + utxoDeposits",
-        "example": "~0.53 + 1 + 19.15 = ~20.7 ADA",
-        "note": "v3 total is flat regardless of teacher count (deposits and fee both fixed).",
-        "previous": "1 teacher: ~130 ADA (v2 model)"
+        "example": "~0.56 + 100 + ~18.8 = ~119.3 ADA",
+        "measured": "119.32 ADA wallet delta on preprod, 2026-09-23 (tx 49d8f2a1199c84fefe4baa99552b5774cbe0f2ac4de89e89bccf19915fc0891d)"
       },
       "executionUnits": {
         "mint_0_local_state_nft": { "mem": 27223, "steps": 10486084 },
@@ -224,19 +230,19 @@
     "course.admin.teachers-update": {
       "txFee": 300669,
       "txFeeAda": "~0.30 ADA",
-      "serviceFee": 1000000,
-      "serviceFeeAda": "1 ADA",
+      "serviceFee": 10000000,
+      "serviceFeeAda": "10 ADA per teacher added",
       "serviceFeeRecipient": "serviceFeeRecipient",
-      "serviceFeeNote": "v3: flat 1 ADA (was 10 ADA).",
+      "serviceFeeNote": "Adding a teacher pays 10 ADA; removing one pays nothing.",
       "utxoDeposits": {
         "total": 0,
         "notes": "Spend-and-recreate pattern - no new UTxOs"
       },
       "totalCost": {
-        "lovelace": 1300669,
-        "ada": "~1.30 ADA",
-        "breakdown": "txFee (0.30) + serviceFee (1.0)",
-        "previous": "~10.3 ADA (v2 model)"
+        "lovelace": 10333307,
+        "ada": "~10.33 ADA to add one teacher; ~0.26 ADA to remove one",
+        "breakdown": "add: txFee (0.30) + serviceFee (10.0); remove: txFee (0.29), no service fee",
+        "measured": "preprod 2026-09-23 — add 501e6c44817c4847f291ee3f4812a1ca3a3ad367f087803f22029dcb914dfd00, remove 3914a36c2ba31ffeff1016e191ccad265ac46a811c039301b28135d581a8d739"
       },
       "executionUnits": {
         "spend_0_local_state_nft": { "mem": 327793, "steps": 104422332 },
@@ -320,10 +326,10 @@
     "instance.owner.project.create": {
       "txFee": 1300865,
       "txFeeAda": "~1.30 ADA",
-      "serviceFee": 1000000,
-      "serviceFeeAda": "1 ADA",
+      "serviceFee": 100000000,
+      "serviceFeeAda": "100 ADA",
       "serviceFeeRecipient": "serviceFeeRecipient",
-      "serviceFeeNote": "v3: flat 1 ADA, no longer scales with manager count. Was '100 ADA + 10 ADA × managers'.",
+      "serviceFeeNote": "Flat 100 ADA, measured with one initial manager.",
       "stakeRegistration": 2000000,
       "stakeRegistrationAda": "2 ADA",
       "utxoDeposits": {
@@ -339,9 +345,8 @@
       },
       "totalCost": {
         "formula": "txFee + serviceFee + stakeReg + utxoDeposits + deposit_value",
-        "example": "~1.3 + 1 + 2 + 45 + deposit = ~49 ADA + deposit",
-        "note": "v3 total is flat regardless of manager count.",
-        "previous": "2 managers: ~168 ADA + deposit (v2 model)"
+        "example": "~1.3 + 100 + 2 + ~44.6 = ~148 ADA (treasury funded separately)",
+        "measured": "147.93 ADA wallet delta on preprod, 2026-09-23 (tx 4ab99e16856002c1b6937be5afac0b4c21b2d82592641f753abfef07f5623f5a)"
       },
       "executionUnits": {
         "mint_0_treasury_script": { "mem": 587159, "steps": 188113819, "policyId": "0d93b85fd1975e409be7c6308060ecc7623498474c4e43da4c83a5ad" },
@@ -359,19 +364,19 @@
     "project.owner.managers.manage": {
       "txFee": 298863,
       "txFeeAda": "~0.30 ADA",
-      "serviceFee": 1000000,
-      "serviceFeeAda": "1 ADA",
+      "serviceFee": 10000000,
+      "serviceFeeAda": "10 ADA per manager added",
       "serviceFeeRecipient": "serviceFeeRecipient",
-      "serviceFeeNote": "v3: flat 1 ADA (was 10 ADA).",
+      "serviceFeeNote": "Adding a manager pays 10 ADA; removing one pays nothing.",
       "utxoDeposits": {
         "total": 0,
         "notes": "Spend-and-recreate pattern - no new UTxOs"
       },
       "totalCost": {
-        "lovelace": 1298863,
-        "ada": "~1.30 ADA",
-        "breakdown": "txFee (0.30) + serviceFee (1.0)",
-        "previous": "~10.3 ADA (v2 model)"
+        "lovelace": 10350506,
+        "ada": "~10.35 ADA to add one manager; ~0.24 ADA to remove one",
+        "breakdown": "add: txFee (0.30) + serviceFee (10.0); remove: txFee (0.29), no service fee",
+        "measured": "preprod 2026-09-23 — add ad25d9e9885df8400389085f9c2d2751fc8002b246c31c8ff2b8520d4a8e4c62, remove bd90c1483aa48bb422d7c392e0839697a09dbbaed398b1c8d7dff5fc990dfa7a"
       },
       "executionUnits": {
         "spend_2_local_state_nft": { "mem": 311977, "steps": 102604429 },

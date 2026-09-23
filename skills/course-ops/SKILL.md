@@ -37,7 +37,7 @@ If no JWT is detected, redirect: "Course operations require wallet authenticatio
 
 #### 1. Create Course
 
-A Cardano transaction. Costs ~130 ADA for 1 teacher (see /cost-estimator).
+A Cardano transaction. Costs ~119.3 ADA with one teacher: a 100 ADA service fee plus ~19 ADA in deposits and tx fee (see /cost-estimator).
 
 **Via API** (Gateway):
 ```
@@ -120,7 +120,7 @@ Auth: API Key + JWT
 Body: { alias, course_id, teachers_to_add: [alias], teachers_to_remove: [alias] }
 ```
 
-Costs ~10.3 ADA per update transaction. The governance token tracks the teacher roster on-chain.
+Each teacher added costs ~10.3 ADA (10 ADA service fee + tx fee); removing one costs only the tx fee (~0.26 ADA). The governance token tracks the teacher roster on-chain.
 
 #### 5. Student Enrollment Flow
 
