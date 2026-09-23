@@ -46,10 +46,9 @@ Not optional. Feedback is how this course improves.
 
 **CLI:**
 
-```bash
-andamio course student commitment create \
-  --course-id "{COURSE_ID}" --module-code 700
+The `assignment_submit` transaction enrolls you and creates your commitment when it confirms — there is no separate create step.
 
+```bash
 andamio tx run /v2/tx/course/student/assignment/commit \
   --body '{"alias":"YOUR_ALIAS","course_id":"{COURSE_ID}","slt_hash":"MODULE_700_HASH","assignment_info":"YOUR_EVIDENCE"}' \
   --skey "$SKEY_PATH" \

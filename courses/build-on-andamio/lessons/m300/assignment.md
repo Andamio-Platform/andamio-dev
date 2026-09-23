@@ -33,10 +33,12 @@ Find the endpoint that lists a project's tasks. Paste the HTTP method, path, and
 
 ### SLT 300.3 — Querying credentials
 
-Query your credentials:
+Query your credentials. The route takes your API key and your User JWT (M200.2):
 
 ```bash
-andamio course student credentials list --output json
+curl -s -X POST https://preprod.api.andamio.io/api/v2/course/student/credentials/list \
+  -H "X-API-Key: $ANDAMIO_API_KEY" \
+  -H "Authorization: Bearer $ANDAMIO_JWT" | jq
 ```
 
 Paste the output (trim to the first course if long). Empty `data` array is fine — you'll have enrollment evidence by M500.
