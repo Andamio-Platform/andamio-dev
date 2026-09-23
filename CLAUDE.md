@@ -11,7 +11,7 @@ Read [AGENTS.md](AGENTS.md) for full project context — API specs, authenticati
 2. **Operational skills** for day-to-day Andamio development (API exploration, CLI guidance, cost estimation)
 3. **Bundled specs and reference** for the Andamio Gateway API (79 paths, public contract only), cost registry, and CLI
 
-There is no build step, no test suite, no linter. "Testing" means invoking skills in an agent harness such as Claude Code or Codex and verifying behavior.
+There is no build step, no test suite, no linter. "Testing" means invoking skills in an agent harness such as Claude Code or Codex and verifying behavior. CI runs the two drift checks in `scripts/` (`gen-endpoint-index.py --check`, `check-cli-refs.py --check`) on every pull request; run them locally before pushing changes to `specs/`, `reference/`, `skills/` or `courses/`.
 
 ## Architecture
 

@@ -6,7 +6,7 @@ Project context for AI agents working in this repository. Read this file to unde
 
 **andamio-dev** is an Agent Skills package originally built as a Claude Code plugin. It serves two purposes: (1) delivering the "Build on Andamio" course via AI agent skills, and (2) providing operational skills for day-to-day Andamio development. The primary artifacts are course content (`courses/`), portable agent skill definitions (`skills/`), compatibility harnesses (`.agents/`, `.claude/`), bundled API specifications (`specs/`), CLI reference documentation (`reference/`), and a compounding knowledge base (`knowledge/`).
 
-This is **not a code project**. There is no build step, no test suite, no linter.
+This is **not a code project**. There is no build step, no test suite, no linter. CI runs the two drift checks in `scripts/` on every pull request and push to `main` (`.github/workflows/drift-checks.yml`).
 
 ## Directory Structure
 
@@ -54,11 +54,14 @@ reference/                # Bundled reference documentation
   cli-retirements.yaml    # CLI command paths retired per release (data for check-cli-refs.py)
   public-repos.yaml       # Curated registry of public repos for the /contribute front door
   acceptance-test-prerequisites.md
-scripts/                  # Maintenance checks. Both are safe to run any time.
+scripts/                  # Maintenance checks. Both are safe to run any time; CI runs both
+                          # with `--check` on every PR and push to main. Needs pyyaml.
   gen-endpoint-index.py   # Regenerates reference/api-endpoints-by-use-case.md from the contract.
                           # `--check` exits 1 when it is out of date.
   check-cli-refs.py       # Reports references to CLI commands a release retires.
                           # `--check` exits 1 once that release is marked `released`.
+.github/workflows/
+  drift-checks.yml        # Runs both scripts/ checks with `--check`.
 knowledge/                # Compound knowledge base (YAML files)
   index.yaml              # Master index and aggregate stats
   gotchas.yaml            # Known errors with root causes and fixes
