@@ -698,7 +698,7 @@ loops:
         endpoint: /v2/tx/course/teacher/modules/manage
         tx_type: modules_manage
         note: >
-          Body: {"alias":"<teacher>","course_id":"<id>","modules_to_add":[{"slts":["SLT text 1","SLT text 2"],"allowed_student_state_ids":[],"prereq_slt_hashes":[]}],"modules_to_update":[],"modules_to_remove":[]}
+          Body: {"alias":"<teacher>","course_id":"<id>","modules_to_add":[{"slts":["SLT text 1","SLT text 2"],"allowed_student_state_ids":[],"prereq_credential_hashes":[]}],"modules_to_update":[],"modules_to_remove":[]}
           All three arrays (modules_to_add, modules_to_update, modules_to_remove) are REQUIRED even when empty.
           modules_to_add takes objects with slts (text array), not module codes or strings.
           Gateway batch-confirms modules from PENDING_TX → ON_CHAIN.
@@ -713,7 +713,7 @@ loops:
     status: validated
     validated_date: 2026-04-07
     known_gotchas:
-      - "modules_to_add takes objects with {slts, allowed_student_state_ids, prereq_slt_hashes} — NOT strings or module codes"
+      - "modules_to_add takes objects with {slts, allowed_student_state_ids, prereq_credential_hashes} — NOT strings or module codes"
       - "Module must be in PENDING_TX status before minting — gateway rejects APPROVED or DRAFT modules"
       - "Updating SLTs changes slt_hash (on-chain identity). 'Update' is really burn + mint."
       - "Module code is off-chain only — never appears in the TX body, matched by slt_hash"

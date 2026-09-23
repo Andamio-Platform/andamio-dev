@@ -3,8 +3,8 @@
 # This is the PUBLIC API surface: the operations available to integrators. It is not every
 # route the server exposes. Administrative and internal operations are deliberately absent.
 #
-# Source: andamio-api docs/swagger.public.json @ ca38a9e4
-# Synced: 2026-07-30
+# Source: andamio-api docs/swagger.public.json @ a51ec140
+# Synced: 2026-09-23
 # Paths:  77
 #
 # Do not hand-edit. Re-sync from the generated public artifact in andamio-api.
@@ -75,6 +75,13 @@ definitions:
     - is_active
     - name
     type: object
+  AddCourseIDRequest:
+    properties:
+      course_id:
+        type: string
+    required:
+    - course_id
+    type: object
   AddFundsTxRequest:
     properties:
       alias:
@@ -84,8 +91,10 @@ definitions:
         minLength: 1
         type: string
       deposit_value:
-        description: List of (asset class, quantity) pairs. An asset class is either "lovelace" or a token
-          with its minting policy and token name delimited by dot (.).
+        description: 'List of (asset class, quantity) pairs. An asset class is either "lovelace" or a
+          token with its minting policy and token name delimited by dot (.).
+
+          Example: [["lovelace", 5000000]]'
         items:
           items: {}
           type: array
@@ -98,8 +107,7 @@ definitions:
   AggregateAssignmentInput:
     properties:
       content_json:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/JSONMap'
       description:
         type: string
       image_url:
@@ -138,35 +146,35 @@ definitions:
       slts_reordered:
         type: boolean
       slts_skipped:
-        description: SltsSkipped True when SLTs were present in the request but module is not DRAFT
         type: boolean
       slts_updated:
         type: integer
       status_changed:
-        description: StatusChanged True if DRAFT → APPROVED
         type: boolean
     type: object
   AggregateIntroductionInput:
     properties:
       content_json:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/JSONMap'
       description:
         type: string
+      image_url:
+        type: string
       title:
+        type: string
+      video_url:
         type: string
     type: object
   AggregateLessonInput:
     properties:
       content_json:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/JSONMap'
       description:
         type: string
       image_url:
         type: string
       slt_index:
-        description: SltIndex 1-based SLT index this lesson belongs to
+        description: SltIndex 1-based, links to SLT
         type: integer
       title:
         type: string
@@ -176,140 +184,62 @@ definitions:
   AggregateSltInput:
     properties:
       slt_index:
-        description: 'SltIndex 1-based index. If provided: update existing. If omitted: create new.'
+        description: 'SltIndex 1-based. If provided: update. If omitted: create new'
         type: integer
       slt_text:
-        description: SltText The SLT text content
         type: string
     type: object
-  AggregateUpdateErrorResponse:
-    properties:
-      code:
-        $ref: '#/definitions/AggregateUpdateErrorResponseCode'
-      error:
-        type: string
-      failed_operation:
-        properties:
-          entity:
-            $ref: '#/definitions/AggregateUpdateErrorResponseFailedOperationEntity'
-          entity_id:
-            type: integer
-          operation:
-            $ref: '#/definitions/AggregateUpdateErrorResponseFailedOperationOperation'
-          reason:
-            type: string
-        type: object
-      message:
-        type: string
-    type: object
-  AggregateUpdateErrorResponseCode:
-    enum:
-    - BAD_REQUEST
-    - DUPLICATE_LESSON_SLT_INDEX
-    - DUPLICATE_SLT_INDEX
-    - INVALID_SLT_HASH
-    - INVALID_SLT_INDEX
-    - MODULE_NOT_FOUND
-    - UNAUTHORIZED
-    type: string
-    x-enum-varnames:
-    - BADREQUEST
-    - DUPLICATELESSONSLTINDEX
-    - DUPLICATESLTINDEX
-    - INVALIDSLTHASH
-    - INVALIDSLTINDEX
-    - MODULENOTFOUND
-    - UNAUTHORIZED
-  AggregateUpdateErrorResponseFailedOperationEntity:
-    enum:
-    - assignment
-    - introduction
-    - lesson
-    - module
-    - slt
-    type: string
-    x-enum-varnames:
-    - Assignment
-    - Introduction
-    - Lesson
-    - Module
-    - Slt
-  AggregateUpdateErrorResponseFailedOperationOperation:
-    enum:
-    - approve
-    - create
-    - delete
-    - update
-    type: string
-    x-enum-varnames:
-    - Approve
-    - Create
-    - Delete
-    - Update
   AggregateUpdateModuleV2Request:
     properties:
       assignment:
-        $ref: '#/definitions/AggregateAssignmentInput'
+        allOf:
+        - $ref: '#/definitions/AggregateAssignmentInput'
+        description: Assignment Assignment - full object. Omit = unchanged.
       course_id:
         type: string
       course_module_code:
         type: string
       delete_assignment:
-        description: DeleteAssignment Set to true to delete the assignment
+        description: DeleteAssignment DeleteAssignment - set true to delete assignment
         type: boolean
       delete_introduction:
-        description: DeleteIntroduction Set to true to delete the introduction
+        description: DeleteIntroduction DeleteIntroduction - set true to delete introduction
         type: boolean
       description:
-        description: Description Module description (only send if changed)
         type: string
       image_url:
-        description: ImageUrl Module image URL (only send if changed)
         type: string
       introduction:
-        $ref: '#/definitions/AggregateIntroductionInput'
+        allOf:
+        - $ref: '#/definitions/AggregateIntroductionInput'
+        description: Introduction Introduction - full object. Omit = unchanged.
       lessons:
-        description: Lessons Flat array of lessons keyed by slt_index. Server diffs against current state.
-          Editable in any status.
+        description: Lessons Lessons - flat array keyed by slt_index. Omit = unchanged.
         items:
           $ref: '#/definitions/AggregateLessonInput'
         type: array
       slt_hash:
-        description: SltHash Required when status = 'APPROVED'. Hash of the SLT list.
+        description: SltHash SltHash - required when status = "APPROVED"
         type: string
       slts:
-        description: Slts Full ordered list of SLTs. Server diffs against current state. ONLY allowed
-          when status is DRAFT.
+        description: Slts SLTs - full ordered list. ONLY allowed when status is DRAFT.
         items:
           $ref: '#/definitions/AggregateSltInput'
         type: array
       status:
-        allOf:
-        - $ref: '#/definitions/AggregateUpdateModuleV2RequestStatus'
-        description: Status Set to 'APPROVED' to approve a DRAFT module
+        description: Status Status - only "APPROVED" is valid via this endpoint
+        type: string
       title:
-        description: Title Module title (only send if changed)
         type: string
       video_url:
-        description: VideoUrl Module video URL (only send if changed)
         type: string
     type: object
-  AggregateUpdateModuleV2RequestStatus:
-    enum:
-    - APPROVED
-    type: string
-    x-enum-varnames:
-    - AggregateUpdateModuleV2RequestStatusAPPROVED
   AggregateUpdateModuleV2Response:
     properties:
       changes:
-        allOf:
-        - $ref: '#/definitions/AggregateChangeSummary'
-        description: Changes Summary of what changed in the aggregate update
+        $ref: '#/definitions/AggregateChangeSummary'
       data:
-        allOf:
-        - $ref: '#/definitions/CourseModuleV2'
-        description: Data Course Module V2 with full content
+        $ref: '#/definitions/CourseModuleV2Output'
     type: object
   AliasExistsResponse:
     properties:
@@ -464,12 +394,10 @@ definitions:
       submission_url:
         type: string
     type: object
-  AssignmentV2:
+  AssignmentV2Output:
     properties:
       content_json:
-        additionalProperties: true
-        description: ContentJson Tiptap JSON content
-        type: object
+        $ref: '#/definitions/JSONMap'
       created_by_alias:
         type: string
       description:
@@ -885,6 +813,21 @@ definitions:
     required:
     - title
     type: object
+  CourseMembershipResponse:
+    properties:
+      account_id:
+        type: string
+      course_ids:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   CourseModule:
     properties:
       created_by:
@@ -932,39 +875,7 @@ definitions:
     - course_id
     - slt_hash
     type: object
-  CourseModuleV2:
-    properties:
-      assignment:
-        allOf:
-        - $ref: '#/definitions/AssignmentV2'
-        description: Assignment Assignment V2 (one-to-one with module)
-      course_module_code:
-        type: string
-      created_by_alias:
-        type: string
-      description:
-        type: string
-      image_url:
-        type: string
-      introduction:
-        $ref: '#/definitions/IntroductionV2'
-      is_live:
-        type: boolean
-      module_status:
-        $ref: '#/definitions/CourseModuleV2ModuleStatus'
-      slt_hash:
-        description: SltHash Hash of SLT list, used as module token name on-chain
-        type: string
-      slts:
-        items:
-          $ref: '#/definitions/SltV2'
-        type: array
-      title:
-        type: string
-      video_url:
-        type: string
-    type: object
-  CourseModuleV2ModuleStatus:
+  CourseModuleStatusV2:
     enum:
     - APPROVED
     - ARCHIVED
@@ -974,12 +885,44 @@ definitions:
     - PENDING_TX
     type: string
     x-enum-varnames:
-    - CourseModuleV2ModuleStatusAPPROVED
-    - CourseModuleV2ModuleStatusARCHIVED
-    - CourseModuleV2ModuleStatusDEPRECATED
-    - CourseModuleV2ModuleStatusDRAFT
-    - CourseModuleV2ModuleStatusONCHAIN
-    - CourseModuleV2ModuleStatusPENDINGTX
+    - CourseModuleStatusV2Approved
+    - CourseModuleStatusV2Archived
+    - CourseModuleStatusV2Deprecated
+    - CourseModuleStatusV2Draft
+    - CourseModuleStatusV2OnChain
+    - CourseModuleStatusV2PendingTx
+  CourseModuleV2Output:
+    properties:
+      assignment:
+        allOf:
+        - $ref: '#/definitions/AssignmentV2Output'
+        description: Assignment One-to-one optional
+      course_module_code:
+        type: string
+      created_by_alias:
+        type: string
+      description:
+        type: string
+      image_url:
+        type: string
+      introduction:
+        $ref: '#/definitions/IntroductionV2Output'
+      is_live:
+        type: boolean
+      module_status:
+        $ref: '#/definitions/CourseModuleStatusV2'
+      slt_hash:
+        description: SltHash Hash of SLT list, used as module token name
+        type: string
+      slts:
+        items:
+          $ref: '#/definitions/SltV2Output'
+        type: array
+      title:
+        type: string
+      video_url:
+        type: string
+    type: object
   CreateAllocationRequest:
     properties:
       api_key_id:
@@ -1090,6 +1033,12 @@ definitions:
         minLength: 1
         type: string
       course_prereqs:
+        description: 'List of [course_id, [slt_hash, ...]] tuples — each prerequisite course''s ID paired
+          with the array of its required SLT hashes. Proxied from Atlas, whose Haskell tuple type has
+          no Swagger 2.0 equivalent; the inner shape is not otherwise expressible here. An empty list
+          means no prerequisites.
+
+          Example: [["ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef", ["c8bc55db03d6ead9c8bc55db03d6ead9c8bc55db03d6ead9c8bc55db03d6ead9"]]]'
         items:
           items: {}
           type: array
@@ -1384,12 +1333,15 @@ definitions:
     description: Error details with code, message, and optional debug info
     properties:
       code:
+        description: Code is a stable machine-readable error identifier.
         example: BAD_REQUEST
         type: string
       details:
+        description: Details carries optional additional debug context.
         example: Field 'email' is required
         type: string
       message:
+        description: Message is a human-readable description of the error.
         example: Invalid input provided
         type: string
     required:
@@ -1508,12 +1460,10 @@ definitions:
     - message
     - status_code
     type: object
-  IntroductionV2:
+  IntroductionV2Output:
     properties:
       content_json:
-        additionalProperties: true
-        description: ContentJson Tiptap JSON content
-        type: object
+        $ref: '#/definitions/JSONMap'
       created_by_alias:
         type: string
       description:
@@ -1526,6 +1476,9 @@ definitions:
         type: string
       video_url:
         type: string
+    type: object
+  JSONMap:
+    additionalProperties: true
     type: object
   JWK:
     description: A single JSON Web Key (JWK) as defined in RFC 7517.
@@ -1588,12 +1541,10 @@ definitions:
       name:
         type: string
     type: object
-  LessonV2:
+  LessonV2Output:
     properties:
       content_json:
-        additionalProperties: true
-        description: ContentJson Tiptap JSON content
-        type: object
+        $ref: '#/definitions/JSONMap'
       created_by_alias:
         type: string
       description:
@@ -1631,6 +1582,15 @@ definitions:
         type: array
       meta:
         $ref: '#/definitions/ListAccountAuditMeta'
+    type: object
+  ListAccountOpUsageResponse:
+    properties:
+      account_id:
+        type: string
+      usage:
+        items:
+          $ref: '#/definitions/OpUsageBucket'
+        type: array
     type: object
   ListAllocationsResponse:
     properties:
@@ -1836,8 +1796,10 @@ definitions:
         example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       deposit_value:
-        description: List of (asset class, quantity) pairs. An asset class is either "lovelace" or a token
-          with its minting policy and token name delimited by dot (.).
+        description: 'List of (asset class, quantity) pairs. An asset class is either "lovelace" or a
+          token with its minting policy and token name delimited by dot (.).
+
+          Example: [["lovelace", 5000000]]'
         items:
           items: {}
           type: array
@@ -2559,7 +2521,7 @@ definitions:
         items:
           type: string
         type: array
-      prereq_slt_hashes:
+      prereq_credential_hashes:
         items:
           type: string
         type: array
@@ -2663,16 +2625,33 @@ definitions:
     - message
     - status_code
     type: object
+  OpUsageBucket:
+    properties:
+      count:
+        description: Count is the number of builds in this (op_name, status) bucket.
+        type: integer
+      op_name:
+        description: 'OpName is the observability label recorded at build time (e.g.
+
+          "evidence-approve", "create-course") — see models.SponsorshipBuild.OpName.'
+        type: string
+      status:
+        description: Status is the build's lifecycle status ("BUILT", "SUBMITTED", "CONFIRMED", "FAILED").
+        type: string
+    type: object
   Pagination:
     description: Pagination metadata for list endpoints
     properties:
       page:
+        description: Page is the current page number (1-based).
         example: 1
         type: integer
       page_size:
+        description: PageSize is the number of items per page.
         example: 20
         type: integer
       total:
+        description: Total is the total number of items across all pages.
         example: 100
         type: integer
     required:
@@ -2864,14 +2843,10 @@ definitions:
   PostProjectContributorCommitmentSubmitJSONRequestBody:
     properties:
       evidence:
-        additionalProperties: true
-        description: Evidence Rich JSON evidence content (Tiptap document)
-        type: object
+        $ref: '#/definitions/JSONMap'
       evidence_hash:
-        description: EvidenceHash Hash of evidence for on-chain verification
         type: string
       pending_tx_hash:
-        description: PendingTxHash Blockchain transaction hash
         type: string
       task_hash:
         type: string
@@ -3345,7 +3320,7 @@ definitions:
     - tx_hash
     - tx_type
     type: object
-  RegisterProjectRequest:
+  RegisterProjectV2Request:
     properties:
       description:
         type: string
@@ -3408,22 +3383,16 @@ definitions:
   RegisterTokenRequest:
     properties:
       asset_name:
-        description: AssetName Hex-encoded asset name — 2-64 hex characters
         type: string
       asset_name_decoded:
-        description: AssetNameDecoded Human-readable asset name (auto-decoded from hex if omitted)
         type: string
       decimals:
-        description: Decimals Number of decimal places
         type: integer
       name:
-        description: Name Display name for the token
         type: string
       policy_id:
-        description: PolicyId Cardano policy ID — exactly 56 hex characters
         type: string
       ticker:
-        description: Ticker Token ticker symbol (e.g., ANDA)
         type: string
     type: object
   RegisteredSltItem:
@@ -3454,20 +3423,13 @@ definitions:
       course_module_code:
         type: string
       decision:
-        $ref: '#/definitions/ReviewAssignmentCommitmentV2RequestDecision'
+        description: Decision "accept" or "refuse"
+        type: string
       participant_alias:
         type: string
       pending_tx_hash:
         type: string
     type: object
-  ReviewAssignmentCommitmentV2RequestDecision:
-    enum:
-    - accept
-    - refuse
-    type: string
-    x-enum-varnames:
-    - ReviewAssignmentCommitmentV2RequestDecisionAccept
-    - ReviewAssignmentCommitmentV2RequestDecisionRefuse
   RevokeAllocationRequest:
     properties:
       kind:
@@ -3578,14 +3540,14 @@ definitions:
     - key
     - signature
     type: object
-  SltV2:
+  SltV2Output:
     properties:
       created_by_alias:
         type: string
       lesson:
-        $ref: '#/definitions/LessonV2'
+        $ref: '#/definitions/LessonV2Output'
       slt_index:
-        description: SltIndex 1-based SLT index (starts at 1, not 0)
+        description: SltIndex 1-based
         type: integer
       slt_text:
         type: string
@@ -3816,20 +3778,14 @@ definitions:
   SubmitAssignmentCommitmentV2Request:
     properties:
       course_id:
-        description: CourseId The course ID (policy ID)
         type: string
       evidence:
-        additionalProperties: true
-        description: Evidence Tiptap JSON evidence content
-        type: object
+        $ref: '#/definitions/JSONMap'
       evidence_hash:
-        description: EvidenceHash Hash of the evidence for on-chain verification
         type: string
       pending_tx_hash:
-        description: PendingTxHash The pending transaction hash
         type: string
       slt_hash:
-        description: SltHash The SLT hash identifying the module (on-chain identifier)
         type: string
     type: object
   SubscriptionStatus:
@@ -4148,40 +4104,6 @@ definitions:
     - message
     - status_code
     type: object
-  TxStatsResponse:
-    description: Statistics about the TX State Machine for monitoring and debugging.
-    properties:
-      confirmed_count:
-        description: Number of transactions confirmed on-chain
-        example: 142
-        type: integer
-      expired_count:
-        description: Number of expired transactions (not confirmed within timeout)
-        example: 0
-        type: integer
-      failed_count:
-        description: Number of failed transactions
-        example: 2
-        type: integer
-      pending_count:
-        description: Number of transactions in pending state
-        example: 5
-        type: integer
-      queue_length:
-        description: Current length of the confirmation queue
-        example: 3
-        type: integer
-      type_breakdown:
-        additionalProperties:
-          format: int64
-          type: integer
-        description: Breakdown of pending transactions by type
-        type: object
-      updated_count:
-        description: Number of transactions with completed DB updates
-        example: 140
-        type: integer
-    type: object
   UnauthorizedErrorResponse:
     properties:
       details:
@@ -4231,6 +4153,11 @@ definitions:
       unsigned_tx:
         type: string
     type: object
+  UpdateAccessTokenAliasResponse:
+    properties:
+      access_token_alias:
+        type: string
+    type: object
   UpdateAssignmentCommitmentV2Request:
     properties:
       course_id:
@@ -4238,8 +4165,7 @@ definitions:
       course_module_code:
         type: string
       evidence:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/JSONMap'
       evidence_hash:
         type: string
     type: object
@@ -4277,7 +4203,7 @@ definitions:
         items:
           type: string
         type: array
-      prereq_slt_hashes:
+      prereq_credential_hashes:
         items:
           type: string
         type: array
@@ -5158,11 +5084,11 @@ paths:
         '400':
           description: Bad request or validation error
           schema:
-            $ref: '#/definitions/AggregateUpdateErrorResponse'
+            $ref: '#/definitions/ErrorResponse'
         '404':
           description: Module not found
           schema:
-            $ref: '#/definitions/NotFoundErrorResponse'
+            $ref: '#/definitions/ErrorResponse'
         '502':
           description: DB API request failed
           schema:
@@ -6262,7 +6188,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/RegisterProjectRequest'
+          $ref: '#/definitions/RegisterProjectV2Request'
       produces:
       - application/json
       responses:
