@@ -3,6 +3,10 @@
 #
 # Naming: {domain}.{subject}.{variant}
 # Status: validated (tested against live stack) | stubbed (defined, not yet tested) | blocked (tested, hit known issue)
+# Costs: cost_estimate is the whole outlay from the payer's wallet — network fee, service fee
+#   and deposits — unless it says otherwise. In validated_fees, service_ada is the service fee
+#   paid to the fee recipient (0.0 means measured, none charged) and tx is the transaction the
+#   figures were read from.
 # Dependencies reference loop numbers, not names.
 #
 # Roles: named for readability, and they come in two kinds.
@@ -32,7 +36,7 @@
 # Source: orch task "andamio-dev - add each Tx Loop and build cost estimation into each.md"
 
 version: 4
-last_updated: 2026-09-21
+last_updated: 2026-09-23
 
 # Dependency graph:
 #   (15) general.access-token
@@ -111,16 +115,16 @@ loops:
           Off-chain — save lesson content, introduction, and assignment via API.
           CLI: andamio course import <path> --course-id <id>
           IMPORTANT: assignment content MUST exist before students can create commitments.
-    cost_estimate: "~20.7 ADA flat + ~1.86 ADA per module (course_create: 1 service + 0.52 fee + ~19 deposits; modules_manage: 0.27 fee + deposit/module). v3 pricing — does not scale with teacher count."
+    cost_estimate: "~119.3 ADA + ~1.86 ADA per module (course_create: 100 service + 0.56 fee + ~18.8 deposits; modules_manage: 0.27 fee + ~1.59 deposit per module). Measured with one initial teacher; each teacher added later is a separate teachers_update (loop 12, 10 ADA service fee)."
     validated_fees:
-      course_create: { fee_ada: 0.522, service_ada: 1.0, note: "v3 — flat 1 ADA, no per-teacher scaling" }
-      modules_manage: { fee_ada: 0.268 }
+      course_create: { fee_ada: 0.559, service_ada: 100.0, wallet_delta_ada: 119.32, tx: 49d8f2a1199c84fefe4baa99552b5774cbe0f2ac4de89e89bccf19915fc0891d }
+      modules_manage: { fee_ada: 0.267, wallet_delta_ada: 1.86, tx: cbfc64f7df6340cf8e4e5198985817aa58193759f28913f2df2633beadc4478e }
     script: examples/course-lifecycle.sh (partial — also covers loop 3)
     status: validated
-    validated_date: 2026-05-14
+    validated_date: 2026-09-23
     known_gotchas:
       - "Module must have assignment content before students can enroll"
-      - "Service fee under Pricing v3 is a flat 1 ADA. Earlier docs / lessons that say '100 ADA base + 10 ADA per teacher' are stale (v2 model)."
+      - "course_create pays a flat 100 ADA service fee. Budget ~120 ADA before starting."
 
   - id: 2
     name: project.setup
@@ -209,18 +213,20 @@ loops:
           expiration_posix: Unix milliseconds (not seconds).
           After tx confirms, discover task_hash:
             andamio project tasks <project-id> --output json
-    cost_estimate: "~49 ADA flat + treasury deposit (project_create: 1 service + 1.30 fee + ~45 deposits + 2 stake reg; treasury_fund: 0.18 fee + deposit; tasks_manage: 0.32 fee). v3 pricing — does not scale with manager count."
+    cost_estimate: "~148 ADA + treasury deposit (project_create: 100 service + 1.30 fee + ~44.6 deposits incl. 5 ADA treasury reserve + 2 stake reg; treasury_fund: 0.18 fee + deposit; tasks_manage: 0.32 fee + deposit_value). Measured with one initial manager; each manager added later pays a 10 ADA service fee."
     validated_fees:
-      project_create: { fee_ada: 1.303, service_ada: 1.0, note: "v3 — flat 1 ADA, no per-manager scaling" }
-      treasury_fund: { fee_ada: 0.175, note: "plus deposit amount" }
-      tasks_manage: { fee_ada: 0.322 }
+      project_create: { fee_ada: 1.301, service_ada: 100.0, wallet_delta_ada: 147.93, tx: 4ab99e16856002c1b6937be5afac0b4c21b2d82592641f753abfef07f5623f5a }
+      managers_manage_add: { fee_ada: 0.299, service_ada: 10.0, wallet_delta_ada: 10.35, tx: ad25d9e9885df8400389085f9c2d2751fc8002b246c31c8ff2b8520d4a8e4c62 }
+      managers_manage_remove: { fee_ada: 0.288, service_ada: 0.0, wallet_delta_ada: 0.24, tx: bd90c1483aa48bb422d7c392e0839697a09dbbaed398b1c8d7dff5fc990dfa7a }
+      treasury_fund: { fee_ada: 0.177, note: "plus deposit amount", tx: fb0eedafb9372fa33c39c05ad354760c66c9850906a82a8f024d96cb2a9ced81 }
+      tasks_manage: { fee_ada: 0.321, tx: eaaf49e113ad3db30e8ded5f19a60db1b5a50742365204270f00d460e8efc47c }
     script: examples/project-lifecycle.sh (partial — also covers loop 4)
     status: validated
-    validated_date: 2026-05-14
+    validated_date: 2026-09-23
     known_gotchas:
       - "Treasury is NOT funded at project creation — explicit treasury_fund TX required"
       - "contributor_state_id must be discovered via project get response (not documented in SYSTEM_REFERENCE §6.2)"
-      - "Service fee under Pricing v3 is a flat 1 ADA. Earlier docs / lessons that say '100 ADA base + 10 ADA per manager' are stale (v2 model)."
+      - "project_create pays a flat 100 ADA service fee. Adding a manager after creation pays 10 ADA each, so name every initial manager in the create body."
 
   # ===========================================================================
   # HAPPY PATH — Credentials
@@ -738,17 +744,18 @@ loops:
         note: >
           Confirm teacher list updated on-chain and in DB.
           CLI: andamio course get <course-id> --output json | jq '.teachers'
-    cost_estimate: "~0.28 ADA per tx (network fee only, no service fee)"
+    cost_estimate: "~10.33 ADA to add one teacher (0.30 network fee + 10 ADA service fee); ~0.26 ADA to remove one (network fee only)"
     validated_fees:
-      teachers_update_add: { fee_ada: 0.28, note: "add one teacher" }
-      teachers_update_remove: { fee_ada: 0.28, note: "remove one teacher" }
+      teachers_update_add: { fee_ada: 0.303, service_ada: 10.0, wallet_delta_ada: 10.33, note: "add one teacher", tx: 501e6c44817c4847f291ee3f4812a1ca3a3ad367f087803f22029dcb914dfd00 }
+      teachers_update_remove: { fee_ada: 0.286, service_ada: 0.0, wallet_delta_ada: 0.26, note: "remove one teacher", tx: 3914a36c2ba31ffeff1016e191ccad265ac46a811c039301b28135d581a8d739 }
     script: null
     status: validated
-    validated_date: 2026-04-07
+    validated_date: 2026-09-23
     known_gotchas:
       - "tx_type is 'teachers_update' NOT 'teachers_manage' — registration fails with invalid tx_type if wrong"
       - "Endpoint path is /v2/tx/course/owner/teachers/manage but the tx_type for registration is teachers_update"
       - "Only the course owner can manage teachers, not existing teachers"
+      - "The 10 ADA service fee is per teacher added. Name every initial teacher in the course_create body to avoid paying it later."
 
   # ===========================================================================
   # MULTI-PARTY
