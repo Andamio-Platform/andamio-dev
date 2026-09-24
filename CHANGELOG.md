@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [0.2.0] — 2026-09-23
+## [0.2.0] — 2026-09-24
 
 ### Added
 - `/contribute` skill — a public front door to Andamio's public repos (#8).
