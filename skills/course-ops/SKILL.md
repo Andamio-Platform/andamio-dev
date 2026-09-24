@@ -18,8 +18,7 @@ Guides developers through the complete course lifecycle on Andamio. Defaults to 
 
 ### Path Resolution
 
-- **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): Read specs from `${CLAUDE_PLUGIN_ROOT}/specs/`, reference from `${CLAUDE_PLUGIN_ROOT}/reference/`.
-- **Clone/symlink context** (default): Read from `specs/` and `reference/` relative to project root.
+Bundled paths in this skill (`specs/`, `reference/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `specs/andamio-api.yaml` is `../../specs/andamio-api.yaml`.
 
 ### Pre-Execution Check
 

@@ -225,8 +225,8 @@ andamio tx types --output json
 
 > **You're set up.** Here's your quick reference:
 
-**Key resources:**
-- CLI reference: `reference/andamio-cli-context.md` in this plugin
+**Key resources** (paths are relative to the andamio-dev package root, two levels above this skill's `SKILL.md` — not to your project):
+- CLI reference: `reference/andamio-cli-context.md`
 - Gateway API spec: `specs/andamio-api.yaml` (77 paths, the public contract)
 - TX loops reference: `reference/tx-loops.yaml` (canonical transaction workflows)
 - Cost data: `specs/cost-registry.json`

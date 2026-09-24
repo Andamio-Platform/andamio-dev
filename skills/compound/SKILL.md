@@ -27,8 +27,11 @@ Extracts patterns from developer interaction sessions and writes them to the kno
 
 ### Path Resolution
 
-- **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): Read knowledge from `${CLAUDE_PLUGIN_DATA}/knowledge/` (user data), falling back to `${CLAUDE_PLUGIN_ROOT}/knowledge/` (seed data). **Write all updates to `${CLAUDE_PLUGIN_DATA}/knowledge/`** — never modify the plugin's bundled seed data.
-- **Clone/symlink context** (default): Read and write knowledge at `knowledge/` relative to project root.
+Bundled paths in this skill (`knowledge/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `knowledge/index.yaml` is `../../knowledge/index.yaml`.
+
+Knowledge files are developer data. Read them from the state directory first — `${CLAUDE_PLUGIN_DATA}/knowledge/` when `${CLAUDE_PLUGIN_DATA}` is set, otherwise `knowledge/` in the current working directory — and fall back to the package's seed `knowledge/`.
+
+Write every knowledge update to the state directory: `${CLAUDE_PLUGIN_DATA}/knowledge/` when `${CLAUDE_PLUGIN_DATA}` is set, otherwise `knowledge/` in the current working directory. Never write into an installed package. If a file does not exist in the state directory yet, copy the package's seed file there before the first append. In a clone of this repo the working directory is the package root, so updates land in the repo's own `knowledge/`.
 
 All `knowledge/` paths below follow this resolution.
 

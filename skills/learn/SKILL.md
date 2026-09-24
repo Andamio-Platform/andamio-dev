@@ -20,8 +20,9 @@ This skill is agent-neutral. In Claude Code it may be paired with specialized ag
 
 ## Path Resolution
 
-- Plugin context (`${CLAUDE_PLUGIN_ROOT}` is set): read course content from `${CLAUDE_PLUGIN_ROOT}/courses/`; write learner state to `${CLAUDE_PLUGIN_DATA}/progress.json` when `${CLAUDE_PLUGIN_DATA}` is set.
-- Clone/symlink context: read course content from `courses/` and write learner state to `./progress.json` at the project root.
+Bundled paths in this skill (`courses/`, `skills/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `courses/build-on-andamio/01-slts.md` is `../../courses/build-on-andamio/01-slts.md`.
+
+Learner state is developer data and never lives inside the package. Write `progress.json` to the state directory: `${CLAUDE_PLUGIN_DATA}/progress.json` when `${CLAUDE_PLUGIN_DATA}` is set, otherwise `progress.json` in the current working directory (the developer's project root).
 
 Read `skills/learn/references/progress-schema.md` for the progress schema.
 

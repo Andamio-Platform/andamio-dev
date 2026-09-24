@@ -18,8 +18,9 @@ Interactive CLI guidance from the bundled agent reference. Developers ask what t
 
 ### Path Resolution
 
-- **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): Read reference from `${CLAUDE_PLUGIN_ROOT}/reference/`.
-- **Clone/symlink context** (default): Read reference at `reference/` relative to project root.
+Bundled paths in this skill (`reference/`, `knowledge/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `reference/andamio-cli-context.md` is `../../reference/andamio-cli-context.md`.
+
+Knowledge files are developer data. Read them from the state directory first — `${CLAUDE_PLUGIN_DATA}/knowledge/` when `${CLAUDE_PLUGIN_DATA}` is set, otherwise `knowledge/` in the current working directory — and fall back to the package's seed `knowledge/`.
 
 ### Pre-Execution Knowledge Check
 

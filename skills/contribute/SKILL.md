@@ -21,8 +21,7 @@ v1 covers one repo: **credential-badges**. The curated list lives in `reference/
 
 ### Path Resolution
 
-- **Plugin context** (`${CLAUDE_PLUGIN_ROOT}` is set): read `${CLAUDE_PLUGIN_ROOT}/reference/public-repos.yaml`.
-- **Clone/symlink context** (default): read `reference/public-repos.yaml` relative to project root.
+Bundled paths in this skill (`reference/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `reference/public-repos.yaml` is `../../reference/public-repos.yaml`.
 
 The registry is the single source of truth for which repos are in scope and how to reach each one's issues. Read it before doing anything else.
 

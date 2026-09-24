@@ -33,7 +33,7 @@ There is no build step, no test suite, no linter. "Testing" means invoking skill
 
 **Knowledge base**: `knowledge/*.yaml` — append-only YAML files. Always increment counts, never overwrite. Update `knowledge/index.yaml` after extraction.
 
-**Path resolution**: When `${CLAUDE_PLUGIN_ROOT}` is set (plugin context), read specs from there. Otherwise all paths are project-relative.
+**Path resolution**: Skills resolve bundled files (`specs/`, `reference/`, `knowledge/` seed, `courses/`) relative to the package root, two levels above each `SKILL.md` after resolving symlinks — never from the working directory. Developer data (`progress.json`, knowledge updates) goes to `${CLAUDE_PLUGIN_DATA}` when set, otherwise the working directory. See AGENTS.md.
 
 ## Key Conventions
 
