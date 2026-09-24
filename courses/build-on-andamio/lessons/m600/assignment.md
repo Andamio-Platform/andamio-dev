@@ -16,10 +16,10 @@ Two parts: evidence and feedback.
 Query the project you created in M600.4:
 
 ```bash
-andamio project show <project-id> --output json
+andamio project get <project-id> --output json
 ```
 
-Paste the output. From it, identify: `project_id`, `contributor_state_id`, and treasury balance.
+Paste the output. From it, identify: `project_id`, `contributor_state_id`, and `treasury_balance`.
 
 ### SLT 600.2 — Compute a task_hash
 
