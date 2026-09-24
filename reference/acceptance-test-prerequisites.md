@@ -4,10 +4,10 @@ Checklist for running Andamio transaction loop acceptance tests on preprod. Comp
 
 ## Environment
 
-- [ ] CLI installed: `andamio --version` (minimum v0.13.3 — the current release)
+- [ ] CLI installed: `andamio --version` (1.1.1 or later)
 - [ ] CLI pointed at preprod: `andamio config set-url https://preprod.api.andamio.io`
 - [ ] API key configured: `andamio auth login --api-key <key>`
-- [ ] Cardano submit configured: `andamio config show` should show a submit URL (Blockfrost preprod) and `project_id` header
+- [ ] Cardano submit configured: `andamio config show` should show a submit URL ending in `/tx/submit` (e.g. `https://cardano-preprod.blockfrost.io/api/v0/tx/submit`) and a `project_id` header. Without `/tx/submit`, submits report success but never reach the chain.
 
 ## Wallets
 
