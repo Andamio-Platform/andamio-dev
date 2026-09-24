@@ -1,0 +1,35 @@
+name: Drift checks
+
+# Runs the two maintenance checks in scripts/ so drift is caught on the PR that
+# introduces it, not by the next person who runs them by hand.
+#   gen-endpoint-index.py --check  reference/api-endpoints-by-use-case.md matches specs/andamio-api.yaml
+#   check-cli-refs.py --check      no references remain to CLI commands a released version retired
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Endpoint index is current
+        run: python3 scripts/gen-endpoint-index.py --check
+
+      # Runs even when the index check fails, so one PR run reports both.
+      - name: No references to retired CLI commands
+        if: success() || failure()
+        run: python3 scripts/check-cli-refs.py --check
