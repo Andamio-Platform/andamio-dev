@@ -189,7 +189,7 @@ Costs ~0.34 ADA. Use when a contributor needs to be removed from participation.
 
 **Treasury system**: On-chain ADA pool that funds task rewards. Starts with a 5 ADA reserve at creation; funded through add-funds and the `deposit_value` of `tasks_manage`.
 
-**Task escrow**: When tasks are created, their reward amount is moved from treasury to escrow. When tasks are assessed (pass), escrow releases to the contributor. When tasks are deleted, escrow returns to treasury.
+**Task escrow**: When tasks are created, the manager pays their reward amount (`deposit_value`) into the treasury, where it is locked for the task. When tasks are assessed (pass), escrow releases to the contributor. When tasks are deleted, escrow returns to treasury.
 
 **Contributor state**: On-chain token that tracks a contributor's participation. Minted on first task commit (~2.3 ADA locked). Burned when credential is claimed (the locked ADA comes back).
 

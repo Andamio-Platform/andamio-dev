@@ -89,7 +89,7 @@ Every Andamio transaction has up to four cost components:
 | Create Project | ~1.30 ADA | 100 ADA | ~44.6 ADA (incl. 5 ADA treasury reserve) + 2 ADA stake registration | ~148 ADA total, measured with one initial manager; treasury funded separately |
 | Update Managers | ~0.30 ADA | 10 ADA per manager added; 0 to remove | 0 | Spend-and-recreate. ~10.35 ADA to add one manager |
 | Manage Blacklist | ~0.34 ADA | 0 | 0 | — |
-| Create Tasks | ~0.43 ADA | 0 | task reward amount | Reward locked in escrow |
+| Create Tasks | ~0.32 ADA | 0 | task reward amount | Reward paid from the manager's wallet into the treasury and locked for the task |
 | First Task Commit | ~0.54 ADA | 0 | ~2.3 ADA | Locked in contributor state (recoverable); ~2.82 ADA total |
 | Subsequent Commits | ~0.51 ADA | 0 | 0 | No new deposit |
 | Assess Tasks | ~0.35 ADA | 0 | 0 | — |

@@ -20,7 +20,7 @@
 #   - Wallet JWT active (andamio user login)
 #   - A submit endpoint configured. The URL must be the full submit route, e.g.
 #       andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/submit
-#       andamio config set-submit-header "project_id: <your-blockfrost-project-id>"
+#       andamio config set-submit-header project_id <your-blockfrost-project-id>
 #   - A Cardano .skey file for signing (preprod)
 #   - ~130 test ADA from the faucet (https://docs.cardano.org/cardano-testnets/tools/faucet/)
 #   - jq

@@ -310,7 +310,7 @@
         "breakdown": "txFee only — no refund was observed",
         "verified": "preprod 2026-09-23, tx cfc7337226f33e26fcac847f05a2bb3a08bdc60cc62741c86f0d6022181f86d7"
       },
-      "notes": "Datum shrinks (pending→completed), so teacher gets partial refund"
+      "notes": "Tx fee only. Earlier captures showed a small minUTxO refund as the datum shrank; the 2026-09-23 run did not."
     },
     "course.student.credential-claim": {
       "txFee": 346896,
