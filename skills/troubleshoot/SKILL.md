@@ -72,6 +72,7 @@ Full table: `andamio help exit-codes`.
 | ScriptFailure | Validator rejected the transaction | Check transaction parameters. Usually wrong role (not a teacher, not a manager). |
 | UTxOContention | Another transaction consumed the same UTxO | Retry after a few seconds. Common during concurrent operations. |
 | ExUnitsExceeded | Script execution exceeded budget | Contact Andamio team — this shouldn't happen with normal operations. |
+| Stuck in `pending`, `not_indexed_count` climbing | Submit URL is not the full `/tx/submit` route, so the tx never reached the chain | `andamio config show`; set the full route with `andamio config set-submit-url .../api/v0/tx/submit` and resubmit. Nothing was spent. |
 
 ### Step 3: Match Against Known Gotchas
 

@@ -3,7 +3,7 @@
 # Schema: id, error_pattern, root_cause, fix, category, frequency, confirmed
 
 version: 1
-last_updated: "2026-04-03"
+last_updated: "2026-09-23"
 
 entries:
   - id: gotcha-001
@@ -74,6 +74,22 @@ entries:
     error_pattern: "slt_index out of range / register-module then import fails"
     root_cause: "`register-module` sets module status to APPROVED, which locks SLTs. Import then can't update SLTs because they're locked, and if the module has 0 DB SLT records (only on-chain SLTs), lesson attachment fails."
     fix: "Run `andamio course teacher update-module-status --course-id <id> --module-code <code> --status DRAFT` to unlock SLTs, then re-import."
+    category: cli
+    frequency: 1
+    confirmed: true
+
+  - id: gotcha-010
+    error_pattern: "tx run reports a tx_hash, then times out in 'pending'; tx status shows not_indexed_count climbing"
+    root_cause: "The configured submit URL is not the full submit route (e.g. it ends in /api/v0 instead of /api/v0/tx/submit). The endpoint answers 200 with its own banner, the CLI treats any 200 as a successful submit, and the transaction never reaches the chain."
+    fix: "Set the full route: `andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/submit`. A tx that never landed spent nothing — rebuild and resubmit (or `andamio tx submit --tx-file <signed.hex> --submit-url <full-route>`)."
+    category: transactions
+    frequency: 1
+    confirmed: true
+
+  - id: gotcha-011
+    error_pattern: "required flag(s) \"course-id\" not set — from `andamio course create-module <course-id>`"
+    root_cause: "create-module's positional argument is an optional outline path, not the course ID"
+    fix: "Pass the course with the flag: `andamio course create-module --course-id <course-id> --code 100 --title \"...\" --slt \"...\" --approve`"
     category: cli
     frequency: 1
     confirmed: true

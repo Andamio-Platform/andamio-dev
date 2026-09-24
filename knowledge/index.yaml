@@ -3,12 +3,12 @@
 # Updated by /compound skill
 
 version: 2
-last_updated: "2026-07-28"
+last_updated: "2026-09-23"
 
 # Aggregate statistics (seed data)
 stats:
   sessions_processed: 0
-  gotchas_captured: 9
+  gotchas_captured: 11
   faqs_captured: 6
   endpoint_patterns: 0
   cost_scenarios: 0

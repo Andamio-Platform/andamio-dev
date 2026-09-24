@@ -1,6 +1,6 @@
 {
   "name": "@andamio/dev",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Build on the Andamio Protocol and API — interactive developer onboarding, API exploration, cost estimation, and operations guidance",
   "license": "MIT",
   "repository": {

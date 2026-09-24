@@ -52,4 +52,4 @@ To add a new skill: create `skills/<name>/SKILL.md` with Agent Skills frontmatte
 
 ## Releasing
 
-Published via npm (`@andamio/dev`) and the Andamio marketplace. `package.json` `files` array controls what ships. Releases are coordinated by the Andamio team.
+Published via the Andamio marketplace; developers can also clone the repo. `package.json` describes the package for Agent Skills tooling that installs from it (such as Pi), and its `files` array controls what ships. Releases are coordinated by the Andamio team.

@@ -130,7 +130,7 @@ andamio course modules "$COURSE_ID" --output json
 |---------|-------------|
 | `config show` | Show current config |
 | `config set-url <url>` | Switch environment |
-| `config set-submit-url <url>` | Set Cardano submit API URL |
+| `config set-submit-url <url>` | Set Cardano submit API URL. Give the full submit route, e.g. `https://cardano-preprod.blockfrost.io/api/v0/tx/submit`: `tx submit` treats any 200 response as success, so a base URL without `/tx/submit` fails silently — the tx never reaches the chain and `tx run` polls until it times out |
 | `config set-submit-header <key> <value>` | Persist a submit API header (e.g., Blockfrost project_id) |
 | `config remove-submit-header <key>` | Remove a persisted submit header |
 
