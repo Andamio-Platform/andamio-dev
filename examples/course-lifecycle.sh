@@ -199,7 +199,7 @@ andamio course create-module "$COURSE_ID" \
 # `module_code` is off-chain only and never appears in TX bodies.
 MODULE_TX=$(do_transaction \
   "/v2/tx/course/teacher/modules/manage" \
-  "{\"alias\": \"$ALIAS\", \"course_id\": \"$COURSE_ID\", \"modules_to_add\": [{\"slts\": [\"$SLT_1\"], \"allowed_student_state_ids\": [], \"prereq_slt_hashes\": []}], \"modules_to_update\": [], \"modules_to_remove\": []}" \
+  "{\"alias\": \"$ALIAS\", \"course_id\": \"$COURSE_ID\", \"modules_to_add\": [{\"slts\": [\"$SLT_1\"], \"allowed_student_state_ids\": [], \"prereq_credential_hashes\": []}], \"modules_to_update\": [], \"modules_to_remove\": []}" \
   "modules_manage" \
   "Add module 100")
 
