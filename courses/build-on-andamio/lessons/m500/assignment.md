@@ -59,14 +59,14 @@ Paste the hash and the status output.
 
 ### SLT 500.5 — Run the full lifecycle
 
-Verify the credential claim and confirm the credential landed:
+Verify the credential claim and confirm the credential landed. You ran the lifecycle as the course's teacher, so the teacher view shows your own commitment:
 
 ```bash
 andamio tx status <credential_claim_hash> --output json
-andamio course student credentials list --output json
+andamio teacher assignments list --course <COURSE_ID> --output json
 ```
 
-Paste both outputs.
+Paste both outputs. Your row's `content.commitment_status` should read `CREDENTIAL_CLAIMED`.
 
 ## Part 2: Feedback
 
@@ -83,10 +83,9 @@ Detailed feedback → open an issue at [github.com/Andamio-Platform/andamio-dev]
 
 **CLI:**
 
-```bash
-andamio course student commitment create \
-  --course-id "{COURSE_ID}" --module-code 500
+The `assignment_submit` transaction enrolls you and creates your commitment when it confirms — there is no separate create step.
 
+```bash
 andamio tx run /v2/tx/course/student/assignment/commit \
   --body '{"alias":"YOUR_ALIAS","course_id":"{COURSE_ID}","slt_hash":"MODULE_500_HASH","assignment_info":"YOUR_EVIDENCE"}' \
   --skey "$SKEY_PATH" \

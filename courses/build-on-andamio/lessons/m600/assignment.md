@@ -16,10 +16,10 @@ Two parts: evidence and feedback.
 Query the project you created in M600.4:
 
 ```bash
-andamio project show <project-id> --output json
+andamio project get <project-id> --output json
 ```
 
-Paste the output. From it, identify: `project_id`, `contributor_state_id`, and treasury balance.
+Paste the output. From it, identify: `project_id`, `contributor_state_id`, and `treasury_balance`.
 
 ### SLT 600.2 — Compute a task_hash
 
@@ -49,14 +49,14 @@ Paste the hash and the status output.
 
 ### SLT 600.4 — Run the full lifecycle
 
-Verify the credential claim and confirm the credential landed:
+Verify the credential claim and confirm the credential landed. You ran the lifecycle as the project's manager, so the manager view shows your own commitment:
 
 ```bash
 andamio tx status <project_credential_claim_hash> --output json
-andamio course student credentials list --output json
+andamio project manager commitments --project-id <PROJECT_ID> --output json
 ```
 
-Paste both outputs.
+Paste both outputs. Your commitment's `content.commitment_status` should read `REWARDED`.
 
 ## Part 2: Feedback
 
@@ -73,10 +73,9 @@ Detailed feedback → open an issue at [github.com/Andamio-Platform/andamio-dev]
 
 **CLI:**
 
-```bash
-andamio course student commitment create \
-  --course-id "{COURSE_ID}" --module-code 600
+The `assignment_submit` transaction enrolls you and creates your commitment when it confirms — there is no separate create step.
 
+```bash
 andamio tx run /v2/tx/course/student/assignment/commit \
   --body '{"alias":"YOUR_ALIAS","course_id":"{COURSE_ID}","slt_hash":"MODULE_600_HASH","assignment_info":"YOUR_EVIDENCE"}' \
   --skey "$SKEY_PATH" \
