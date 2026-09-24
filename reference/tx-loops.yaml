@@ -209,7 +209,9 @@ loops:
             }
 
           contributor_state_id: from project get response.
-          deposit_value: total reward moving from treasury to escrow (must match sum of tasks_to_add rewards).
+          deposit_value: must match the sum of tasks_to_add rewards. It is paid from the
+          manager's wallet, not drawn from the treasury: the project's treasury_fundings list
+          records it as a funding by the manager.
           expiration_posix: Unix milliseconds (not seconds).
           After tx confirms, discover task_hash:
             andamio project tasks <project-id> --output json
@@ -242,10 +244,9 @@ loops:
         established_by: /v2/tx/course/owner/teachers/manage
     prereqs: [course.setup]
     steps:
-      # The off-chain create step that used to open this loop is GONE. It called
-      # POST /v2/course/student/commitment/create, removed from the API on 2026-07-30.
-      # No replacement is needed: the commitment record is now upserted when the
-      # assignment_submit TX is confirmed (see the note on that step).
+      # The loop opens with the on-chain enrollment. There is no off-chain create step:
+      # the commitment record is upserted when the assignment_submit TX is confirmed
+      # (POST /v2/course/student/commitment/create left the API on 2026-07-30).
       - tx: assignment_submit
         role: student
         endpoint: /v2/tx/course/student/assignment/commit
@@ -282,28 +283,22 @@ loops:
         tx_type: credential_claim
         note: >
           Body: {"alias":"<student>","course_id":"<id>"}
-          On-chain NFT minted. No DB status change (credential is on-chain only).
-    cost_estimate: "~1.00 ADA total (student: 0.37 + 0.36 = 0.73; teacher: 0.27)"
+          On-chain NFT minted. Transitions: ACCEPTED → CREDENTIAL_CLAIMED.
+    commitment_status: "SUBMITTED (on assignment_submit) → ACCEPTED (on assessment_assess) → CREDENTIAL_CLAIMED (on credential_claim). There is no AWAITING_SUBMISSION stage on this path."
+    cost_estimate: "~1.27 ADA total (student: 2.64 out at submit, 1.65 back at claim = ~0.99 net; teacher: 0.27)"
     validated_fees:
-      assignment_submit: { fee_ada: 0.372, paid_by: student }
-      assessment_assess: { fee_ada: 0.274, paid_by: teacher }
-      credential_claim: { fee_ada: 0.356, paid_by: student }
+      assignment_submit: { fee_ada: 0.368, wallet_delta_ada: 2.64, paid_by: student, note: "includes ~2.27 ADA locked in the course-state UTxO, largely returned at claim", tx: aa209289f3b1e511c55b78e30d651d4680a2a3d9b2fc1fd44088fe7844e74513 }
+      assessment_assess: { fee_ada: 0.275, wallet_delta_ada: 0.27, paid_by: teacher, tx: cfc7337226f33e26fcac847f05a2bb3a08bdc60cc62741c86f0d6022181f86d7 }
+      credential_claim: { fee_ada: 0.347, wallet_delta_ada: -1.65, paid_by: student, note: "negative delta — the student gains ADA", tx: 9e34d342a05a7e267a679936ee2eae369ef16f8fd7d394de96c0f5462ce7f2ba }
     script: examples/course-lifecycle.sh (partial — also covers loop 1)
-    status: needs_revalidation
-    validated_date: 2026-04-06        # last end-to-end run, against the pre-2026-07-30 flow
-    revalidation_note: >
-      The step list was corrected on 2026-07-30 from the API implementation, not from a
-      run. The removed create step and the upsert-on-confirmation behaviour are verified;
-      the resulting commitment_status values and the fees below are NOT — they date from
-      the old flow. Re-run end-to-end on preprod before trusting them.
+    status: validated
+    validated_date: 2026-09-23
     known_gotchas:
       - "Module MUST be published on-chain with assignment content — the confirm handler
          treats a 404 from the DB API as a permanent module-not-found failure and gives up
          on the TX. This is now the only hard prerequisite for the loop."
-      - "Pre-creating the off-chain commitment is NO LONGER required, and no longer possible.
-         The old gotcha here said confirm returns 404 without it; that premise is dead —
-         confirmation upserts the record. A 404 now means the module is missing, not the
-         commitment."
+      - "There is no off-chain commitment to pre-create — confirmation of assignment_submit
+         creates it. A 404 at confirm means the module is missing, not the commitment."
 
   - id: 4
     name: project.credential
@@ -316,11 +311,11 @@ loops:
     prereqs: [project.setup, course.credential]
     prereq_note: Contributor must hold course credential (prerequisite) and project must exist with funded tasks.
     steps:
-      # The off-chain create step that used to open this loop is GONE. It called
-      # POST /v2/project/contributor/commitment/create, removed from the API on 2026-07-30.
-      # As on the course side, the project_join confirmation handler upserts the commitment
-      # record, so nothing needs to exist beforehand. The CLI's contributor command group was
-      # removed in CLI 1.0 (see cli-retirements.yaml); contributors work in the Andamio app.
+      # The loop opens with the on-chain join. As on the course side there is no off-chain
+      # create step: the project_join confirmation upserts the commitment record
+      # (POST /v2/project/contributor/commitment/create left the API on 2026-07-30).
+      # Contributors work in the Andamio app; the CLI's contributor command group ended
+      # with CLI 1.0 (see cli-retirements.yaml), but `andamio tx run` still runs these steps.
       - tx: project_join
         role: contributor
         endpoint: /v2/tx/project/contributor/task/commit
@@ -359,26 +354,24 @@ loops:
         note: >
           Body: {"alias":"<contributor>","project_id":"<id>","contributor_state_id":"<csid>"}
           CLI auto-looks up task_hash from contributor's ACCEPTED commitment for registration metadata.
-          Reward: task lovelace from escrow minus 5% commission. State deposit (~14.5 ADA) refunded.
-    cost_estimate: "~1.27 ADA in fees (contributor: 0.56 + 0.36 = 0.92; manager: 0.36). Contributor deposits ~14.5 ADA at join (refunded at claim)."
+          Pays the task reward minus the commission, max(1 ADA, commission_rate × reward),
+          and returns the ADA locked at join. Transitions: ACCEPTED → REWARDED.
+    commitment_status: "COMMITTED (on project_join) → ACCEPTED (on task_assess) → REWARDED (on project_credential_claim)"
+    cost_estimate: "~1.24 ADA in network fees (contributor: 0.54 + 0.36 = 0.90; manager: 0.35) plus the commission. The contributor locks ~2.3 ADA at join and ends net positive at claim."
     validated_fees:
-      project_join: { fee_ada: 0.555, paid_by: contributor, note: "plus ~14.5 ADA state deposit (refunded at claim)" }
-      task_assess: { fee_ada: 0.357, paid_by: manager }
-      project_credential_claim: { fee_ada: 0.361, paid_by: contributor, note: "net positive: deposit refund + task reward - fee - 5% commission" }
-    reward: ADA from treasury (minus 5% commission)
+      project_join: { fee_ada: 0.542, wallet_delta_ada: 2.82, paid_by: contributor, note: "includes ~2.3 ADA locked in the contributor-state UTxO", tx: 09f6126b9aff98e379c86f92ad653331d274852f0d0f00c2ec1828b099d7739b }
+      task_assess: { fee_ada: 0.350, wallet_delta_ada: 0.35, paid_by: manager, tx: 3ed17f52cdaf0df24bf2c2a917358dcfecbaca5e23a9be2b13dff043f34afd9d }
+      project_credential_claim: { fee_ada: 0.356, service_ada: 1.0, wallet_delta_ada: -5.64, paid_by: contributor, note: "5 ADA reward, 1 ADA commission (the minimum at 5%), ~2 ADA returned; negative delta — the contributor gains ADA", tx: dc837cd2d4686e1f76b996d7fc859eeb96b526b6dba44ca185645d38f351bc68 }
+    reward: ADA from treasury, minus max(1 ADA, commission_rate × reward)
     script: examples/project-lifecycle.sh (partial — also covers loop 2)
-    status: needs_revalidation
-    validated_date: 2026-04-06        # last end-to-end run, against the pre-2026-07-30 flow
-    revalidation_note: >
-      Step list corrected on 2026-07-30 from the API implementation, not from a run.
-      The removed create step and the upsert-on-confirmation behaviour are verified;
-      resulting statuses and the fees below are NOT — they date from the old flow.
+    status: validated
+    validated_date: 2026-09-23
     known_gotchas:
       - "task_hash must be in registration metadata — CLI auto-injects it since andamio-cli commit after 4ccd87e"
       - "contributor_state_id discovered via project get response"
       - "Treasury must be funded (loop 2 treasury_fund step) before contributor can join"
-      - "Pre-creating the off-chain commitment is no longer required or possible — the
-         project_join confirmation upserts the record, same as the course side."
+      - "There is no off-chain commitment to pre-create — the project_join confirmation
+         creates it, same as the course side."
 
   # ===========================================================================
   # HAPPY PATH — Variants
@@ -451,7 +444,7 @@ loops:
         role: student
         endpoint: /v2/tx/course/student/credential/claim
         note: Module 2 credential — repeat for N modules
-    cost_estimate: ~1.32 ADA × N modules
+    cost_estimate: ~1.27 ADA × N modules
     script: null
     status: stubbed
     notes: This is the real-world course experience. Tests prerequisite gating at the module level.
@@ -783,7 +776,7 @@ loops:
         role: student
         endpoint: /v2/tx/course/student/credential/claim
         note: "× N students"
-    cost_estimate: ~1.32 ADA × N (linear per student)
+    cost_estimate: ~1.27 ADA × N (linear per student)
     cost_scaling: linear
     notes: "This is the real-world teaching scenario. course.credential is pedagogy; course.credential.cohort is production. Cost scales linearly — each student is an independent credential loop."
     script: null

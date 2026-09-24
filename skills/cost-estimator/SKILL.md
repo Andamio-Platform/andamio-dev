@@ -37,8 +37,8 @@ Andamio operations are organized into named **transaction loops** — multi-step
 |------|-------------|------------|-------|
 | Course Setup | `course.setup` | ~119.3 ADA + ~1.86 ADA/module | course_create (~119.3, incl. 100 ADA service fee) + modules_manage |
 | Project Setup | `project.setup` | ~148 ADA + treasury deposit | project_create (~148, incl. 100 ADA service fee) + treasury_fund + tasks_manage |
-| Course Credential | `course.credential` | ~1.32 ADA | Per student: enroll → assess → claim |
-| Project Credential | `project.credential` | ~1.21 ADA + max(1 ADA, commission × reward) | Contributor net positive (deposit refund + reward minus commission) |
+| Course Credential | `course.credential` | ~1.27 ADA | Per student: enroll → assess → claim |
+| Project Credential | `project.credential` | ~1.24 ADA + max(1 ADA, commission × reward) | Contributor net positive (deposit refund + reward minus commission) |
 | Access Token | `general.access-token` | ~2.87 ADA | Prerequisite for course/project creation (no service fee in v3) |
 
 **Stubbed loops** (defined, not yet tested): `project.credential.native-assets`, `course.credential.sequential`, `course.credential.refused`, `project.credential.refused`, `project.credential.denied`, `project.tasks.replace`, `course.modules.ongoing`, `course.teachers.rotate`, `course.credential.cohort`, `project.treasury.drawdown`, `general.auth.headless`
@@ -77,10 +77,10 @@ Every Andamio transaction has up to four cost components:
 | Create Course | ~0.56 ADA | 100 ADA | ~18.8 ADA | ~119.3 ADA total, measured with one initial teacher |
 | Update Teachers | ~0.30 ADA | 10 ADA per teacher added; 0 to remove | 0 | Spend-and-recreate. ~10.33 ADA to add one teacher |
 | Manage Modules | ~0.27 ADA | 0 (free) | ~1.59 ADA/module | Scales linearly |
-| Student Enroll | ~0.40 ADA | 0 | ~1.74 ADA | ~2.14 ADA total |
+| Student Enroll | ~0.37 ADA | 0 | ~2.27 ADA | ~2.64 ADA total |
 | Update Assignment | ~0.28 ADA | 0 | ~0.05 ADA | Datum grows |
-| Assess Assignment | ~0.28 ADA | 0 | -0.07 ADA refund | Teacher gets small refund |
-| Claim Credential | ~0.35 ADA | 0 | -1.38 ADA refund | Student gains ~1.03 ADA |
+| Assess Assignment | ~0.27 ADA | 0 | 0 | Tx fee only |
+| Claim Credential | ~0.35 ADA | 0 | ~-2.0 ADA refund | Student gains ~1.65 ADA |
 
 #### Project Operations
 
@@ -90,10 +90,10 @@ Every Andamio transaction has up to four cost components:
 | Update Managers | ~0.30 ADA | 10 ADA per manager added; 0 to remove | 0 | Spend-and-recreate. ~10.35 ADA to add one manager |
 | Manage Blacklist | ~0.34 ADA | 0 | 0 | — |
 | Create Tasks | ~0.43 ADA | 0 | task reward amount | Reward locked in escrow |
-| First Task Commit | ~0.51 ADA | 0 | ~14.5 ADA | State deposit (recoverable) |
+| First Task Commit | ~0.54 ADA | 0 | ~2.3 ADA | Locked in contributor state (recoverable); ~2.82 ADA total |
 | Subsequent Commits | ~0.51 ADA | 0 | 0 | No new deposit |
 | Assess Tasks | ~0.35 ADA | 0 | 0 | — |
-| Claim Project Credential | ~0.35 ADA | max(1 ADA, commission × reward) | -14.5 ADA refund | Default commission 5%; tiered (5/3/2/1%) per project. See `commissionTiers` in cost-registry. |
+| Claim Project Credential | ~0.36 ADA | max(1 ADA, commission × reward) | ~-2.0 ADA refund | Default commission 5%; tiered (5/3/2/1%) per project. See `commissionTiers` in cost-registry. |
 | Add Treasury Funds | ~0.30–0.50 ADA | 0 | deposit amount | — |
 
 ### Scenario Calculator
@@ -110,17 +110,17 @@ Course Setup (one-time):
   Setup subtotal:                                       = ~137.96 ADA
 
 Per Student (50 students × 5 assignments each):
-  Enroll (per student):           2.14 × 50             = ~107.00 ADA
+  Enroll (per student):           2.64 × 50             = ~132.00 ADA
   Update (per assignment):        0.33 × 250            = ~82.50 ADA
-  Assess (per assignment):        0.21 × 250            = ~52.50 ADA
-  Claim (per student):           -1.03 × 50             = ~-51.50 ADA
-  Student/teacher subtotal:                             = ~190.50 ADA
+  Assess (per assignment):        0.27 × 250            = ~67.50 ADA
+  Claim (per student):           -1.65 × 50             = ~-82.50 ADA
+  Student/teacher subtotal:                             = ~199.50 ADA
 
-TOTAL: ~328.46 ADA
+TOTAL: ~337.46 ADA
   One-time costs:     ~137.96 ADA (non-recoverable)
-  Operational costs:  ~190.50 ADA (partially recoverable via claims)
+  Operational costs:  ~199.50 ADA (partially recoverable via claims)
 
-Cost per student: ~3.81 ADA net (across 5 assignments)
+Cost per student: ~3.99 ADA net (across 5 assignments)
 ```
 
 > course_create was measured with one initial teacher. Whether naming more teachers at creation raises its fee has not been measured; say so when a scenario depends on it. Teachers added *after* creation pay 10 ADA each (~10.33 ADA with the tx fee).

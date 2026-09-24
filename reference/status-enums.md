@@ -35,6 +35,8 @@ AWAITING_SUBMISSION ──leave──> LEFT
 
 Any state can have a `PENDING_TX_*` intermediate while a TX is in flight.
 
+**Observed on preprod (2026-09-23):** a student's first `assignment_submit` creates the commitment directly in `SUBMITTED` — the enrollment transaction carries the initial evidence, so `AWAITING_SUBMISSION` does not appear on that path. The full happy path ran `SUBMITTED` → `ACCEPTED` → `CREDENTIAL_CLAIMED`. On the project side, `project_join` created the task commitment in `COMMITTED`, then `ACCEPTED` → `REWARDED`.
+
 ---
 
 ## Task commitment status
