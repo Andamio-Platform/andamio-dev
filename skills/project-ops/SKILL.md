@@ -38,24 +38,26 @@ If no JWT is detected, redirect to `/auth-setup`.
 
 The most complex Andamio transaction. Creates 6 validator UTxOs, a stake account, and mints 6 tokens.
 
-**Cost**: ~148 ADA with one manager (100 ADA service fee + ~47 ADA in deposits, stake registration and tx fee), plus whatever you later add to the treasury. See /cost-estimator for the breakdown.
+**Cost**: ~148 ADA with one manager (100 ADA service fee + ~47 ADA in deposits, stake registration and tx fee). The treasury is funded separately — see step 4. See /cost-estimator for the breakdown.
 
 **Via CLI:**
 ```bash
 # Discover your alias
-andamio user me --output json | jq -r '.alias'
+andamio user status --output json | jq -r '.user_alias'
 
 # Build the transaction
 andamio tx build /v2/tx/instance/owner/project/create \
   --body '{
     "alias": "my-alias",
     "managers": ["manager1", "manager2"],
-    "treasury_deposit": 200000000
+    "course_prereqs": [["<56-hex-course-id>", ["<64-hex-slt-hash>"]]]
   }' \
   --output json
 ```
 
-**Treasury deposit**: ADA locked in the on-chain treasury. This funds task rewards. The `treasury_deposit` field is in lovelace (1 ADA = 1,000,000 lovelace).
+**Course prerequisites**: `course_prereqs` is an array of `[course_id, [slt_hash, ...]]` tuples, not objects. A contributor must hold those course credentials before they can commit to a task.
+
+**Treasury**: created with a 5 ADA reserve and no task funds. Fund it with `treasury_fund` (step 4) before publishing tasks.
 
 **Planning tip:** Set all initial managers at creation — adding managers later costs ~10.3 ADA each.
 
@@ -112,12 +114,12 @@ andamio project task import <project-id>             # Apply changes
 
 Contributors join projects, commit to tasks, submit work, and claim credentials:
 
-1. **Commit to task** (~15 ADA first time, ~0.51 ADA after):
+1. **Commit to task** (~2.8 ADA the first time: ~0.54 ADA fee + ~2.3 ADA locked):
    ```
    POST /v2/tx/project/contributor/task/commit
    Body: { alias, project_id, contributor_state_id, task_hash, task_info }
    ```
-   First commit mints a contributor-state token (~14.5 ADA deposit, recoverable). The `task_hash` is the 64-char Blake2b-256 of the on-chain task datum; discover it via `andamio project list-tasks <project-id>` or andamioscan. `task_info` is free-form text, max 140 chars.
+   First commit mints a contributor-state token and locks ~2.3 ADA, returned at claim. The commitment lands in `COMMITTED`. The `task_hash` is the 64-char Blake2b-256 of the on-chain task datum; discover it via `andamio project tasks <project-id> --output json` or andamioscan. `task_info` is free-form text, max 140 chars.
 
 2. **Submit work** (on-chain evidence update, ~0.3 ADA):
    ```
@@ -140,14 +142,14 @@ Contributors join projects, commit to tasks, submit work, and claim credentials:
    - `"refuse"` — "try again"; evidence is cleared; contributor resubmits via a new commit TX.
    - `"deny"` — **permanent expulsion**. Contributor state reverts to uncommitted and treasury assets are clawed back. Terminal.
 
-   > ⚠ **DenyProject indexer gap (as of 2026-04-04):** andamioscan only indexes Accept (constructor 0) and Refuse (constructor 1). A `deny` outcome lands on-chain but is silently ignored by the indexer, so it will not currently show up in platform views. Track [DenyProjectPlan] for status before relying on Deny in production.
+   > ⚠ **DenyProject indexer gap (as of 2026-04-04):** andamioscan only indexes Accept (constructor 0) and Refuse (constructor 1). A `deny` outcome lands on-chain but is silently ignored by the indexer, so it will not currently show up in platform views. Confirm the indexer handles Deny before relying on it in production.
 
-4. **Claim credential** (nets +13 ADA):
+4. **Claim credential** (net gain — +5.64 ADA for a 5 ADA reward at the default rate):
    ```
    POST /v2/tx/project/contributor/credential/claim
    Body: { alias, project_id, contributor_state_id }
    ```
-   Mints credential NFT, burns contributor-state, returns ~14.5 ADA deposit. Charges `max(1 ADA, commission_rate × reward)` as a service fee to the serviceFeeRecipient. Default commission is 5%; tier-upgradeable.
+   Mints credential NFT, burns contributor-state, pays the reward and returns the ADA locked at commit. Charges `max(1 ADA, commission_rate × reward)` as a service fee to the serviceFeeRecipient. Default commission is 5%; tier-upgradeable. The commitment moves to `REWARDED`.
 
 #### 4. Fund Treasury
 
@@ -156,17 +158,17 @@ Add ADA to the project treasury at any time:
 ```
 POST /v2/tx/project/user/treasury/add-funds
 Auth: API Key + JWT
-Body: { project_id, amount: 100000000 }
+Body: { alias, project_id, deposit_value: [["lovelace", 100000000]] }
 ```
 
-Amount is in lovelace. Funds are locked in the on-chain treasury and available for task rewards.
+Amounts are in lovelace. Funds are locked in the on-chain treasury and available for task rewards. The `deposit_value` of each `tasks_manage` transaction is also paid from the manager's wallet into the treasury.
 
 #### 5. Manage Managers
 
 ```
 POST /v2/tx/project/owner/managers/manage
 Auth: API Key + JWT
-Body: { project_id, add_managers: [alias], remove_managers: [alias] }
+Body: { alias, project_id, managers_to_add: [alias], managers_to_remove: [alias] }
 ```
 
 Each manager added costs ~10.35 ADA (10 ADA service fee + tx fee); removing one costs only the tx fee (~0.24 ADA).
@@ -178,18 +180,18 @@ Exclude contributors from the project:
 ```
 POST /v2/tx/project/owner/contributor-blacklist/manage
 Auth: API Key + JWT
-Body: { project_id, add_blacklist: [alias], remove_blacklist: [alias] }
+Body: { alias, project_id, aliases_to_add: [alias], aliases_to_remove: [alias] }
 ```
 
 Costs ~0.34 ADA. Use when a contributor needs to be removed from participation.
 
 ### Key Concepts
 
-**Treasury system**: On-chain ADA pool that funds task rewards. Managed by project owner. Deposited at creation and topped up via add-funds.
+**Treasury system**: On-chain ADA pool that funds task rewards. Starts with a 5 ADA reserve at creation; funded through add-funds and the `deposit_value` of `tasks_manage`.
 
-**Task escrow**: When tasks are created, their reward amount is moved from treasury to escrow. When tasks are assessed (pass), escrow releases to the contributor. When tasks are deleted, escrow returns to treasury.
+**Task escrow**: When tasks are created, the manager pays their reward amount (`deposit_value`) into the treasury, where it is locked for the task. When tasks are assessed (pass), escrow releases to the contributor. When tasks are deleted, escrow returns to treasury.
 
-**Contributor state**: On-chain token that tracks a contributor's participation. Minted on first task commit (~14.5 ADA deposit). Burned when credential is claimed (deposit refunded).
+**Contributor state**: On-chain token that tracks a contributor's participation. Minted on first task commit (~2.3 ADA locked). Burned when credential is claimed (the locked ADA comes back).
 
 **Credential NFT**: Permanent on-chain proof of contribution. Minted to the contributor's wallet when they claim after completing assessed tasks.
 

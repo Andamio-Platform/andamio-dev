@@ -56,7 +56,7 @@ Each module is a Cardano transaction. Costs ~1.86 ADA each (no service fee).
 **Via CLI:**
 ```bash
 # Create module shell
-andamio course create-module <course-id> \
+andamio course create-module --course-id <course-id> \
   --code 101 \
   --title "Introduction to Andamio" \
   --sort-order 1
@@ -125,13 +125,13 @@ Each teacher added costs ~10.3 ADA (10 ADA service fee + tx fee); removing one c
 
 Students interact through the app or API:
 
-1. **Build enrollment tx**: `POST /v2/tx/course/student/assignment/commit` (~2.14 ADA)
+1. **Build enrollment tx**: `POST /v2/tx/course/student/assignment/commit` (~2.64 ADA). Its confirmation creates the commitment in `SUBMITTED`.
 2. **Submit commitment**: `POST /v2/course/student/commitment/submit`
 3. **Update evidence**: `POST /v2/course/student/commitment/update` (~0.33 ADA per update)
-4. **Teacher assesses**: `POST /v2/tx/course/teacher/assignments/assess` (~0.21 ADA)
-5. **Claim credential**: `POST /v2/tx/course/student/credential/claim` (nets +1.03 ADA)
+4. **Teacher assesses**: `POST /v2/tx/course/teacher/assignments/assess` (~0.27 ADA) — `SUBMITTED` → `ACCEPTED`
+5. **Claim credential**: `POST /v2/tx/course/student/credential/claim` (nets +1.65 ADA) — `ACCEPTED` → `CREDENTIAL_CLAIMED`
 
-> `POST /v2/course/student/commitment/create` was removed from the API in the 2026-07-30 contract sync — it is absent from `specs/andamio-api.yaml` and calls to it now fail. The tx builder in step 1 is the sole supported path. Same story on the project side for `POST /v2/project/contributor/commitment/create`. CLI 1.0 removed the learner and contributor command groups altogether (see `reference/cli-retirements.yaml`): learners and contributors work in the Andamio app, and from the CLI these steps are reachable only through `andamio tx run` / `tx build` on the `/v2/tx/...` endpoints.
+> There is no off-chain commitment to create first: `POST /v2/course/student/commitment/create` is not in the API (it left in the 2026-07-30 contract sync), and the tx builder in step 1 is the only path. Same story on the project side for `POST /v2/project/contributor/commitment/create`. CLI 1.0 removed the learner and contributor command groups altogether (see `reference/cli-retirements.yaml`): learners and contributors work in the Andamio app, and from the CLI these steps are reachable only through `andamio tx run` / `tx build` on the `/v2/tx/...` endpoints.
 
 #### 6. Publish Module
 

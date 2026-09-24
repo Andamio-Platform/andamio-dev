@@ -101,7 +101,7 @@ groups altogether (see reference/cli-retirements.yaml), so there is no CLI
 wrapper for these steps: use the app, the API, or `andamio tx run` on the
 /v2/tx/... endpoints.
 
-Note: Enrollment involves a Cardano transaction (~2.14 ADA).
+Note: Enrollment involves a Cardano transaction (~2.64 ADA).
 Use /cost-estimator for a full cost breakdown.
 ```
 

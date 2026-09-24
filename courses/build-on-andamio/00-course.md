@@ -93,7 +93,7 @@ All 32 SLTs are now backed by at least one of the above sources. No SLT requires
 All external dependencies have been resolved as of 2026-04-06:
 
 - **`tx-loops.yaml`** — landed 2026-04-06. 16 canonical loops with dotted names, steps, roles, costs. Lives at `reference/tx-loops.yaml`.
-- **Cohort-scale cost math** — confirmed linear per student (~1.32 ADA × N). Reflected in `tx-loops.yaml` loop 13 (`course.credential.cohort`).
+- **Cohort-scale cost math** — confirmed linear per student (~1.27 ADA × N). Reflected in `tx-loops.yaml` loop 13 (`course.credential.cohort`).
 - **Cost-registry key rename** — `single-credential` → `course.credential`, `multi-assignment-credential` → `course.credential.with-updates`. Keys now match tx-loop names.
 - **DB API PENDING_TX** — resolved in `andamio-db-api-go#181`. Module status can now be set to PENDING_TX via API.
 

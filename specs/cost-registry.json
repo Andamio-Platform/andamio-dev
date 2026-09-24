@@ -280,10 +280,10 @@
       "txFeeAda": "~0.40 ADA",
       "serviceFee": 0,
       "walletDelta": {
-        "lovelace": 2140000,
-        "ada": "~2.14 ADA",
-        "breakdown": "txFee (~0.40) + courseStateDeposit (~1.45) + globalStateDelta (~0.29)",
-        "verified": true
+        "lovelace": 2644052,
+        "ada": "~2.64 ADA",
+        "breakdown": "txFee (~0.37) + ~2.27 ADA locked in the course-state UTxO, largely returned at credential claim",
+        "verified": "preprod 2026-09-23, tx aa209289f3b1e511c55b78e30d651d4680a2a3d9b2fc1fd44088fe7844e74513"
       },
       "notes": "With single assignment commitment. Deposit recoverable on credential-claim."
     },
@@ -295,7 +295,8 @@
         "lovelace": 330000,
         "ada": "~0.33 ADA",
         "breakdown": "txFee (~0.28) + minUtxoDelta (~0.05)",
-        "verified": true
+        "verified": true,
+        "withoutGrowth": "0.274 ADA when the new evidence is no longer than the old — tx fee only (preprod 2026-09-23, tx d7d491a825eae51143f3d4b8ae4e22a3c9ab8ff883d4c266236ba03f97c571e8)"
       },
       "notes": "MinUTxO increases when datum grows (longer assignment_info)"
     },
@@ -304,22 +305,22 @@
       "txFeeAda": "~0.28 ADA",
       "serviceFee": 0,
       "walletDelta": {
-        "lovelace": 210000,
-        "ada": "~0.21 ADA",
-        "breakdown": "txFee (~0.28) - minUtxoRefund (~0.07)",
-        "verified": true
+        "lovelace": 274791,
+        "ada": "~0.27 ADA",
+        "breakdown": "txFee only — no refund was observed",
+        "verified": "preprod 2026-09-23, tx cfc7337226f33e26fcac847f05a2bb3a08bdc60cc62741c86f0d6022181f86d7"
       },
-      "notes": "Datum shrinks (pending→completed), so teacher gets partial refund"
+      "notes": "Tx fee only. Earlier captures showed a small minUTxO refund as the datum shrank; the 2026-09-23 run did not."
     },
     "course.student.credential-claim": {
       "txFee": 346896,
       "txFeeAda": "~0.35 ADA",
       "serviceFee": 0,
       "walletDelta": {
-        "lovelace": -1030000,
-        "ada": "-1.03 ADA",
-        "breakdown": "txFee (~0.35) - depositRefund (~1.38)",
-        "verified": true
+        "lovelace": -1652502,
+        "ada": "-1.65 ADA",
+        "breakdown": "depositRefund (~2.0) - txFee (~0.35)",
+        "verified": "preprod 2026-09-23, tx 9e34d342a05a7e267a679936ee2eae369ef16f8fd7d394de96c0f5462ce7f2ba"
       },
       "notes": "NEGATIVE = student gains ADA. Burned course state UTxO releases enrollment deposit."
     },
@@ -445,13 +446,15 @@
         "notes": "Contributor-state deposit is largest - holds enrollment data. Some deposits may come from task-escrow UTxOs."
       },
       "walletDelta": {
-        "estimate": "~22 ADA",
-        "notes": "Actual cost depends on existing UTxOs consumed from task escrow. First enrollment has higher cost due to contributor-state token mint."
+        "lovelace": 2817695,
+        "ada": "~2.82 ADA",
+        "notes": "The contributor's own outlay. The utxoDeposits above are output sizes, mostly funded from the task escrow, not from the contributor's wallet.",
+        "verified": "preprod 2026-09-23, tx 09f6126b9aff98e379c86f92ad653331d274852f0d0f00c2ec1828b099d7739b"
       },
       "totalCost": {
-        "formula": "txFee + utxoDeposits (some from escrow)",
-        "ada": "~0.51 ADA + ~14.5 ADA contributor-state deposit",
-        "breakdown": "Most deposit comes from task escrow deposit UTxO"
+        "formula": "txFee + the contributor's share of the new deposits",
+        "ada": "~0.54 ADA fee + ~2.3 ADA locked, returned at credential claim",
+        "breakdown": "Most of the contributor-state deposit comes from the task escrow"
       },
       "executionUnits": {
         "spend_1_global_state": { "mem": 227336, "steps": 79871977 },
@@ -494,13 +497,13 @@
       "serviceFeeMin": 1000000,
       "serviceFeeMinAda": "1 ADA",
       "serviceFeeRecipient": "serviceFeeRecipient",
-      "serviceFeeNote": "v3: replaces flat 1 ADA with min-or-percentage. Default commission_rate is 0.05 (5%); see commissionTiers for tiers.",
+      "serviceFeeNote": "Minimum-or-percentage commission. Default commission_rate is 0.05 (5%); see commissionTiers for tiers.",
       "walletDelta": {
-        "lovelace": -13000000,
-        "ada": "~-13 ADA (NET GAIN at default tier with no reward)",
-        "breakdown": "depositRefund (~14.5) - txFee (~0.35) - serviceFee (1.0 min)",
-        "verified": "Empirical from 2025-12; v3 fee dynamics may shift this when reward is non-trivial.",
-        "withReward": "Effective wallet delta = depositRefund + reward × (1 - commission_rate) - txFee - max(1 ADA, commission_rate × reward)"
+        "lovelace": -5644234,
+        "ada": "-5.64 ADA with a 5 ADA reward (NET GAIN)",
+        "breakdown": "reward (5.0) + depositRefund (~2.0) - commission (1.0, the minimum) - txFee (~0.36)",
+        "verified": "preprod 2026-09-23, tx dc837cd2d4686e1f76b996d7fc859eeb96b526b6dba44ca185645d38f351bc68",
+        "withReward": "Gain = reward + depositRefund - max(1 ADA, commission_rate × reward) - txFee"
       },
       "executionUnits": {
         "spend_1_global_state": { "mem": 189650, "steps": 66014459 },
@@ -570,32 +573,32 @@
         "student": {
           "transactions": ["enroll", "credential-claim"],
           "costs": {
-            "enroll": "~2.14 ADA",
-            "credential-claim": "-1.03 ADA (refund)"
+            "enroll": "~2.64 ADA",
+            "credential-claim": "-1.65 ADA (refund)"
           },
-          "netCost": "~1.11 ADA",
-          "notes": "Enrollment deposit partially recovered on credential claim. No service fees on either side."
+          "netCost": "~0.99 ADA",
+          "notes": "Most of the enrollment deposit is returned on credential claim. No service fees on either side."
         },
         "teacher": {
           "transactions": ["assignments-assess"],
           "costs": {
-            "assignments-assess": "~0.21 ADA"
+            "assignments-assess": "~0.27 ADA"
           },
-          "netCost": "~0.21 ADA",
-          "notes": "Datum compression gives small refund vs raw tx fee"
+          "netCost": "~0.27 ADA",
+          "notes": "Tx fee only"
         }
       },
-      "totalLoopCost": "~1.32 ADA",
-      "breakdown": "student (~1.11) + teacher (~0.21)",
+      "totalLoopCost": "~1.27 ADA",
+      "breakdown": "student (~0.99) + teacher (~0.27), measured on preprod 2026-09-23",
       "notes": "Assumes single assignment commitment at enrollment. Additional assignment-updates add ~0.33 ADA each."
     },
     "course.credential.with-updates": {
       "description": "Loop with assignment updates: enroll → update → update → assess → claim",
-      "formula": "student: ~1.11 + (N × ~0.33) where N = number of assignment updates",
+      "formula": "student: ~0.99 + (N × ~0.33) where N = number of assignment updates",
       "examples": {
-        "0-updates": { "student": "~1.11 ADA", "teacher": "~0.21 ADA", "total": "~1.32 ADA" },
-        "2-updates": { "student": "~1.77 ADA", "teacher": "~0.21 ADA", "total": "~1.98 ADA" },
-        "5-updates": { "student": "~2.76 ADA", "teacher": "~0.21 ADA", "total": "~2.97 ADA" }
+        "0-updates": { "student": "~0.99 ADA", "teacher": "~0.27 ADA", "total": "~1.27 ADA" },
+        "2-updates": { "student": "~1.65 ADA", "teacher": "~0.27 ADA", "total": "~1.92 ADA" },
+        "5-updates": { "student": "~2.64 ADA", "teacher": "~0.27 ADA", "total": "~2.91 ADA" }
       }
     },
     "project.credential": {
@@ -604,11 +607,11 @@
         "contributor": {
           "transactions": ["project-task-commit", "project-credential-claim"],
           "costs": {
-            "project-task-commit": "~0.51 ADA fee + ~14.5 ADA state deposit",
-            "project-credential-claim": "~0.35 ADA fee + max(1 ADA, commission × reward) - ~14.5 ADA deposit refund"
+            "project-task-commit": "~0.54 ADA fee + ~2.3 ADA locked",
+            "project-credential-claim": "~0.36 ADA fee + max(1 ADA, commission × reward), offset by the reward and ~2 ADA returned"
           },
           "netCost": "Net positive at claim due to deposit refund + reward × (1 - commission_rate)",
-          "notes": "State deposit (~14.5 ADA) fully refunded at claim. Commission rate defaults to 5% — see commissionTiers."
+          "notes": "The ADA locked at commit comes back at claim. Commission rate defaults to 5% — see commissionTiers."
         },
         "manager": {
           "transactions": ["project-tasks-assess"],
@@ -619,10 +622,10 @@
           "notes": "No service fee for assessment"
         }
       },
-      "totalLoopCost": "~1.21 ADA in fees + max(1 ADA, commission × reward)",
-      "breakdown": "contributor fees (~0.86) + service fee (min 1 ADA) + manager (~0.35). Contributor net positive due to deposit refund + reward minus commission.",
+      "totalLoopCost": "~1.24 ADA in fees + max(1 ADA, commission × reward)",
+      "breakdown": "contributor fees (~0.90) + manager (~0.35) + commission (min 1 ADA), measured on preprod 2026-09-23. Contributor ends net positive: reward plus returned deposit, minus commission and fees.",
       "prerequisite": "Contributor must hold course credential (prerequisite gating). Project must have funded treasury.",
-      "notes": "Task reward from treasury, paid out minus commission. State deposit is ~14.5 ADA locked at commit, fully refunded at claim. See tx-loops.yaml loop #4 for full step sequence."
+      "notes": "Task reward from treasury, paid out minus commission. ~2.3 ADA is locked at commit and returned at claim. See tx-loops.yaml loop #4 for full step sequence."
     }
   }
 }
