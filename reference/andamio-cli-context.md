@@ -4,7 +4,7 @@
 
 **Who the CLI is for (1.0+)**: the people who author work and assess it — course Owners and Teachers, and project Managers. Learners and contributors use the [Andamio app](https://app.andamio.io), which signs and submits their work in one flow. The learner and contributor command groups were removed in 1.0 (see [Removed in 1.0](#removed-in-10)).
 
-**Last synced**: 2026-09-21, against CLI v1.1.1 (`andamio --help` for every command, plus the CHANGELOG from 0.12.1 to 1.1.1).
+**Last synced**: 2026-09-28, against CLI v1.1.2 (`andamio --help` for every command, plus the CHANGELOG from 0.12.1 to 1.1.2).
 **Requires Andamio API 2.5 or later** (CLI 1.0+). Preprod and mainnet both run 2.5. Against a gateway pinned to the 2.4 line, stay on CLI 0.13.x.
 **Canonical CLI version**: run `andamio --version` (`--output json` emits `{version, commit, built}`). CLI release notes: `github.com/Andamio-Platform/andamio-cli/releases`. This doc is hand-curated; if commands here drift from what `andamio --help` shows, the CLI wins — file an issue.
 
@@ -228,10 +228,24 @@ Stable error codes preserved verbatim in error messages: `tier_limit_exceeded` (
 | `teacher courses` | jwt | List courses where you are a teacher |
 | `teacher assignments list` | jwt | Lightweight summary of pending commitments across all courses. No nested `content`, so the text-mode Status column shows `—` |
 | `teacher assignments list --course <id>` | jwt | Full merged history for one course. Status comes from `content.commitment_status`, shown verbatim: `AWAITING_SUBMISSION`, `SUBMITTED`, `ACCEPTED`, `REFUSED`, `CREDENTIAL_CLAIMED`, `LEFT`, transient `PENDING_TX_*` |
-| `teacher assignments get <course> <module> <student>` | jwt | Get a specific student's commitment. Exit 2 (`not_found`) when the course has no commitments or no matching student |
+| `teacher assignments list --course <id> --module-code <code>` | jwt | Keep only one module's rows, in every output format (1.1.2+). `--module-code` without `--course` is refused |
+| `teacher assignments list --course <id> --module-code <code> -o csv --wide` | jwt | One row per student and one column per prompt id, for a single [prompts](#prompts-assignments) module (1.1.2+). Refused with any output but CSV, and for a result that spans modules |
+| `teacher assignments get <course> <module> <student>` | jwt | Get a specific student's commitment. Same fields and CSV/Markdown rendering as `list`. Exit 2 (`not_found`) when the course has no commitments or no matching student |
 | `teacher assessment build --course-id <id> --alias <teacher-alias>` | jwt | Build an assessment transaction and stop — nothing is signed or submitted (1.0+). Decisions: `--decision <student-alias>=<accept\|refuse>` (repeatable) or `--decisions-file <path>` (`[{"alias":"…","outcome":"accept"}]`). Duplicate aliases are rejected. JSON: `{unsigned_tx, course_id, teacher_alias, decisions[], decision_count}` |
 
-`content.evidence_text` (1.0+) on `teacher assignments list --course` / `get` is the submission rendered as Markdown. Read it for the prose; read `content.evidence` (the raw Tiptap document) to verify a commitment hash.
+`content.evidence_text` (1.0+) on `teacher assignments list --course` / `get` is the submission rendered as Markdown. Read it for the prose; read `content.evidence` (the raw evidence, passed through unchanged) to verify a commitment hash. For a prompts submission (1.1.2+), `evidence_text` holds one `**<label>.** <question>` block per answer, with the answer on the next line, and `content.evidence_answers` gives the same answers as `[{prompt_id, label, question, answer}]` records in submitted order. Written submissions have no `evidence_answers`.
+
+Output formats for `teacher assignments list` / `get` (1.1.2+):
+
+| Format | Shape |
+|--------|-------|
+| `-o json` | The envelope above |
+| `-o csv` | One row per answer: `student_alias, course_module_code, status, prompt_id, label, question, answer`. A written submission is one row with blank prompt columns and its Markdown in `answer` |
+| `-o csv --wide` | One row per student, one column per prompt id. Needs a single prompts module, so pass `--course` and `--module-code`. Refuses a prompt id that is empty or matches a fixed column name |
+| `-o markdown` | One section per student |
+| text | Unchanged table |
+
+A CSV cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return (after any leading spaces) is written with a leading `'`, so a spreadsheet shows it as text instead of running it as a formula. The guard covers the `--wide` header too.
 
 `teacher assessment build` exists to keep a person in the loop: the decision set and the unsigned transaction come from one command, so a reviewer sees both before signing. The echoed decisions are the request the CLI sent, not a decode of the returned transaction.
 
@@ -360,6 +374,14 @@ andamio teacher assignments list --course "$COURSE" --output json \
 
 # Get a specific submission
 andamio teacher assignments get "$COURSE" "$MODULE" "$STUDENT" --output json
+
+# Prompts module: every answer as tab-separated rows (1.1.2+)
+andamio teacher assignments list --course "$COURSE" --module-code "$MODULE" --output json \
+  | jq -r '.data[] | .student_alias as $s
+           | .content.evidence_answers[]? | [$s, .prompt_id, .answer] | @tsv'
+
+# Or one spreadsheet row per student, one column per prompt
+andamio teacher assignments list --course "$COURSE" --module-code "$MODULE" --output csv --wide > answers.csv
 
 # Build the assessment transaction and STOP. One transaction carries every
 # decision — include the refuses as well as the accepts.
@@ -555,7 +577,7 @@ When one backend is unavailable the gateway returns the normal `data` plus `meta
 - Module data: `data[].content.course_module_code`, `data[].content.title`, `data[].content.module_status`
 - SLT data: `data[].slt_index`, `data[].slt_text`, `data[].lesson` (object if lesson exists)
 - Task data: `data[].task_index`, `data[].content.title`, `data[].task_status`, `data[].lovelace_amount`
-- Assignment commitments: `data[].student_alias`, `data[].course_module_code`, `data[].content.commitment_status`, `data[].content.evidence` (Tiptap, hash-bearing), `data[].content.evidence_text` (Markdown, added by the CLI)
+- Assignment commitments: `data[].student_alias`, `data[].course_module_code`, `data[].content.commitment_status`, `data[].content.evidence` (Tiptap or prompts-evidence, hash-bearing), `data[].content.evidence_text` (Markdown, added by the CLI), `data[].content.evidence_answers` (prompts only, added by the CLI in 1.1.2)
 - Task commitments: `data[].task_hash`, `data[].submitted_by`, `data[].source`, `data[].content.commitment_status`, `data[].content.task_outcome` (`null` until assessed)
 
 ## Content Formats
@@ -641,6 +663,28 @@ Requires CLI v1.1.0 or later. A quiz assignment is a JSON envelope the Andamio a
 - `import-assignment` keeps the existing title, description, image and video URLs unless `--title` / `--description` override them. A module with no assignment yet requires `--title`.
 - After the write, `import-assignment` re-fetches the module and deep-compares the stored value. A mismatch, a degraded read-back or a failed read-back exits 1 with `kind: verify` — the update **was** applied.
 - JSON: `import-assignment` emits `{course_id, module_code, module_status, assignment: {title, title_source, question_count, pass_threshold, question_ids}, verified}`; `course import` gains an `assignment_quiz` summary object.
+
+### Prompts assignments
+
+CLI v1.1.2 reads prompts submissions. It does not publish prompts assignments yet. A prompts assignment is a written assignment asked in parts, one short answer each. Like a quiz, it rides the assignment's opaque `content_json`, so there is no API change:
+
+```jsonc
+// assignment content_json
+{"type": "prompts", "version": 1,
+ "intro": {"type": "doc", "content": [ ... ]},        // optional Tiptap brief
+ "prompts": [{"id": "cause", "label": "The cause", "question": "What should people see?"}, ...]}
+
+// commitment evidence, written when the learner locks their work
+{"type": "prompts-evidence", "version": 1,
+ "answers": [{"promptId": "cause", "label": "The cause", "question": "...", "answer": "..."}, ...]}
+```
+
+Each answer carries its prompt's `label` and `question`, so evidence reads without the assignment definition.
+
+- **Read**: `teacher assignments list` / `get` decode prompts evidence into `content.evidence_text` and `content.evidence_answers`, and render it in CSV and Markdown (see [teacher](#teacher--top-level-teacher-operations)).
+- **Assess**: prompts have no grade. A teacher accepts or refuses the submission with `teacher assessment build`, as for written work.
+- **Not yet supported**: `course export`, `course import` and `course import-assignment` do not understand prompts. Do not round-trip a prompts module through export and import, and do not expect to publish one from the CLI. Tracked in [andamio-cli#171](https://github.com/Andamio-Platform/andamio-cli/issues/171).
+- **App support is partial.** The Andamio app is adding prompts support. Check the app before telling a learner they can answer a prompts assignment there.
 
 ## Key Identifiers
 

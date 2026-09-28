@@ -2,7 +2,7 @@
 name: cli-guide
 description: Get exact CLI commands for any Andamio operation. Translates developer questions to commands with flags, exit codes, and composability patterns.
 license: MIT
-compatibility: Requires the Andamio CLI binary (v1.0.0+; v1.1.1 for quiz assignments and lesson video). Install via brew install andamio-platform/tap/andamio.
+compatibility: Requires the Andamio CLI binary (v1.0.0+; v1.1.1 for quiz assignments and lesson video; v1.1.2 for prompts answers and CSV/Markdown from teacher assignments). Install via brew install andamio-platform/tap/andamio.
 metadata:
   author: Andamio
   version: 0.2.0
@@ -24,7 +24,7 @@ Knowledge files are developer data. Read them from the state directory first —
 
 ### Pre-Execution Knowledge Check
 
-1. Read `reference/andamio-cli-context.md` — complete CLI command reference (synced against CLI v1.1.1).
+1. Read `reference/andamio-cli-context.md` — complete CLI command reference (synced against CLI v1.1.2).
 2. If knowledge files exist, read `knowledge/gotchas.yaml` for CLI-related gotchas (category: cli). Proceed without it if missing.
 
 ### Answering Developer Questions
@@ -101,6 +101,11 @@ if [ "$(andamio user status --output json | jq -r '.session_expired // true')" =
   echo "Auth required" >&2
   andamio user login
 fi
+
+# Hand submissions to a spreadsheet (1.1.2+). --module-code needs --course;
+# --wide gives one column per prompt and needs a single prompts module
+andamio teacher assignments list --course "$COURSE_ID" --module-code 101 --output csv
+andamio teacher assignments list --course "$COURSE_ID" --module-code 101 --output csv --wide
 
 # Branch on exit code, or on .kind in the JSON error envelope
 # 2 not_found · 3 auth · 5 unreachable · 6 conflict · 7 tier_limit (andamio help exit-codes)
