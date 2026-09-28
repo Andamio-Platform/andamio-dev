@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- CLI reference resynced against andamio-cli 1.1.2: `teacher assignments` reads prompts answers (`content.evidence_answers`), writes real CSV and Markdown, and gains `--module-code` and `--wide`. Prompts publishing and export/import are not supported yet (andamio-cli#171).
+
 ## [0.2.0] — 2026-09-24
 
 ### Added
