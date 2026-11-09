@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- `auth-setup` (0.2.0) revised against the first-run friction log (#32): API keys come from `app.andamio.io/api-setup` and need a mainnet Access Token, said up front; key prefixes `ant_pp_`/`ant_mn_`; the Access Token, the two wallets and the submit endpoint explained before any on-chain step; secrets never printed (the pre-check no longer `cat`s the config file); CI no longer relies on an `ANDAMIO_API_KEY` variable the CLI doesn't read; checks only reported when run.
+
+### Changed
+- `auth-setup` runs everything after the API key on a `.skey`: `wallet create` (or an existing key), faucet, a submit endpoint (Blockfrost preprod, full `/tx/submit` path), headless `user login`, the Access Token minted with `tx run`, then a second login that carries the alias. No browser wallet signing after the developer portal, so it works the same in containers and CI.
+
+### Added
+- `auth-setup` picks up a returning developer (expired JWT, no alias yet, existing content, network mismatch) and checks the app template's `.env` against the CLI's network and key.
+
 ### Changed
 - CLI reference resynced against andamio-cli 1.1.2: `teacher assignments` reads prompts answers (`content.evidence_answers`), writes real CSV and Markdown, and gains `--module-code` and `--wide`. Prompts publishing and export/import are not supported yet (andamio-cli#171).
 

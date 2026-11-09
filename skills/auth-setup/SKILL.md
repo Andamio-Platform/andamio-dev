@@ -1,18 +1,20 @@
 ---
 name: auth-setup
-description: Walk through API key creation, wallet JWT authentication, and environment config for the Andamio API.
+description: Walk through API key creation, wallet JWT authentication, and environment config for the Andamio CLI and the app template. Picks up from whatever the developer already has.
 license: MIT
-compatibility: Requires the Andamio CLI for wallet authentication. Install via brew install andamio-platform/tap/andamio.
+compatibility: Requires the Andamio CLI for wallet authentication. Install via brew install Andamio-Platform/tap/andamio-cli.
 metadata:
   author: Andamio
-  version: 0.1.0
+  version: 0.2.0
 ---
 
 # Skill: Auth Setup
 
 ## Description
 
-Walks developers through authenticating with the Andamio API. Covers API key (read-only), wallet JWT (read+write), and CI/CD configuration. Detects existing credentials and skips completed steps.
+Walks developers through authenticating with the Andamio API. Covers the API key (application identity, read access), a signing wallet and submit endpoint, the wallet JWT (user identity, needed for writes), the Access Token, the app template's `.env`, and CI/CD configuration. Detects existing credentials, including a developer returning after creating content, and skips completed steps.
+
+The only browser step is getting the API key from the developer portal. Everything after that uses a signing key file (`.skey`) and the CLI, with no browser wallet signing.
 
 ## Instructions
 
@@ -20,37 +22,58 @@ Walks developers through authenticating with the Andamio API. Covers API key (re
 
 Bundled paths in this skill (`reference/`) are relative to the **package root**: the directory two levels above this `SKILL.md`, after resolving symlinks — the one that contains `specs/andamio-api.yaml`. Resolve them from there, never from the current working directory, which is the developer's own project and does not contain these files. From this file, `reference/andamio-cli-context.md` is `../../reference/andamio-cli-context.md`.
 
+### Secrets
+
+API keys, JWTs, `.skey` contents, `mnemonic.txt` and submit-service project IDs are secrets. Never print them in full, in your own text or in a command you show or run: show the first and last 4 characters only. When a key needs storing, offer the developer the command to run themselves so the key never enters the chat. Never `cat` the CLI config file or a `.env` file. Use `andamio config show`, which masks the key, and check `.env` values without echoing them (for example `grep -c '^ANDAMIO_API_KEY=.\+' .env`).
+
 ### Pre-Execution Check
 
 1. Read `reference/andamio-cli-context.md` for the complete auth command reference.
-2. Check for existing credentials:
+2. Check what the developer already has:
 
 ```bash
-# Check if CLI is installed
+# CLI installed?
 andamio --version 2>/dev/null
 
-# Check existing auth state
+# CLI state (these mask secrets)
+andamio config show                 # base URL (= network), API key set or not, submit URL
 andamio auth status 2>/dev/null
-andamio user status 2>/dev/null
+andamio user status 2>/dev/null     # alias, JWT expiry
 
-# Check environment variables
-echo "ANDAMIO_API_KEY: ${ANDAMIO_API_KEY:-(not set)}"
-echo "ANDAMIO_JWT: ${ANDAMIO_JWT:-(not set)}"
+# JWT injected from the environment? (the CLI reads ANDAMIO_JWT; it does not read ANDAMIO_API_KEY)
+[ -n "$ANDAMIO_JWT" ] && echo "ANDAMIO_JWT: set" || echo "ANDAMIO_JWT: not set"
 
-# Check config file
-cat ~/.andamio/config.json 2>/dev/null | python3 -m json.tool 2>/dev/null
+# Local signing wallet from `andamio wallet create`?
+ls ~/.andamio/wallet/ 2>/dev/null
+
+# In an app template project? (.env holds the template's own auth config)
+ls .env .env.example 2>/dev/null
+grep -E '^(NEXT_PUBLIC_ANDAMIO_GATEWAY_URL|NEXT_PUBLIC_CARDANO_NETWORK)=' .env 2>/dev/null
+grep -c '^ANDAMIO_API_KEY=.\+' .env 2>/dev/null    # 1 = set; never print the value
 ```
 
-3. If credentials already exist and work, report status and ask if the developer wants to reconfigure or proceed to their next task.
+3. Work out where the developer is, then go to the matching step:
+
+| What you find | Go to |
+|---|---|
+| Nothing set up | Step 1 |
+| API key works, no signing wallet or no submit URL | Step 3b |
+| Wallet and submit URL set, JWT missing or expired | Step 3b.4 only. An expired JWT just needs the headless `user login` again |
+| JWT works but `andamio user status` shows no alias | Step 3b.5 (mint the Access Token), then log in again |
+| API key and JWT (with alias) both work | Report status (Step 4). Offer Step 3d if they're in a template project and its `.env` isn't filled in |
+| CLI base URL and template `.env` point at different networks | Flag it before anything else (Step 1) |
+| A template `.env` with `your-api-key-here` or no key | Step 3d. The CLI's key works there too, so there's no need to make a new one |
+
+Don't claim a check passed that you didn't run. `andamio user me` is a read: it proves the JWT is valid, not that writes work.
 
 ### Step 1: Environment Selection
 
-**Always default to preprod.**
+**Always default to preprod.** Don't skip this step even if the base URL already looks right: confirm it with the developer.
 
 ```
 Which environment are you targeting?
 
-1. Preprod (recommended) — Cardano testnet. Free test ADA. Safe to experiment.
+1. Preprod (recommended) — Cardano testnet. Test ADA from the faucet. Safe to experiment.
 2. Mainnet — Real ADA. Production use only.
 ```
 
@@ -68,133 +91,198 @@ andamio config set-url https://preprod.api.andamio.io
 andamio config set-url https://mainnet.api.andamio.io
 ```
 
+Everything else must match the network chosen here: the API key, the signing wallet's address (`addr_test1…` on preprod), the submit endpoint, the Access Token, and, in a template project, `NEXT_PUBLIC_ANDAMIO_GATEWAY_URL`, `NEXT_PUBLIC_CARDANO_NETWORK` and `NEXT_PUBLIC_ACCESS_TOKEN_POLICY_ID` in `.env`. If anything points at the other network, say so plainly and fix it before going on.
+
 ### Step 2: Access Level Decision
 
 ```
 What level of access do you need?
 
 1. Read-only — Browse courses, projects, and public data. (API key only)
-2. Read + Write — Create courses, submit assignments, build transactions. (API key + wallet JWT)
-3. CI/CD pipeline — Automated access for scripts and workflows. (API key + ANDAMIO_JWT env var)
+2. Read + Write — Create courses and projects, build and submit transactions. (API key + signing wallet + submit endpoint + wallet JWT + Access Token)
+3. CI/CD pipeline — Automated access for scripts and workflows. (The same as Read + Write, with the login run in the pipeline)
 ```
+
+### Before Step 3: What to Explain
+
+Explain these in plain words before asking the developer to do anything on-chain. Don't assume Cardano knowledge.
+
+**The Access Token.** An Andamio Access Token (the "222-token") is a small on-chain token in your wallet that carries your Andamio alias. It's your identity on Andamio: you mint it once per network, and a preprod token doesn't count on mainnet. Costs are in /cost-estimator.
+
+**Two wallets, two jobs.**
+- A **browser wallet** (Eternl, Lace or another CIP-30 wallet) on **mainnet** is needed once, to get an API key from the developer portal (Step 3a). Nothing after that uses it.
+- A **signing key file** (`.skey`) is what the CLI uses for everything else: logging in, minting the preprod Access Token, and signing every on-chain step. `andamio wallet create` makes one offline (Step 3b).
+
+**A submit endpoint.** The Andamio API builds transactions but doesn't send them to the chain. The CLI signs with the `.skey` and sends the transaction itself, through a Cardano submit service you configure, such as a free Blockfrost project.
 
 ### Step 3a: API Key Setup (All Paths)
 
-Every developer needs an API key. Walk through:
+Every developer needs an API key. It identifies the application, not the person: one key works with any wallet's login, and the same key works for the CLI and the app template.
 
-1. **Register a developer account:**
-   - Go to `https://preprod.app.andamio.io/api-setup` (or `https://app.andamio.io/api-setup` for mainnet)
-   - Connect your wallet (you need an Andamio Access Token — mint one if you don't have it)
-   - Register with your email
-   - Verify your email (check inbox for verification link)
+**Say this up front:** API keys for every network, preprod included, come from the developer portal on the **mainnet** app, using a browser wallet. Registering there needs a **mainnet** Access Token, which costs real ADA (see /cost-estimator). The keys themselves are free. This is the only step that uses a browser wallet or mainnet. A developer with only a preprod token can't register yet, so tell them before they start, not after.
 
-2. **Generate an API key:**
-   - After email verification, log in at the API setup page
-   - Generate a new API key
-   - Copy the key (starts with `ant-`)
+1. **Mint a mainnet Access Token** (skip if they have one): go to `https://app.andamio.io`, connect the wallet (switched to mainnet), and follow Create Access Token. If the app doesn't recognise the new token straight away, disconnect and reconnect the wallet.
 
-3. **Store the key in the CLI:**
+2. **Register a developer account:**
+   - Go to `https://app.andamio.io/api-setup` (Dev Tools → API Setup in the sidebar, once you hold a token). Not `preprod.app.andamio.io/api-setup`: that redirects to the dashboard by design
+   - Connect the wallet that holds the mainnet Access Token
+   - Register with your email, then verify it (check spam)
+
+3. **Generate an API key:**
+   - Pick the network with the portal's network selector (preprod for development)
+   - Generate a key. Preprod keys start with `ant_pp_`, mainnet keys with `ant_mn_`
+
+4. **Store the key in the CLI.** Offer this for the developer to run themselves:
 
 ```bash
 andamio auth login --api-key <your-key>
 andamio auth status  # Verify it works
 ```
 
-4. **Test read-only access:**
+5. **Test read-only access:**
 
 ```bash
-andamio course list --output json
+andamio course list --output json | jq length
 ```
 
-If the developer selected read-only access, auth setup is complete.
+If a key is rejected (401), don't decide from its format that it belongs to another service. Check that the key's network matches the base URL (`andamio config show`), then that it hasn't been revoked in the portal, then ask for a new key.
 
-### Step 3b: Wallet JWT Setup (Read + Write)
+If the developer selected read-only access, go to Step 3d (template project) or Step 4.
 
-For write operations, the developer also needs a wallet JWT:
+### Step 3b: Signing Wallet, Login and Access Token (Read + Write)
 
-1. **Prerequisites:**
-   - A Cardano wallet with an Andamio Access Token (222-token)
-   - The Andamio CLI installed
+All of this runs in the CLI with a `.skey`. No browser wallet signing.
 
-2. **Authenticate:**
+1. **Signing wallet.** If the developer already has a `.skey` for this network, use it (with its bech32 address). Otherwise create one:
 
 ```bash
-andamio user login
-# Opens browser for CIP-30 wallet signing
-# Signs a challenge nonce to prove wallet ownership
-# JWT stored at ~/.andamio/config.json
+andamio wallet create          # writes ~/.andamio/wallet/default/ for the configured network
+cat ~/.andamio/wallet/default/address.txt
 ```
 
-3. **Verify:**
+The address is public and fine to show. The wallet folder also holds `payment.skey` and `mnemonic.txt`: tell the developer to back up the mnemonic somewhere safe, and never read either file aloud. `tx sign` and `tx run` use this wallet when `--skey` is omitted.
+
+2. **Fund it.** On preprod, send test ADA to the address from the faucet: `https://docs.cardano.org/cardano-testnets/tools/faucet` (choose Preprod). Wait for it to arrive before minting.
+
+3. **Submit endpoint.** The CLI sends signed transactions through a Cardano submit service. A free Blockfrost project works: create one at `https://blockfrost.io` for **Cardano preprod**, then:
+
+```bash
+andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/submit
+andamio config set-submit-header project_id <blockfrost-project-id>
+```
+
+Use the full `/tx/submit` path. A base URL without it fails silently: the transaction never reaches the chain and `tx run` waits until it times out. Have the developer run the header command themselves, since the project ID is a secret. Any Cardano submit API works; Blockfrost is the usual choice.
+
+4. **Log in with the signing key:**
+
+```bash
+andamio user login --skey ~/.andamio/wallet/default/payment.skey \
+  --alias <alias> --address $(cat ~/.andamio/wallet/default/address.txt)
+```
+
+The login itself doesn't need an Access Token: any wallet that signs gets a session. The alias is only attached if the wallet holds that alias's Access Token on this network; otherwise it is dropped without an error. So for a new wallet, pass the alias the developer wants, and expect `andamio user status` to show no alias yet.
+
+5. **Mint the Access Token** (skip if `andamio user status` already shows the alias). Check the alias is free, then mint it onto the wallet:
+
+```bash
+andamio user exists <alias>
+andamio tx run /v2/tx/global/user/access-token/mint \
+  --body '{"alias":"<alias>","initiator_data":"<bech32 address>"}' \
+  --tx-type access_token_mint
+```
+
+`initiator_data` is the wallet's address as a plain string, not an object. Report the mint only when `tx run` reports it confirmed.
+
+6. **Log in again** with the same command as step 4. Now `andamio user status` should show the alias.
+
+7. **Check the session:**
 
 ```bash
 andamio user status
-# Shows: alias, JWT expiry time, access token status
-```
-
-4. **Test write access:**
-
-```bash
 andamio user me --output json
 ```
 
-**Note:** JWT expires after ~24 hours. Re-authenticate with `andamio user login` when it expires.
+This confirms the JWT is valid and carries the alias. `user me` is a read, so don't report write access as verified from it; the confirmed mint in step 5 is the proof that signing and submitting work.
+
+**Note:** The JWT expires after about 24 hours. An expired JWT counts as logged out, so re-running the step 4 login is all that's needed. Returning developers usually only need this step.
 
 ### Step 3c: CI/CD Setup
 
 For automated pipelines:
 
-1. Complete steps 3a (API key) and 3b (get a JWT).
-2. Set environment variables:
+1. Complete steps 3a and 3b once, outside the pipeline, so the wallet holds its Access Token.
+2. Store the API key, the `.skey`, the address and the submit project ID in the CI secret store. In the pipeline:
 
 ```bash
-export ANDAMIO_API_KEY="ant-your-key-here"
-export ANDAMIO_JWT="your-jwt-token-here"
+andamio config set-url https://preprod.api.andamio.io
+andamio auth login --api-key "$ANDAMIO_API_KEY"
+andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/submit
+andamio config set-submit-header project_id "$BLOCKFROST_PROJECT_ID"
+andamio user login --skey "$SKEY_PATH" --alias "$ANDAMIO_ALIAS" --address "$WALLET_ADDRESS"
 ```
 
-The CLI reads `ANDAMIO_JWT` from the environment, overriding the stored config. This is useful for CI/CD where browser wallet signing isn't available.
+The CLI doesn't read an `ANDAMIO_API_KEY` variable on its own, which is why the key goes through `auth login`. Logging in each run avoids the 24-hour JWT expiry. The CLI also reads `ANDAMIO_JWT` and `ANDAMIO_SUBMIT_URL` from the environment if you'd rather inject those.
 
-**For headless signing** (no browser):
+### Step 3d: App Template `.env` (template projects)
 
-```bash
-andamio user login --skey /path/to/payment.skey
-```
+If the developer is in an `andamio-app-template` project (a `.env.example` mentioning `ANDAMIO_API_KEY`), check its auth settings. Copy `.env.example` to `.env` if there's no `.env` yet.
+
+| Variable | Should be |
+|---|---|
+| `ANDAMIO_API_KEY` | An API key for the same network. The CLI's key from Step 3a works. Server-side only: never put it in a `NEXT_PUBLIC_` variable |
+| `NEXT_PUBLIC_ANDAMIO_GATEWAY_URL` | The same base URL as the CLI (`andamio config show`) |
+| `NEXT_PUBLIC_CARDANO_NETWORK` | `preprod` or `mainnet`, matching the above |
+| `NEXT_PUBLIC_ACCESS_TOKEN_POLICY_ID` | The Access Token policy ID for that network (listed in `.env.example`) |
+| `NEXT_PUBLIC_BLOCKFROST_PROJECT_ID` | Only needed for social-wallet logins (Google, Discord, X), not for browser wallets |
+
+Have the developer paste the key into `.env` themselves, and check it's set with `grep -c`, never by printing it. People using the template log in with their own browser wallets in the running app, so the CLI's JWT isn't used there.
 
 ### Step 4: Verification Summary
 
-After setup, present a summary:
+After setup, summarise what was actually checked:
 
 ```
 Auth Setup Complete
 
-Environment:  preprod
-API Key:      configured (read-only access)
-Wallet JWT:   configured (read+write, expires in ~24h)
-Config:       ~/.andamio/config.json
+Environment:   preprod
+API Key:       ant_pp_…a1b2 (course list returned 200)
+Signing key:   ~/.andamio/wallet/default/ (addr_test1…)
+Submit URL:    Blockfrost preprod, /tx/submit
+Access Token:  <alias> (mint confirmed)
+Wallet JWT:    valid for alias <alias>, expires in ~24h
+Template .env: API key set, network matches
+Config:        ~/.andamio/config.json
+```
 
-You're ready to:
-- Browse courses and projects (/explore-api)
-- Use the CLI for operations (/cli-guide)
-- Create courses (/course-ops) or projects (/project-ops)
+Then suggest next steps, with a line on what each is for:
+
+- If they already have a course or project, point back to it: /course-ops or /project-ops carries on with it.
+- **/explore-api** — look around courses, projects and the API, read-only.
+- **/cli-guide** — a reference of CLI commands, for checking what's available.
+- **/course-ops** — create and manage a course.
+- **/project-ops** — create and manage a project.
 
 What would you like to do next?
-```
 
 ### Handling Async Steps
 
 If the developer says "I already registered but haven't verified my email":
 - Tell them to check their inbox (including spam) for the verification email
 - They can resend: the API setup page has a resend option
-- Once verified, continue from step 3a.2 (generate API key)
+- Once verified, continue from step 3a.3 (generate API key)
 
 If the developer says "I don't have an Access Token":
-- They need to mint one first. This costs ~7.9 ADA (see /cost-estimator).
-- On preprod: get test ADA from the faucet first, then mint via the app at preprod.app.andamio.io
-- The Access Token is a prerequisite for API key generation
+- Explain what it is (see "Before Step 3"). Costs are in /cost-estimator
+- For the API key: a **mainnet** token is needed, minted at `https://app.andamio.io` with real ADA. A preprod token can't register a developer account
+- For preprod work: the CLI mints one onto the signing wallet in Step 3b.5, paid with faucet ADA
+
+If the developer is waiting on faucet ADA: the mint fails without funds, so pause at Step 3b.2 and check the address has a balance before going on.
 
 ### Guidelines
 
 - Always start on preprod unless the developer explicitly requests mainnet
-- Never store or display full API keys or JWTs in output — show first/last 4 characters only
-- If the CLI isn't installed, provide install instructions: `brew install andamio-platform/tap/andamio`
-- Skip steps the developer has already completed (detected in pre-execution check)
+- Never print secrets in full (see "Secrets"); show the first and last 4 characters only
+- Only report what you checked: never say a login worked, a mint landed or write access is verified without seeing it
+- Don't route the developer through browser wallet signing after Step 3a; use the `.skey`
+- If the CLI isn't installed, provide install instructions: `brew install Andamio-Platform/tap/andamio-cli`
+- Skip steps the developer has already completed (detected in the pre-execution check)
