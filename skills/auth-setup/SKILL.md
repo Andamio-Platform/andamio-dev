@@ -132,6 +132,8 @@ Every developer needs an API key. It identifies the application, not the person:
    - Pick the network with the portal's network selector (preprod for development)
    - Generate a key. Preprod keys start with `ant_pp_`, mainnet keys with `ant_mn_`
 
+   On the free (Pioneer) tier you get one API key: 15,000 requests a month, 500 a day. Choose preprod for development. A second key, for example for mainnet, is refused with `tier_limit_exceeded` (CLI exit 7) until you delete the first one in the portal or upgrade. Keep the key somewhere safe: losing it means deleting it in the portal and generating a new one.
+
 4. **Store the key in the CLI.** Offer this for the developer to run themselves:
 
 ```bash
