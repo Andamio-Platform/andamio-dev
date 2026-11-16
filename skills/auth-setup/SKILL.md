@@ -110,7 +110,7 @@ Explain these in plain words before asking the developer to do anything on-chain
 **The Access Token.** An Andamio Access Token (the "222-token") is a small on-chain token in your wallet that carries your Andamio alias. It's your identity on Andamio: you mint it once per network, and a preprod token doesn't count on mainnet. Costs are in /cost-estimator.
 
 **Two wallets, two jobs.**
-- A **browser wallet** (Eternl, Lace or another CIP-30 wallet) on **mainnet** is needed once, to get an API key from the developer portal (Step 3a). Nothing after that uses it.
+- A **browser wallet** (Eternl, Lace or another CIP-30 wallet) on **mainnet** is needed once, to get an API key from the developer portal (Step 3a). That's how the portal works today, and it may change. Nothing after that uses it.
 - A **signing key file** (`.skey`) is what the CLI uses for everything else: logging in, minting the preprod Access Token, and signing every on-chain step. `andamio wallet create` makes one offline (Step 3b).
 
 **A submit endpoint.** The Andamio API builds transactions but doesn't send them to the chain. The CLI signs with the `.skey` and sends the transaction itself, through a Cardano submit service you configure, such as a free Blockfrost project.
@@ -119,7 +119,7 @@ Explain these in plain words before asking the developer to do anything on-chain
 
 Every developer needs an API key. It identifies the application, not the person: one key works with any wallet's login, and the same key works for the CLI and the app template.
 
-**Say this up front:** API keys for every network, preprod included, come from the developer portal on the **mainnet** app, using a browser wallet. Registering there needs a **mainnet** Access Token, which costs real ADA (see /cost-estimator). The keys themselves are free. This is the only step that uses a browser wallet or mainnet. A developer with only a preprod token can't register yet, so tell them before they start, not after.
+**Say this up front:** as it works today, API keys for every network, preprod included, come from the developer portal on the **mainnet** app, using a browser wallet. Registering there needs a **mainnet** Access Token, which costs real ADA (see /cost-estimator). The keys themselves are free. This is the only step that uses a browser wallet or mainnet. A developer with only a preprod token can't register yet, so tell them before they start, not after. Andamio may change this, so describe it as the current process, not a permanent rule.
 
 1. **Mint a mainnet Access Token** (skip if they have one): go to `https://app.andamio.io`, connect the wallet (switched to mainnet), and follow Create Access Token. If the app doesn't recognise the new token straight away, disconnect and reconnect the wallet.
 
@@ -149,6 +149,8 @@ andamio course list --output json | jq length
 
 If a key is rejected (401), don't decide from its format that it belongs to another service. Check that the key's network matches the base URL (`andamio config show`), then that it hasn't been revoked in the portal, then ask for a new key.
 
+The CLI is for course Owners and Teachers and project Managers, whether a person or an agent is running it. An Issuer (enterprise) key gets 403 on the transaction build routes: that's expected, not a broken key, and Issuer work isn't covered by the CLI.
+
 If the developer selected read-only access, go to Step 3d (template project) or Step 4.
 
 ### Step 3b: Signing Wallet, Login and Access Token (Read + Write)
@@ -166,14 +168,19 @@ The address is public and fine to show. The wallet folder also holds `payment.sk
 
 2. **Fund it.** On preprod, send test ADA to the address from the faucet: `https://docs.cardano.org/cardano-testnets/tools/faucet` (choose Preprod). Wait for it to arrive before minting.
 
-3. **Submit endpoint.** The CLI sends signed transactions through a Cardano submit service. A free Blockfrost project works: create one at `https://blockfrost.io` for **Cardano preprod**, then:
+3. **Submit endpoint.** The Andamio API never submits transactions for you, by design: the CLI signs with the `.skey` and sends the transaction to a Cardano submit service you configure. Blockfrost is the default. It's a signup in the browser that an agent can't do for the developer, so walk them through it:
+   - Sign up at `https://blockfrost.io` (the free plan is enough)
+   - Add a project and choose **Cardano preprod** as its network. A free account has one project, so preprod is the right one for development
+   - Copy the project ID
+
+   Then:
 
 ```bash
 andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/submit
 andamio config set-submit-header project_id <blockfrost-project-id>
 ```
 
-Use the full `/tx/submit` path. A base URL without it fails silently: the transaction never reaches the chain and `tx run` waits until it times out. Have the developer run the header command themselves, since the project ID is a secret. Any Cardano submit API works; Blockfrost is the usual choice.
+Use the full URL, ending in `/api/v0/tx/submit`. Blockfrost redirects a wrong path (the base URL, or one missing `/v0`) to its homepage, and CLI versions up to 1.3.x take that as a successful submit: the transaction never reaches the chain and `tx run` waits until it times out (andamio-cli#218 makes this an error). Have the developer run the header command themselves, since the project ID is a secret. Any Cardano submit API that takes raw CBOR works too.
 
 4. **Log in with the signing key:**
 
@@ -275,7 +282,7 @@ If the developer says "I already registered but haven't verified my email":
 
 If the developer says "I don't have an Access Token":
 - Explain what it is (see "Before Step 3"). Costs are in /cost-estimator
-- For the API key: a **mainnet** token is needed, minted at `https://app.andamio.io` with real ADA. A preprod token can't register a developer account
+- For the API key: today a **mainnet** token is needed, minted at `https://app.andamio.io` with real ADA. A preprod token can't register a developer account
 - For preprod work: the CLI mints one onto the signing wallet in Step 3b.5, paid with faucet ADA
 
 If the developer is waiting on faucet ADA: the mint fails without funds, so pause at Step 3b.2 and check the address has a balance before going on.
