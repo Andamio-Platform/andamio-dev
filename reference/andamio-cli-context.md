@@ -212,7 +212,7 @@ Stable error codes preserved verbatim in error messages: `tier_limit_exceeded` (
 | `course teacher register-module --course-id <id> --module-code <code> --slt-hash <hash>` | jwt | Register module from on-chain data. Idempotent on `slt_hash` match (DRAFT advances to APPROVED; APPROVED/PENDING_TX/ON_CHAIN no-ops; mismatch errors and points at `delete-module`). **Breaking in 0.12.0 (`--output json` consumers):** response is now wrapped — `{action, status, slt_hash, advanced_from, response}`. Branch on `.action` (`registered` / `advanced` / `already_registered`); gateway fields nest under `.response` |
 | `course teacher publish-module --course-id <id> --module-code <code>` | jwt | Publish a module. Warns only when the response shows the module is not linked (`module_status` / `slt_hash`) |
 | `course teacher delete-module --course-id <id> --module-code <code>` | jwt | Delete a module |
-| `course teacher update-module-status --course-id <id> --module-code <code> --status <status>` | jwt | Update module status. `--slt-hash` required for APPROVED. Valid statuses: DRAFT, APPROVED, PENDING_TX |
+| `course teacher update-module-status --course-id <id> --module-code <code> --status <status>` | jwt | Update module status. `--slt-hash` required for APPROVED. Valid statuses: DRAFT, APPROVED |
 
 ### course credential — Verification and hash computation
 
@@ -512,9 +512,8 @@ Some operations have on-chain prerequisites. Attempting them out of order return
 
 1. **Create course on-chain** → `tx run /v2/tx/instance/owner/course/create`
 2. **Draft module with SLTs** → `course create-module --slt "..." --slt "..." --approve`
-3. **Set PENDING_TX** → `course teacher update-module-status --status PENDING_TX`
-4. **Mint module on-chain** → `tx run /v2/tx/course/teacher/modules/manage`
-5. **Import content** → `course import <path> --course-id <id>` (must include assignment)
+3. **Mint module on-chain** → `tx run /v2/tx/course/teacher/modules/manage` (straight from APPROVED)
+4. **Import content** → `course import <path> --course-id <id>` (must include assignment)
 
 To appoint teachers after step 1: `course owner teachers --course-id <id> --alias <owner> --skey <path> --add <alias>` (on-chain).
 
@@ -700,7 +699,7 @@ Each answer carries its prompt's `label` and `question`, so evidence reads witho
 | slt_hash | 64-char hex | Blake2b-256 of PlutusTx-serialized SLT byte string list (NOT Plutus Data encoding). Module token name on-chain. |
 | task_hash | 64-char hex | Blake2b-256 of Plutus Data `Constr 0 [content, expiration, lovelace, native_assets]` (CBOR tag 121). Different encoding from `slt_hash`. |
 | tx_hash | 64-char hex | `cfd58c772c21a6a281b207d6999595b81771e911cb8450a34cf323af61a61b4e` (Cardano transaction hash) |
-| evidence_hash | string | Evidence hash. **Request inputs** use `evidence_hash`. **Response outputs** disambiguate with `assignment_evidence_hash` (courses) or `task_evidence_hash` (projects). |
+| evidence_hash | string | Evidence hash. Andamio computes it from the saved `evidence`; requests do not send it (a sent value is ignored). **Response outputs** carry it as `assignment_evidence_hash` (courses) or `task_evidence_hash` (projects). |
 
 ### Global Access Token Policy IDs
 

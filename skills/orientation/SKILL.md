@@ -227,7 +227,7 @@ andamio tx types --output json
 
 **Key resources** (paths are relative to the andamio-dev package root, two levels above this skill's `SKILL.md` — not to your project):
 - CLI reference: `reference/andamio-cli-context.md`
-- Gateway API spec: `specs/andamio-api.yaml` (77 paths, the public contract)
+- Gateway API spec: `specs/andamio-api.yaml` (75 paths, the public contract)
 - TX loops reference: `reference/tx-loops.yaml` (canonical transaction workflows)
 - Cost data: `specs/cost-registry.json`
 - Lifecycle examples: `examples/course-lifecycle.sh` and `examples/project-lifecycle.sh`

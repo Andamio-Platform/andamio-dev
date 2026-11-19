@@ -78,7 +78,6 @@ Use the public API directly.
 # /v2/project/manager, /v2/project/contributor, plus /v2/user/dashboard, require
 # BOTH headers in the same request:
 #   -H "X-API-Key: $ANDAMIO_API_KEY" -H "Authorization: Bearer $ANDAMIO_JWT"
-# The /v2/keys routes are the exception — they take the JWT only, no API key.
 curl -H "X-API-Key: $ANDAMIO_API_KEY" \
   https://preprod.api.andamio.io/api/v2/course/user/courses/list
 ```
