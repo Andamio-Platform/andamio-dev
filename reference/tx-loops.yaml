@@ -36,7 +36,7 @@
 # Source: orch task "andamio-dev - add each Tx Loop and build cost estimation into each.md"
 
 version: 4
-last_updated: 2026-09-23
+last_updated: 2026-11-19
 
 # Dependency graph:
 #   (15) general.access-token
@@ -122,7 +122,7 @@ loops:
       modules_manage: { fee_ada: 0.267, wallet_delta_ada: 1.86, tx: cbfc64f7df6340cf8e4e5198985817aa58193759f28913f2df2633beadc4478e }
     script: examples/course-lifecycle.sh (partial — also covers loop 3)
     status: validated
-    validated_date: 2026-09-23
+    validated_date: 2026-11-19
     known_gotchas:
       - "Module must have assignment content before students can enroll"
       - "course_create pays a flat 100 ADA service fee. Budget ~120 ADA before starting."

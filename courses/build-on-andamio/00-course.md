@@ -95,6 +95,6 @@ All external dependencies have been resolved as of 2026-04-06:
 - **`tx-loops.yaml`** — landed 2026-04-06. 16 canonical loops with dotted names, steps, roles, costs. Lives at `reference/tx-loops.yaml`.
 - **Cohort-scale cost math** — confirmed linear per student (~1.27 ADA × N). Reflected in `tx-loops.yaml` loop 13 (`course.credential.cohort`).
 - **Cost-registry key rename** — `single-credential` → `course.credential`, `multi-assignment-credential` → `course.credential.with-updates`. Keys now match tx-loop names.
-- **DB API PENDING_TX** — resolved in `andamio-db-api-go#181`. Module status can now be set to PENDING_TX via API.
+- **Module status** — since API 2.6 a teacher sets a module only to `DRAFT` or `APPROVED`; the API reads `ON_CHAIN` from the chain, so there is no `PENDING_TX` step before minting.
 
 **All 7 modules are unblocked and drafted.** M100–M700 lessons are complete and live in `courses/build-on-andamio/lessons/m{N}/`.
