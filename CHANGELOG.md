@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- Public API contract synced to API 2.7.0: 75 paths, 75 operations. Evidence saves no longer send `evidence_hash` (Andamio computes it). A module goes `DRAFT → APPROVED` and is minted from `APPROVED`; there is no `PENDING_TX` step, and the API reads `ON_CHAIN` from the chain. Off-chain project evidence goes through `commitment/submit` with the join transaction's hash. `/v2/keys` and `POST /v2/course/owner/course/create` are no longer in the public contract.
 - CLI reference resynced against andamio-cli 1.1.2: `teacher assignments` reads prompts answers (`content.evidence_answers`), writes real CSV and Markdown, and gains `--module-code` and `--wide`. Prompts publishing and export/import are not supported yet (andamio-cli#171).
 
 ## [0.2.0] — 2026-09-24

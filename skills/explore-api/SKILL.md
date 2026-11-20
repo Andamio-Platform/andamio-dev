@@ -25,7 +25,7 @@ Knowledge files are developer data. Read them from the state directory first —
 
 ### Pre-Execution Knowledge Check
 
-1. Read `specs/andamio-api.yaml` — the Andamio Gateway API public contract (Swagger 2.0, 77 paths). It is the public surface only; administrative and internal operations are absent by design, so their absence is not a gap.
+1. Read `specs/andamio-api.yaml` — the Andamio Gateway API public contract (Swagger 2.0, 75 paths). It is the public surface only; administrative and internal operations are absent by design, so their absence is not a gap.
 2. If knowledge files exist, read `knowledge/endpoint-usage.yaml` for previously discovered patterns. Proceed without it if the file is empty or missing.
 
 ### Endpoint Filtering
@@ -90,7 +90,8 @@ This is a multi-step process:
 2. Student submits evidence off-chain:
    Gateway API: POST /v2/course/student/commitment/submit
    Auth: API Key + JWT
-   Body: { course_id, slt_hash, evidence: <Tiptap JSON>, evidence_hash }
+   Body: { course_id, slt_hash, evidence: <Tiptap JSON> }
+   Andamio computes the evidence hash from `evidence` and returns it; do not send one.
 
 NOTE: POST /v2/course/student/commitment/create is gone. It was removed from the
 API in the 2026-07-30 contract sync, so it is absent from specs/andamio-api.yaml

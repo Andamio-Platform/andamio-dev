@@ -135,12 +135,11 @@ Students interact through the app or API:
 
 #### 6. Publish Module
 
-Status transitions: DRAFT → APPROVED → PENDING_TX → ON_CHAIN (→ DEPRECATED / ARCHIVED)
+Status values: DRAFT → APPROVED → ON_CHAIN
 
 - **DRAFT → APPROVED**: Teacher action. Locks SLTs but allows lesson content updates.
-- **APPROVED → PENDING_TX**: Teacher submits the `modules_manage` TX; the DB marks the module pending, awaiting on-chain confirmation.
-- **PENDING_TX → ON_CHAIN**: Gateway batch-confirms once andamioscan sees the minted module token. Fully immutable after this point. **Important:** the batch confirm endpoint requires the module to be in `PENDING_TX` before it will set `ON_CHAIN` — the off-chain flow must advance to `PENDING_TX` first.
-- **ON_CHAIN → DEPRECATED / ARCHIVED**: Optional terminal states for removing a module from active use without deleting it.
+- **APPROVED → ON_CHAIN**: Teacher submits the `modules_manage` TX straight from APPROVED. `ON_CHAIN` is read from the chain once the module token is minted; nobody sets it. Fully immutable after this point.
+- A teacher can set only `DRAFT` or `APPROVED`. There is no `PENDING_TX` step (API 2.6+: `--status PENDING_TX` answers 400), and a module on chain can't be moved back to `DRAFT`.
 
 ```bash
 # Check module status

@@ -42,7 +42,7 @@ examples/                 # Runnable scripts demonstrating full tx state machine
   course-lifecycle.sh     # Course: create → module → enroll → submit → assess → claim
   project-lifecycle.sh    # Project: create → task → commit → assess → claim
 specs/                    # Bundled API specifications (read-only reference)
-  andamio-api.yaml        # Andamio Gateway API — the PUBLIC contract (Swagger 2.0, 77 paths).
+  andamio-api.yaml        # Andamio Gateway API — the PUBLIC contract (Swagger 2.0, 75 paths).
                           # Synced from the generated public artifact in andamio-api; the header
                           # records the source commit and sync date. Administrative and internal
                           # operations are not in it, by design. Do not hand-edit.
@@ -78,21 +78,20 @@ CONCEPTS.md               # Shared domain vocabulary (entities, named processes,
 
 ### Andamio API (`specs/andamio-api.yaml`)
 
-The public-facing Andamio API. 77 paths across these groups (the public contract only — administrative and internal operations are excluded by design):
+The public-facing Andamio API. 75 paths across these groups (the public contract only — administrative and internal operations are excluded by design):
 
 | Group | Operations | Auth | Purpose |
 |-------|-----------|------|---------|
-| Courses | 27 | API key (+ JWT for role-scoped) | Course discovery, modules, teachers, learner commitments, assessment |
-| Transactions | 22 | API key | Build, register, and track Cardano transactions |
-| Projects | 20 | API key (+ JWT for role-scoped) | Project CRUD, tasks, contributors, treasury |
-| Platform Auth | 3 | varies | Wallet login, session management, user profile |
-| Keys | 3 | JWT | Developer API key CRUD |
+| Courses | 26 | API key (+ JWT for role-scoped) | Course discovery, modules, teachers, learner commitments, assessment |
+| Transactions | 23 | API key | Build, register, and track Cardano transactions |
+| Projects | 19 | API key (+ JWT for role-scoped) | Project CRUD, tasks, contributors, treasury |
+| Platform Auth | 4 | varies | Wallet login, session management, user profile |
 | Verify | 2 | API key | Credential and task-commitment verification |
 | Public | 1 | API key | Public read |
 
-**78 operations across 77 paths.** Counts and Auth values derive from the contract's own tag groups and per-operation `security` blocks — regenerate `reference/api-endpoints-by-use-case.md` to see the current breakdown per group and the auth requirement per endpoint.
+**75 operations across 75 paths.** Counts and Auth values derive from the contract's own tag groups and per-operation `security` blocks — regenerate `reference/api-endpoints-by-use-case.md` to see the current breakdown per group and the auth requirement per endpoint.
 
-The role-scoped path prefixes that require **both** `X-API-Key` and `Authorization: Bearer` in the same request are `/v2/course/owner`, `/v2/course/student`, `/v2/course/teacher`, `/v2/project/contributor`, `/v2/project/manager`, `/v2/project/owner`, and `/v2/user/dashboard`. `/v2/keys` requires the JWT only. Everything else takes the API key alone.
+The role-scoped path prefixes that require **both** `X-API-Key` and `Authorization: Bearer` in the same request are `/v2/course/owner`, `/v2/course/student`, `/v2/course/teacher`, `/v2/project/contributor`, `/v2/project/manager`, `/v2/project/owner`, and `/v2/user/dashboard`. Everything else takes the API key alone.
 
 **Endpoint filtering is no longer something skills must do.** Developer-portal concerns (registration, API-key lifecycle, billing) and administrative operations are not in this spec at all — they were removed when the vendored copy was replaced with the generated public contract on 2026-07-28. If an operation is absent, treat that as the contract rather than as a gap in the file — but absence is not proof that a route is dead.
 

@@ -36,7 +36,7 @@
 # Source: orch task "andamio-dev - add each Tx Loop and build cost estimation into each.md"
 
 version: 4
-last_updated: 2026-09-23
+last_updated: 2026-11-19
 
 # Dependency graph:
 #   (15) general.access-token
@@ -89,26 +89,27 @@ loops:
 
           Path B — import-all (bulk from compiled content directories):
             andamio course import-all ./compiled/my-course --course-id <id> --create --sort-order-start 1
-            Creates modules in DRAFT. Does NOT approve — must run update-module-status separately.
+            Creates modules in DRAFT. Does NOT approve — run update-module-status --status APPROVED separately.
             The slt_hash is printed in the import output for each module.
 
           Path A is simpler. Path B is needed when lesson/assignment content already exists on disk.
-      - action: set_pending_tx
+      - action: approve_module
         role: teacher
         note: >
-          REQUIRED: advance module from APPROVED → PENDING_TX before minting.
+          The module must be APPROVED before minting.
 
-          If Path A (create-module --approve): module is already APPROVED, skip to PENDING_TX:
-            andamio course teacher update-module-status --course-id <id> --module-code 100 --status PENDING_TX
+          If Path A (create-module --approve): the module is already APPROVED. Nothing to do.
 
-          If Path B (import-all): module is DRAFT, must approve first:
+          If Path B (import-all): the module is DRAFT, approve it:
             andamio course teacher update-module-status --course-id <id> --module-code 100 --status APPROVED --slt-hash <hash>
-            andamio course teacher update-module-status --course-id <id> --module-code 100 --status PENDING_TX
+
+          There is no PENDING_TX step: a module's status can only be set to DRAFT or APPROVED
+          (API 2.6+; --status PENDING_TX answers 400). ON_CHAIN is read from the chain.
       - tx: modules_manage
         role: teacher
         endpoint: /v2/tx/course/teacher/modules/manage
         tx_type: modules_manage
-        note: Gateway batch-confirms modules from PENDING_TX → ON_CHAIN. Fails if module is not in PENDING_TX.
+        note: Mint from APPROVED. Once the module token is on chain, the API reads the module as ON_CHAIN.
       - action: publish_content
         role: teacher
         note: >
@@ -121,7 +122,7 @@ loops:
       modules_manage: { fee_ada: 0.267, wallet_delta_ada: 1.86, tx: cbfc64f7df6340cf8e4e5198985817aa58193759f28913f2df2633beadc4478e }
     script: examples/course-lifecycle.sh (partial — also covers loop 3)
     status: validated
-    validated_date: 2026-09-23
+    validated_date: 2026-11-19
     known_gotchas:
       - "Module must have assignment content before students can enroll"
       - "course_create pays a flat 100 ADA service fee. Budget ~120 ADA before starting."
@@ -167,7 +168,7 @@ loops:
         note: >
           REQUIRED before tasks_manage TX. Create task records in DB (DRAFT status).
           CLI: andamio project task create <project-id> --title "..." --lovelace 5000000 --expiration 2026-12-31
-          Tasks are confirmed by index fallback — no PENDING_TX issue like modules.
+          Tasks are confirmed by index fallback.
       - tx: treasury_fund
         role: owner
         endpoint: /v2/tx/project/user/treasury/add-funds
@@ -269,7 +270,7 @@ loops:
           No CLI command: the learner command group was removed in CLI 1.0 (see
           cli-retirements.yaml). Learners submit in the Andamio app; from a script, call the API.
         api:
-          - POST /v2/course/student/commitment/submit   # body: {course_id, slt_hash, evidence, evidence_hash}
+          - POST /v2/course/student/commitment/submit   # body: {course_id, slt_hash, evidence}; Andamio computes the evidence hash and returns it
       - tx: assessment_assess
         role: teacher
         endpoint: /v2/tx/course/teacher/assignments/assess
@@ -336,10 +337,15 @@ loops:
         role: contributor
         note: >
           Off-chain evidence submission (optional — enriches evidence beyond the 140-char on-chain field).
+          It travels with the project_join transaction above: call submit with that
+          transaction's hash as pending_tx_hash before it confirms, and the commitment waits
+          for it. Submit is not an edit after the fact: it accepts an
+          existing commitment only in COMMITTED or REFUSED, and the route that edited evidence
+          later (commitment/update) was retired in API 2.6.
           No CLI command: the contributor command group was removed in CLI 1.0. Contributors
           submit in the Andamio app; from a script, call the API.
         api:
-          - POST /v2/project/contributor/commitment/update
+          - POST /v2/project/contributor/commitment/submit   # body: {task_hash, evidence, pending_tx_hash}; Andamio computes the evidence hash
       - tx: task_assess
         role: manager
         endpoint: /v2/tx/project/manager/tasks/assess
@@ -687,11 +693,6 @@ loops:
           Create off-chain module record in DRAFT status, add SLTs, approve to compute slt_hash.
           CLI: andamio course create-module --course-id <id> --code 200 --title "..." --slt "SLT 1" --slt "SLT 2" --approve
           Creates DRAFT → adds SLTs → APPROVED in one step. slt_hash printed on success.
-      - action: set_pending_tx
-        role: teacher
-        note: >
-          Advance module from APPROVED → PENDING_TX before minting.
-          CLI: andamio course teacher update-module-status --course-id <id> --module-code 200 --status PENDING_TX
       - tx: modules_manage
         role: teacher
         endpoint: /v2/tx/course/teacher/modules/manage
@@ -700,7 +701,7 @@ loops:
           Body: {"alias":"<teacher>","course_id":"<id>","modules_to_add":[{"slts":["SLT text 1","SLT text 2"],"allowed_student_state_ids":[],"prereq_credential_hashes":[]}],"modules_to_update":[],"modules_to_remove":[]}
           All three arrays (modules_to_add, modules_to_update, modules_to_remove) are REQUIRED even when empty.
           modules_to_add takes objects with slts (text array), not module codes or strings.
-          Gateway batch-confirms modules from PENDING_TX → ON_CHAIN.
+          Mint from APPROVED; the API reads the module as ON_CHAIN once the token is on chain.
       - action: verify_module
         note: >
           Confirm module is ON_CHAIN.
@@ -713,7 +714,7 @@ loops:
     validated_date: 2026-04-07
     known_gotchas:
       - "modules_to_add takes objects with {slts, allowed_student_state_ids, prereq_credential_hashes} — NOT strings or module codes"
-      - "Module must be in PENDING_TX status before minting — gateway rejects APPROVED or DRAFT modules"
+      - "Mint from APPROVED. There is no PENDING_TX status any more (API 2.6+): --status PENDING_TX answers 400"
       - "Updating SLTs changes slt_hash (on-chain identity). 'Update' is really burn + mint."
       - "Module code is off-chain only — never appears in the TX body, matched by slt_hash"
 

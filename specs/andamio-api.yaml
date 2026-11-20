@@ -3,85 +3,13 @@
 # This is the PUBLIC API surface: the operations available to integrators. It is not every
 # route the server exposes. Administrative and internal operations are deliberately absent.
 #
-# Source: andamio-api docs/swagger.public.json @ a51ec140
-# Synced: 2026-09-23
-# Paths:  77
+# Source: andamio-api product/developer/swagger.public.json @ df90e269 (v2.7.0)
+# Synced: 2026-11-19
+# Paths:  75
 #
 # Do not hand-edit. Re-sync from the generated public artifact in andamio-api.
 basePath: /api
 definitions:
-  APIKeyMetadata:
-    properties:
-      created_at:
-        description: CreatedAt is the key creation timestamp.
-        type: string
-      id:
-        description: ID is the API key UUID.
-        type: string
-      is_active:
-        description: IsActive indicates whether the key is currently active.
-        type: boolean
-      kind:
-        description: 'Kind is the key type: ''developer'' or ''enterprise''.'
-        type: string
-      prefix:
-        description: Prefix is the first 12 characters of the key (without the plaintext key itself).
-        type: string
-      role:
-        description: 'Role is the capability level within the account (''admin'' or ''member''), or
-
-          empty for developer keys not associated with an account.'
-        type: string
-    type: object
-  APIKeyRequest:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        maxLength: 64
-        minLength: 3
-        type: string
-      expires_in_days:
-        example: 365
-        minimum: 1
-        type: integer
-    required:
-    - api_key_name
-    type: object
-  APIKeyResponse:
-    properties:
-      api_key:
-        example: ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        type: string
-      created_at:
-        example: '2025-08-31T23:59:59Z'
-        type: string
-      expires_at:
-        example: '2026-08-31T23:59:59Z'
-        type: string
-      expires_in_days:
-        example: 365
-        type: integer
-      is_active:
-        example: true
-        type: boolean
-      name:
-        example: MyFirstKey
-        type: string
-    required:
-    - api_key
-    - created_at
-    - expires_at
-    - expires_in_days
-    - is_active
-    - name
-    type: object
-  AddCourseIDRequest:
-    properties:
-      course_id:
-        type: string
-    required:
-    - course_id
-    type: object
   AddFundsTxRequest:
     properties:
       alias:
@@ -248,39 +176,6 @@ definitions:
       exists:
         type: boolean
     type: object
-  AllocationMetadata:
-    properties:
-      active:
-        type: boolean
-      api_key_id:
-        type: string
-      costs:
-        additionalProperties: true
-        type: object
-      course_ids:
-        items:
-          type: string
-        type: array
-      created_at:
-        type: string
-      id:
-        description: ID is the opaque db-api allocation identifier (CUID, not UUID; api#532).
-        type: string
-      kind:
-        type: string
-      quota:
-        type: integer
-      revoked_at:
-        type: string
-      route_key:
-        type: string
-      scope_kind:
-        type: string
-      updated_at:
-        type: string
-      used:
-        type: integer
-    type: object
   AssessAssignmentsTxRequest:
     properties:
       alias:
@@ -334,43 +229,76 @@ definitions:
         - $ref: '#/definitions/SponsorData'
         description: Sponsored path (Path A) — API caller needs to handle sponsorship tank.
     type: object
-  AssignmentCommitment:
-    properties:
-      assignment_commitment_status:
-        example: submitted
-        type: string
-      assignment_evidence_hash:
-        type: string
-      content:
-        $ref: '#/definitions/AssignmentSubmissionInput'
-      course_id:
-        type: string
-      created_at:
-        type: string
-      slt_hash:
-        type: string
-      student_address:
-        type: string
-      updated_at:
-        type: string
-    required:
-    - course_id
-    - slt_hash
-    - student_address
-    type: object
   AssignmentCommitmentContent:
     properties:
-      assessment_outcome:
-        description: '"accept" or "refuse"'
-        type: string
       assignment_evidence_hash:
-        description: Hash for on-chain verification
+        description: Andamio's canonical-v1 hash of the stored evidence, computed by Andamio when the
+          evidence is saved. Callers do not set it. Evidence saved before Andamio computed this hash carries
+          the hash the caller supplied. When no saved evidence matches the on-chain value, this is the
+          on-chain value.
+        type: string
+      assignment_outcome:
+        description: The teacher's decision, once assessed.
+        enum:
+        - accept
+        - refuse
         type: string
       commitment_status:
-        description: DRAFT, SUBMITTED, APPROVED, etc.
+        description: Derived from the chain submission; absent when it could not be derived.
+        enum:
+        - AWAITING_SUBMISSION
+        - SUBMITTED
+        - ACCEPTED
+        - REFUSED
+        - LEFT
+        - CREDENTIAL_CLAIMED
         type: string
       evidence:
         description: JSON evidence data
+    type: object
+  AssignmentCommitmentRecord:
+    properties:
+      assignment_evidence_hash:
+        description: Andamio's canonical-v1 hash of the stored evidence, computed by Andamio when the
+          evidence is saved. Callers do not set it. Evidence saved before Andamio computed this hash carries
+          the hash the caller supplied. When no saved evidence matches the on-chain value, this is the
+          on-chain value.
+        type: string
+      assignment_outcome:
+        description: The teacher's decision, once assessed. Absent when the chain status could not be
+          read.
+        enum:
+        - accept
+        - refuse
+        type: string
+      commitment_status:
+        description: Absent when the chain status could not be read.
+        enum:
+        - AWAITING_SUBMISSION
+        - SUBMITTED
+        - ACCEPTED
+        - REFUSED
+        - LEFT
+        - CREDENTIAL_CLAIMED
+        example: SUBMITTED
+        type: string
+      course_id:
+        example: a1b2c3
+        type: string
+      course_module_code:
+        example: '101'
+        type: string
+      evidence:
+        additionalProperties: true
+        type: object
+      participant_alias:
+        example: learner1
+        type: string
+      slt_hash:
+        description: 'The module''s SLT hash, the credential the commitment is for. Empty while
+
+          the module has none (not approved, or unpublished).'
+        type: string
     type: object
   AssignmentOutcome:
     properties:
@@ -385,15 +313,6 @@ definitions:
         - refuse
         type: string
     type: object
-  AssignmentSubmissionInput:
-    properties:
-      feedback:
-        type: string
-      notes:
-        type: string
-      submission_url:
-        type: string
-    type: object
   AssignmentV2Output:
     properties:
       content_json:
@@ -404,8 +323,6 @@ definitions:
         type: string
       image_url:
         type: string
-      is_live:
-        type: boolean
       title:
         type: string
       video_url:
@@ -416,7 +333,7 @@ definitions:
       details:
         type: string
       message:
-        example: 'Bad Gateway: The upstream server returned an invalid response.'
+        example: 'Bad Gateway: Data the request needs could not be read; retry later.'
         type: string
       status_code:
         example: 502
@@ -452,51 +369,6 @@ definitions:
     required:
     - message
     - status_code
-    type: object
-  BillingStatusResponse:
-    properties:
-      api:
-        $ref: '#/definitions/SubscriptionStatus'
-      platform:
-        $ref: '#/definitions/SubscriptionStatus'
-    type: object
-  BillingStatusResponseEnvelope:
-    description: Standard API response envelope for billing status
-    properties:
-      data:
-        $ref: '#/definitions/BillingStatusResponse'
-    required:
-    - data
-    type: object
-  CheckoutRequest:
-    properties:
-      product:
-        enum:
-        - api
-        example: api
-        type: string
-      tier:
-        example: starter
-        type: string
-    required:
-    - product
-    - tier
-    type: object
-  CheckoutResponse:
-    properties:
-      url:
-        example: https://checkout.stripe.com/c/pay/cs_xxx
-        type: string
-    required:
-    - url
-    type: object
-  CheckoutResponseEnvelope:
-    description: Standard API response envelope for checkout session
-    properties:
-      data:
-        $ref: '#/definitions/CheckoutResponse'
-    required:
-    - data
     type: object
   ClaimCourseCredentialsTxRequest:
     properties:
@@ -539,21 +411,6 @@ definitions:
         example: JohnDoe
         type: string
     type: object
-  CleanerStatsView:
-    properties:
-      candidates:
-        type: integer
-      deleted:
-        type: integer
-      dry_run:
-        type: boolean
-      errored:
-        type: integer
-      operation_id:
-        type: string
-      skipped:
-        type: integer
-    type: object
   CommitAssignmentTxRequest:
     properties:
       alias:
@@ -570,7 +427,8 @@ definitions:
         example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       slt_hash:
-        description: Hex-encoded hash of the task SLT (exactly 64 characters).
+        description: Hex-encoded hash of the module's SLT list, which is also its on-chain token name
+          (exactly 64 characters).
         example: a1b2c3d4e5f6...
         type: string
       sponsor_data:
@@ -595,7 +453,8 @@ definitions:
         example: ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef
         type: string
       task_hash:
-        description: Hex-encoded hash of the task SLT (exactly 64 characters).
+        description: 'Hex-encoded identifier of the task as offered: its content, deadline, reward and
+          native assets (exactly 64 characters).'
         example: a1b2c3d4e5f6...
         type: string
       task_info:
@@ -716,11 +575,6 @@ definitions:
         items:
           type: string
         type: array
-      my_commitments:
-        description: Contributor's own commitments
-        items:
-          $ref: '#/definitions/MyCommitmentSummary'
-        type: array
       owner:
         type: string
       prerequisites:
@@ -769,7 +623,7 @@ definitions:
         example: addr1_owner
         type: string
       source:
-        example: chain+db
+        example: merged
         type: string
       student_state_id:
         type: string
@@ -812,21 +666,6 @@ definitions:
         type: string
     required:
     - title
-    type: object
-  CourseMembershipResponse:
-    properties:
-      account_id:
-        type: string
-      course_ids:
-        items:
-          type: string
-        type: array
-      created_at:
-        type: string
-      id:
-        type: string
-      updated_at:
-        type: string
     type: object
   CourseModule:
     properties:
@@ -877,20 +716,14 @@ definitions:
     type: object
   CourseModuleStatusV2:
     enum:
-    - APPROVED
-    - ARCHIVED
-    - DEPRECATED
     - DRAFT
+    - APPROVED
     - ON_CHAIN
-    - PENDING_TX
     type: string
     x-enum-varnames:
-    - CourseModuleStatusV2Approved
-    - CourseModuleStatusV2Archived
-    - CourseModuleStatusV2Deprecated
     - CourseModuleStatusV2Draft
+    - CourseModuleStatusV2Approved
     - CourseModuleStatusV2OnChain
-    - CourseModuleStatusV2PendingTx
   CourseModuleV2Output:
     properties:
       assignment:
@@ -908,9 +741,12 @@ definitions:
       introduction:
         $ref: '#/definitions/IntroductionV2Output'
       is_live:
+        description: Read from chain; absent when the on-chain state could not be read.
         type: boolean
       module_status:
-        $ref: '#/definitions/CourseModuleStatusV2'
+        allOf:
+        - $ref: '#/definitions/CourseModuleStatusV2'
+        description: Read from chain; absent when the on-chain state could not be read.
       slt_hash:
         description: SltHash Hash of SLT list, used as module token name
         type: string
@@ -922,45 +758,6 @@ definitions:
         type: string
       video_url:
         type: string
-    type: object
-  CreateAllocationRequest:
-    properties:
-      api_key_id:
-        type: string
-      costs:
-        additionalProperties: true
-        type: object
-      course_ids:
-        items:
-          type: string
-        type: array
-      kind:
-        description: '"developer" or "enterprise"'
-        type: string
-      route_key:
-        type: string
-      scope_kind:
-        description: '"course" or "route"'
-        type: string
-      total_quota:
-        type: integer
-    type: object
-  CreateAllocationResponse:
-    properties:
-      allocation:
-        $ref: '#/definitions/AllocationMetadata'
-      cross_env_operation_id:
-        type: string
-    type: object
-  CreateCourseRequest:
-    properties:
-      content:
-        $ref: '#/definitions/CourseContentInput'
-      course_id:
-        example: policy_abc123
-        type: string
-    required:
-    - course_id
     type: object
   CreateCourseTxRequest:
     properties:
@@ -978,36 +775,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  CreateKeyRequest:
-    properties:
-      environment:
-        enum:
-        - mainnet
-        - preprod
-        type: string
-      name:
-        maxLength: 64
-        minLength: 3
-        type: string
-    required:
-    - environment
-    - name
-    type: object
-  CreateKeyResponse:
-    properties:
-      created_at:
-        type: string
-      environment:
-        type: string
-      id:
-        type: string
-      key:
-        type: string
-      last4:
-        type: string
-      name:
-        type: string
     type: object
   CreateModuleRequest:
     properties:
@@ -1034,9 +801,8 @@ definitions:
         type: string
       course_prereqs:
         description: 'List of [course_id, [slt_hash, ...]] tuples — each prerequisite course''s ID paired
-          with the array of its required SLT hashes. Proxied from Atlas, whose Haskell tuple type has
-          no Swagger 2.0 equivalent; the inner shape is not otherwise expressible here. An empty list
-          means no prerequisites.
+          with the array of its required SLT hashes. The tuple type has no Swagger 2.0 equivalent; the
+          inner shape is not otherwise expressible here. An empty list means no prerequisites.
 
           Example: [["ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef", ["c8bc55db03d6ead9c8bc55db03d6ead9c8bc55db03d6ead9c8bc55db03d6ead9"]]]'
         items:
@@ -1101,15 +867,6 @@ definitions:
       slt_hash:
         type: string
       title:
-        type: string
-    type: object
-  CrossEnvKeyMetadata:
-    properties:
-      source_env:
-        description: '"mainnet", "preprod", etc.'
-        type: string
-      source_key:
-        description: Hashed key from source environment
         type: string
     type: object
   DashboardCommitmentSummary:
@@ -1261,37 +1018,6 @@ definitions:
     required:
     - alias
     type: object
-  DeactivateAPIKeyRequest:
-    type: object
-  DeactivateAPIKeyResponse:
-    properties:
-      cross_env_operation_id:
-        type: string
-      is_active:
-        type: boolean
-      key_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  DeleteAPIKeyRequest:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        maxLength: 64
-        minLength: 3
-        type: string
-    required:
-    - api_key_name
-    type: object
-  DeleteAPIKeyResponse:
-    properties:
-      confirmation:
-        example: API key deleted successfully
-        type: string
-    required:
-    - confirmation
-    type: object
   DeleteModuleV2Request:
     properties:
       course_id:
@@ -1310,24 +1036,6 @@ definitions:
     required:
     - contributor_state_id
     - index
-    type: object
-  EmailVerificationStatusResponse:
-    properties:
-      can_resend:
-        example: true
-        type: boolean
-      email_verified:
-        example: false
-        type: boolean
-      remaining_attempts:
-        example: 4
-        type: integer
-      verification_email_sent_at:
-        example: '2026-02-09T14:30:00Z'
-        type: string
-      wait_duration_seconds:
-        example: 0
-        type: integer
     type: object
   ErrorDetail:
     description: Error details with code, message, and optional debug info
@@ -1364,15 +1072,6 @@ definitions:
     required:
     - error
     type: object
-  FederatedCleanupCandidate:
-    properties:
-      created_at:
-        type: string
-      user_id:
-        type: string
-      wallet_address:
-        type: string
-    type: object
   ForbiddenErrorResponse:
     properties:
       details:
@@ -1387,13 +1086,6 @@ definitions:
     - message
     - status_code
     type: object
-  GetAllocationResponse:
-    properties:
-      allocation:
-        $ref: '#/definitions/AllocationMetadata'
-      cross_env_operation_id:
-        type: string
-    type: object
   GetContributorCommitmentRequest:
     properties:
       project_id:
@@ -1406,45 +1098,11 @@ definitions:
       course_id:
         type: string
       course_module_code:
-        description: Human-readable code (e.g., "101") - used for DB lookup
+        description: Human-readable code (e.g., "101") - used for lookup
         type: string
       slt_hash:
         description: On-chain hash - required for on-chain lookup
         type: string
-    type: object
-  GoneErrorResponse:
-    properties:
-      details:
-        type: string
-      message:
-        example: Gone - The requested resource is no longer available.
-        type: string
-      status_code:
-        example: 410
-        type: integer
-    required:
-    - message
-    - status_code
-    type: object
-  InitialAllocationSpec:
-    properties:
-      costs:
-        additionalProperties: true
-        type: object
-      course_ids:
-        items:
-          type: string
-        type: array
-      kind:
-        description: '"developer" or "enterprise"'
-        type: string
-      route_key:
-        type: string
-      scope_kind:
-        description: '"course" or "route"'
-        type: string
-      total_quota:
-        type: integer
     type: object
   InternalServerErrorResponse:
     properties:
@@ -1470,8 +1128,6 @@ definitions:
         type: string
       image_url:
         type: string
-      is_live:
-        type: boolean
       title:
         type: string
       video_url:
@@ -1479,67 +1135,6 @@ definitions:
     type: object
   JSONMap:
     additionalProperties: true
-    type: object
-  JWK:
-    description: A single JSON Web Key (JWK) as defined in RFC 7517.
-    properties:
-      alg:
-        description: Alg is the algorithm intended for use with the key
-        example: RS256
-        type: string
-      e:
-        description: E is the RSA exponent (base64url-encoded)
-        example: AQAB
-        type: string
-      kid:
-        description: Kid is a key identifier used to match a specific key
-        example: andamio-api-attestation-key
-        type: string
-      kty:
-        description: Kty is the key type (always "RSA" for our keys)
-        example: RSA
-        type: string
-      n:
-        description: N is the RSA modulus (base64url-encoded)
-        example: 0vx7agoebGcQ...
-        type: string
-      use:
-        description: Use indicates the intended use of the key ("sig" for signature verification)
-        example: sig
-        type: string
-    type: object
-  JWKSResponse:
-    description: JSON Web Key Set containing public keys for JWT verification.
-    properties:
-      keys:
-        items:
-          $ref: '#/definitions/JWK'
-        type: array
-    type: object
-  JWTResponse:
-    properties:
-      expires_at:
-        example: '2025-09-01T23:59:59Z'
-        type: string
-      token:
-        example: eyJhbGci...
-        type: string
-    required:
-    - expires_at
-    - token
-    type: object
-  KeyListItem:
-    properties:
-      created_at:
-        type: string
-      environment:
-        type: string
-      id:
-        type: string
-      last4:
-        type: string
-      name:
-        type: string
     type: object
   LessonV2Output:
     properties:
@@ -1551,81 +1146,10 @@ definitions:
         type: string
       image_url:
         type: string
-      is_live:
-        type: boolean
       title:
         type: string
       video_url:
         type: string
-    type: object
-  ListAccountAPIKeysResponse:
-    properties:
-      account_id:
-        type: string
-      keys:
-        items:
-          $ref: '#/definitions/APIKeyMetadata'
-        type: array
-    type: object
-  ListAccountAuditMeta:
-    properties:
-      pagination:
-        $ref: '#/definitions/PaginationMeta'
-    type: object
-  ListAccountAuditResponse:
-    properties:
-      account_id:
-        type: string
-      audits:
-        items:
-          $ref: '#/definitions/SponsorshipAuditRecord'
-        type: array
-      meta:
-        $ref: '#/definitions/ListAccountAuditMeta'
-    type: object
-  ListAccountOpUsageResponse:
-    properties:
-      account_id:
-        type: string
-      usage:
-        items:
-          $ref: '#/definitions/OpUsageBucket'
-        type: array
-    type: object
-  ListAllocationsResponse:
-    properties:
-      allocations:
-        items:
-          $ref: '#/definitions/AllocationMetadata'
-        type: array
-      api_key_id:
-        type: string
-      cross_env_operation_id:
-        type: string
-    type: object
-  ListKeysKeyMetadata:
-    properties:
-      created_at:
-        type: string
-      expires_at:
-        type: string
-      is_active:
-        type: boolean
-      key_id:
-        type: string
-      name:
-        type: string
-      prefix:
-        type: string
-      source:
-        type: string
-    type: object
-  ListKeysResponse:
-    properties:
-      keys:
-        items:
-          $ref: '#/definitions/KeyListItem'
-        type: array
     type: object
   ListManagerTasksRequest:
     properties:
@@ -1657,17 +1181,6 @@ definitions:
       course_id:
         type: string
     type: object
-  LoginCompleteRequest:
-    properties:
-      session_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-      signature:
-        $ref: '#/definitions/SignatureData'
-    required:
-    - session_id
-    - signature
-    type: object
   LoginSession:
     properties:
       expires_at:
@@ -1683,34 +1196,6 @@ definitions:
     - expires_at
     - id
     - nonce
-    type: object
-  LoginSessionRequest:
-    properties:
-      alias:
-        example: johndoe
-        maxLength: 32
-        minLength: 1
-        type: string
-      wallet_address:
-        example: addr1q...
-        maxLength: 108
-        minLength: 103
-        type: string
-    required:
-    - alias
-    - wallet_address
-    type: object
-  LoginSessionResponse:
-    properties:
-      expires_at:
-        example: '2026-05-05T12:35:00Z'
-        type: string
-      nonce:
-        example: 'Sign this message to login to Andamio: abc123...'
-        type: string
-      session_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
     type: object
   ManageContributorBlacklistTxRequest:
     properties:
@@ -1954,30 +1439,6 @@ definitions:
     required:
     - data
     type: object
-  MeResponse:
-    properties:
-      active_keys:
-        items:
-          $ref: '#/definitions/APIKeyResponse'
-        type: array
-      alias:
-        example: johndoe
-        type: string
-      created_at:
-        example: '2025-08-31T23:59:59Z'
-        type: string
-      tier:
-        example: Free
-        type: string
-      user_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-    required:
-    - alias
-    - created_at
-    - tier
-    - user_id
-    type: object
   MergedAssignmentContent:
     properties:
       content_json:
@@ -1998,7 +1459,7 @@ definitions:
       content:
         allOf:
         - $ref: '#/definitions/MergedAssignmentContent'
-        description: Off-chain content (from DB API)
+        description: Off-chain content
       course_id:
         description: Course and module context
         type: string
@@ -2042,7 +1503,7 @@ definitions:
           $ref: '#/definitions/CourseModule'
         type: array
       owner:
-        description: 'WORKAROUND: fetched via extra API call until Andamioscan#15 is resolved'
+        description: Alias of the course owner
         type: string
       past_students:
         items:
@@ -2109,12 +1570,12 @@ definitions:
       content:
         allOf:
         - $ref: '#/definitions/ModuleContent'
-        description: Off-chain content (from DB API)
+        description: Off-chain content
       course_id:
         description: Course context
         type: string
       created_by:
-        description: On-chain fields (from Andamioscan)
+        description: On-chain fields
         type: string
       on_chain_slts:
         description: SLT hashes from chain
@@ -2127,7 +1588,7 @@ definitions:
           type: string
         type: array
       slt_hash:
-        description: 'Primary identifier - matches on-chain slts_hash and DB slt_hash.
+        description: 'Primary identifier - matches on-chain slts_hash and off-chain slt_hash.
 
           Empty string for db_only drafts without SLTs computed yet.'
         type: string
@@ -2370,7 +1831,7 @@ definitions:
         description: Data source indicator
         type: string
       total_reward_lovelace:
-        description: Aggregated task reward data (computed from Andamioscan detail)
+        description: Aggregated task reward data (computed from on-chain detail)
         type: integer
       treasury_address:
         type: string
@@ -2470,10 +1931,10 @@ definitions:
         description: On-chain fields (top level)
         type: string
       task_index:
-        description: DB task index (for draft identification)
+        description: Off-chain task index (for draft identification)
         type: integer
       task_status:
-        description: 'DB task status (for db_only tasks: DRAFT, PENDING_TX, ON_CHAIN, etc.)'
+        description: 'Off-chain task status (for db_only tasks: DRAFT, PENDING_TX, ON_CHAIN, etc.)'
         type: string
     required:
     - project_id
@@ -2573,7 +2034,7 @@ definitions:
       module_status:
         type: string
       slts:
-        description: Full SLT content from DB ([]SltV2)
+        description: Full SLT content ([]SltV2)
       title:
         type: string
       video_url:
@@ -2598,19 +2059,6 @@ definitions:
       video_url:
         type: string
     type: object
-  MyCommitmentSummary:
-    properties:
-      commitment_status:
-        description: committed, submitted, approved, rejected
-        type: string
-      content:
-        $ref: '#/definitions/TaskCommitmentContent'
-      task_hash:
-        type: string
-    required:
-    - commitment_status
-    - task_hash
-    type: object
   NotFoundErrorResponse:
     properties:
       details:
@@ -2624,20 +2072,6 @@ definitions:
     required:
     - message
     - status_code
-    type: object
-  OpUsageBucket:
-    properties:
-      count:
-        description: Count is the number of builds in this (op_name, status) bucket.
-        type: integer
-      op_name:
-        description: 'OpName is the observability label recorded at build time (e.g.
-
-          "evidence-approve", "create-course") — see models.SponsorshipBuild.OpName.'
-        type: string
-      status:
-        description: Status is the build's lifecycle status ("BUILT", "SUBMITTED", "CONFIRMED", "FAILED").
-        type: string
     type: object
   Pagination:
     description: Pagination metadata for list endpoints
@@ -2658,30 +2092,6 @@ definitions:
     - page
     - page_size
     - total
-    type: object
-  PaginationMeta:
-    properties:
-      has_more:
-        type: boolean
-      next_cursor:
-        type: integer
-    type: object
-  PatchAllocationRequest:
-    properties:
-      costs:
-        additionalProperties: true
-        type: object
-      kind:
-        type: string
-      total_quota:
-        type: integer
-    type: object
-  PatchAllocationResponse:
-    properties:
-      allocation:
-        $ref: '#/definitions/AllocationMetadata'
-      cross_env_operation_id:
-        type: string
     type: object
   PendingAssessmentSummary:
     properties:
@@ -2727,7 +2137,7 @@ definitions:
         description: Optional metadata stored with the transaction
         type: object
       not_indexed_count:
-        description: Number of 404 poll cycles (Andamioscan not yet indexed)
+        description: Number of 404 poll cycles (transaction not yet indexed)
         example: 0
         type: integer
       retry_count:
@@ -2779,95 +2189,25 @@ definitions:
         example: user_abc123
         type: string
     type: object
-  PlanTier:
-    properties:
-      checkout_keys:
-        additionalProperties:
-          type: string
-        type: object
-      daily_quota:
-        example: 2500
-        type: integer
-      description:
-        example: For developers building on the Andamio protocol.
-        type: string
-      max_api_keys:
-        example: 2
-        type: integer
-      monthly_quota:
-        example: 75000
-        type: integer
-      name:
-        example: starter
-        type: string
-      rate_limit_per_minute:
-        example: 50
-        type: integer
-    type: object
-  PlansResponse:
-    properties:
-      plans:
-        items:
-          $ref: '#/definitions/PlanTier'
-        type: array
-    type: object
-  PlansResponseEnvelope:
-    description: Standard API response envelope for available plans
-    properties:
-      data:
-        $ref: '#/definitions/PlansResponse'
-    required:
-    - data
-    type: object
-  PortalResponse:
-    properties:
-      url:
-        example: https://billing.stripe.com/p/session/xxx
-        type: string
-    required:
-    - url
-    type: object
-  PortalResponseEnvelope:
-    description: Standard API response envelope for portal session
-    properties:
-      data:
-        $ref: '#/definitions/PortalResponse'
-    required:
-    - data
-    type: object
-  PostProjectContributorCommitmentDeleteJSONRequestBody:
-    properties:
-      task_hash:
-        type: string
-    type: object
   PostProjectContributorCommitmentSubmitJSONRequestBody:
     properties:
       evidence:
-        $ref: '#/definitions/JSONMap'
-      evidence_hash:
-        type: string
+        allOf:
+        - $ref: '#/definitions/JSONMap'
+        description: Evidence is required. Andamio computes the evidence hash from it.
       pending_tx_hash:
         type: string
       task_hash:
         type: string
+    required:
+    - evidence
+    - pending_tx_hash
+    - task_hash
     type: object
   PostUserAccessTokenAliasJSONRequestBody:
     properties:
       access_token_alias:
         type: string
-    type: object
-  PreviewCandidatesResponse:
-    properties:
-      candidates:
-        items:
-          $ref: '#/definitions/FederatedCleanupCandidate'
-        type: array
-      count:
-        type: integer
-      cross_env_operation_id:
-        type: string
-      grace_period_minutes:
-        type: integer
     type: object
   Project:
     properties:
@@ -2893,7 +2233,7 @@ definitions:
         example: policy_xyz789
         type: string
       source:
-        example: chain+db
+        example: merged
         type: string
       treasury_address:
         type: string
@@ -2921,6 +2261,12 @@ definitions:
     type: object
   ProjectContent:
     properties:
+      commission_rate:
+        description: The project's configured commission rate on task reward payouts, as a decimal fraction
+          (0.05 = 5%). Not included in the user projects list; absent with the rest of content when source
+          is chain_only.
+        example: 0.05
+        type: number
       description:
         type: string
       image_url:
@@ -3068,77 +2414,17 @@ definitions:
           $ref: '#/definitions/DashboardProjectWithPrereqs'
         type: array
     type: object
-  ProvisionEnterpriseKeyRequest:
-    properties:
-      account_id:
-        description: 'Bucket M5: multi-key account attachment (enterprise keys only).
-
-          AccountID attaches the key to an existing account (multi-key path).
-
-          If omitted, a new account is created for the key (auto-generated single-key account).'
-        type: string
-      account_name:
-        description: 'AccountName is the human-readable name for a newly created enterprise account.
-
-          Only used when AccountID is omitted (auto-generated single-key account path).
-
-          If not provided, defaults to a generated name. Ignored on the multi-key path.'
-        type: string
-      cross_env_key_metadata:
-        $ref: '#/definitions/CrossEnvKeyMetadata'
-      initial_allocations:
-        items:
-          $ref: '#/definitions/InitialAllocationSpec'
-        type: array
-      kind:
-        description: '"developer" or "enterprise"'
-        type: string
-      role:
-        description: 'Role is the capability level within the account (''admin'' or ''member'').
-
-          Defaults to ''admin'' if omitted. Only valid for enterprise keys.'
-        type: string
-    type: object
-  ProvisionEnterpriseKeyResponse:
-    properties:
-      account_id:
-        description: 'Bucket M5: account ownership and role (enterprise keys only).'
-        type: string
-      allocations:
-        items:
-          $ref: '#/definitions/AllocationMetadata'
-        type: array
-      cross_env_operation_id:
-        type: string
-      key:
-        description: 'Key is the one-time plaintext X-API-Key — present only on 201, cryptographically
-
-          unrecoverable afterward (only the hash is stored). Full semantics: INTERNAL_AUTH.md §1.3.'
-        example: ant_mn_xxxxxxxxxxxxxxxxxxxxxxxx
-        type: string
-      key_id:
-        type: string
-      kind:
-        type: string
-      role:
-        description: '"admin" or "member"'
-        type: string
-      rolled_back:
-        allOf:
-        - $ref: '#/definitions/RollbackDetail'
-        description: Only present on 422 (partial failure)
-    type: object
   PublicCourseModuleItem:
     properties:
       content:
         allOf:
         - $ref: '#/definitions/PublicModuleContent'
-        description: Off-chain content (from DB API)
+        description: Off-chain content
       course_id:
         description: Course context
         type: string
       created_by:
-        description: On-chain fields (from Andamioscan)
+        description: On-chain fields
         type: string
       on_chain_slts:
         description: SLT text from chain
@@ -3209,35 +2495,6 @@ definitions:
     required:
     - data
     type: object
-  RefreshRequest:
-    properties:
-      refresh_token:
-        example: a3f1c2d4e5b6...
-        type: string
-    required:
-    - refresh_token
-    type: object
-  RefreshTokenData:
-    description: Refresh token data included in login and refresh responses
-    properties:
-      expires_at:
-        example: '2026-06-04T12:30:00Z'
-        type: string
-      token:
-        example: a3f1c2d4e5b6...
-        type: string
-    type: object
-  RegisterCompleteRequest:
-    properties:
-      session_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-      signature:
-        $ref: '#/definitions/SignatureData'
-    required:
-    - session_id
-    - signature
-    type: object
   RegisterCourseV2Request:
     properties:
       category:
@@ -3251,8 +2508,6 @@ definitions:
       is_public:
         type: boolean
       title:
-        type: string
-      tx_hash:
         type: string
       video_url:
         type: string
@@ -3278,7 +2533,7 @@ definitions:
   RegisterPendingTxRequest:
     description: Request body for registering a transaction with the TX State Machine. After submitting
       a signed transaction to the Cardano network, register it here so the Gateway can track confirmation
-      and automatically update the database.
+      and automatically update its off-chain record.
     properties:
       instance_id:
         description: Optional instance ID (course_id or project_id) for scoping
@@ -3287,15 +2542,16 @@ definitions:
       metadata:
         additionalProperties:
           type: string
-        description: Optional metadata for off-chain data needed during DB update (e.g., policy_id, module_code)
+        description: Optional metadata for off-chain data needed during the off-chain update (e.g., policy_id,
+          module_code)
         type: object
       tx_hash:
         description: Transaction hash (64 hex characters) returned from wallet.submitTx()
         example: 8a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b
         type: string
       tx_type:
-        description: Transaction type - determines which Andamioscan event endpoint to poll and which
-          DB update to perform
+        description: Transaction type - determines which on-chain event confirms the transaction and which
+          off-chain update follows
         enum:
         - course_create
         - course_enroll
@@ -3331,91 +2587,6 @@ definitions:
       title:
         type: string
     type: object
-  RegisterResponse:
-    properties:
-      alias:
-        example: johndoe
-        type: string
-      subscription_expiration:
-        example: '2026-08-31T23:59:59Z'
-        type: string
-      tier:
-        example: Free
-        type: string
-      user_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-    type: object
-  RegisterSessionRequest:
-    properties:
-      alias:
-        example: johndoe
-        maxLength: 32
-        minLength: 1
-        type: string
-      email:
-        example: john.doe@example.com
-        maxLength: 254
-        minLength: 1
-        type: string
-      wallet_address:
-        example: addr1q...
-        maxLength: 108
-        minLength: 103
-        type: string
-    required:
-    - alias
-    - email
-    - wallet_address
-    type: object
-  RegisterSessionResponse:
-    properties:
-      expires_at:
-        example: '2026-01-22T15:30:00Z'
-        type: string
-      nonce:
-        example: 'Please sign this message to verify wallet ownership: abc123...'
-        type: string
-      session_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-    type: object
-  RegisterTokenRequest:
-    properties:
-      asset_name:
-        type: string
-      asset_name_decoded:
-        type: string
-      decimals:
-        type: integer
-      name:
-        type: string
-      policy_id:
-        type: string
-      ticker:
-        type: string
-    type: object
-  RegisteredSltItem:
-    properties:
-      slt_index:
-        description: 1-based index
-        type: integer
-      slt_text:
-        description: The SLT content
-        type: string
-    type: object
-  ResendVerificationResponse:
-    properties:
-      message:
-        example: Verification email sent
-        type: string
-      next_resend_available_at:
-        example: '2026-02-09T15:30:00Z'
-        type: string
-      remaining_attempts:
-        example: 4
-        type: integer
-    type: object
   ReviewAssignmentCommitmentV2Request:
     properties:
       course_id:
@@ -3427,97 +2598,14 @@ definitions:
         type: string
       participant_alias:
         type: string
-      pending_tx_hash:
-        type: string
-    type: object
-  RevokeAllocationRequest:
-    properties:
-      kind:
-        type: string
-    type: object
-  RevokeAllocationResponse:
-    properties:
-      allocation:
-        $ref: '#/definitions/AllocationMetadata'
-      cross_env_operation_id:
-        type: string
-    type: object
-  RevokeKeyResponse:
-    properties:
-      cross_env_operation_id:
-        type: string
-      environment:
-        type: string
-      key_id:
-        type: string
-      revoked_at:
-        type: string
-    type: object
-  RollbackDetail:
-    properties:
-      allocation_id:
-        description: AllocationID is the opaque db-api allocation identifier (CUID, not UUID; api#532).
-        type: string
-      error:
-        type: string
-    type: object
-  RotateAPIKeyRequest:
-    properties:
-      api_key_name:
-        example: MyFirstKey
-        maxLength: 64
-        minLength: 3
-        type: string
-      expires_in_days:
-        example: 365
-        minimum: 1
-        type: integer
-    required:
-    - api_key_name
-    type: object
-  RotateAPIKeyResponse:
-    properties:
-      confirmation:
-        example: API key expiration extended to 2026-08-31T23:59:59Z
-        type: string
-    required:
-    - confirmation
-    type: object
-  RunCleanupOnceRequest:
-    properties:
-      dry_run:
-        type: boolean
-    type: object
-  RunCleanupOnceResponse:
-    properties:
-      cross_env_operation_id:
-        type: string
-      stats:
-        $ref: '#/definitions/CleanerStatsView'
-    type: object
-  SecureLoginResponse:
-    properties:
-      alias:
-        example: johndoe
-        type: string
-      jwt:
-        $ref: '#/definitions/JWTResponse'
-      refresh_token:
-        $ref: '#/definitions/RefreshTokenData'
-      tier:
-        example: pioneer
-        type: string
-      user_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
     type: object
   ServiceUnavailableErrorResponse:
     properties:
       details:
         type: string
       message:
-        example: Service Unavailable - One or more critical dependencies (e.g., database, Redis) are not
-          reachable or healthy.
+        example: Service Unavailable - The service is temporarily unable to handle the request; retry
+          later.
         type: string
       status_code:
         example: 503
@@ -3571,25 +2659,6 @@ definitions:
     - collateral_utxo_ref
     - sponsor_address
     - static_utxo_ref
-    type: object
-  SponsorshipAuditRecord:
-    properties:
-      allocation_id:
-        type: string
-      api_key_id:
-        type: string
-      at:
-        type: string
-      event:
-        description: '"build_recorded", "build_consumed", etc.'
-        type: string
-      id:
-        type: integer
-      kind:
-        description: '"developer" or "enterprise"'
-        type: string
-      tx_hash:
-        type: string
     type: object
   StartVerificationRequest:
     description: Request to start an Access Token ownership verification session.
@@ -3686,7 +2755,7 @@ definitions:
         description: Enrollment state (from on-chain)
         type: boolean
       modules:
-        description: Module metadata (from DB, for resolving slt_hash → title/code)
+        description: Module metadata (off-chain, for resolving slt_hash → title/code)
         items:
           $ref: '#/definitions/CredentialModuleInfo'
         type: array
@@ -3780,28 +2849,15 @@ definitions:
       course_id:
         type: string
       evidence:
-        $ref: '#/definitions/JSONMap'
-      evidence_hash:
-        type: string
-      pending_tx_hash:
-        type: string
+        allOf:
+        - $ref: '#/definitions/JSONMap'
+        description: Evidence is required. Andamio computes the evidence hash from it.
       slt_hash:
         type: string
-    type: object
-  SubscriptionStatus:
-    properties:
-      cancel_at_period_end:
-        example: false
-        type: boolean
-      current_period_end:
-        example: '2026-04-18T00:00:00Z'
-        type: string
-      status:
-        example: active
-        type: string
-      tier:
-        example: starter
-        type: string
+    required:
+    - course_id
+    - evidence
+    - slt_hash
     type: object
   SuccessResponse:
     properties:
@@ -3872,6 +2928,8 @@ definitions:
         example: pending
         type: string
       task_evidence_hash:
+        description: Andamio's canonical-v1 hash of the stored evidence, computed by Andamio when the
+          evidence is saved. Callers do not set it.
         type: string
       task_hash:
         type: string
@@ -3893,10 +2951,11 @@ definitions:
       evidence:
         description: Tiptap JSON document
       task_evidence_hash:
-        description: Hash for on-chain verification
+        description: Andamio's canonical-v1 hash of the stored evidence, computed by Andamio when the
+          evidence is saved. Callers do not set it.
         type: string
       task_outcome:
-        description: accept, refuse, deny (lowercase, matches db-api enum)
+        description: accept, refuse, deny (lowercase)
         type: string
     type: object
   TaskContent:
@@ -3979,7 +3038,7 @@ definitions:
         description: Identifiers
         type: string
       course_module_code:
-        description: Human-readable module code (from DB)
+        description: Human-readable module code
         type: string
       on_chain_content:
         description: Hex-encoded on-chain content
@@ -4028,16 +3087,6 @@ definitions:
         type: array
       total_pending_reviews:
         type: integer
-    type: object
-  TokenDetailResponse:
-    description: Single registered native asset token
-    properties:
-      data:
-        $ref: '#/definitions/TokenRegistryEntry'
-      meta:
-        $ref: '#/definitions/Meta'
-    required:
-    - data
     type: object
   TokenListResponse:
     description: List of registered native asset tokens
@@ -4089,20 +3138,6 @@ definitions:
     required:
     - expires_at
     - token
-    type: object
-  TooManyRequestsErrorResponse:
-    properties:
-      details:
-        type: string
-      message:
-        example: 'Too Many Requests: Rate limit or quota exceeded.'
-        type: string
-      status_code:
-        example: 429
-        type: integer
-    required:
-    - message
-    - status_code
     type: object
   UnauthorizedErrorResponse:
     properties:
@@ -4165,9 +3200,13 @@ definitions:
       course_module_code:
         type: string
       evidence:
-        $ref: '#/definitions/JSONMap'
-      evidence_hash:
-        type: string
+        allOf:
+        - $ref: '#/definitions/JSONMap'
+        description: Evidence is required. Andamio computes the evidence hash from it.
+    required:
+    - course_id
+    - course_module_code
+    - evidence
     type: object
   UpdateCourseRequest:
     properties:
@@ -4194,7 +3233,9 @@ definitions:
         description: Required when status = "APPROVED"
         type: string
       status:
-        description: '"DRAFT", "APPROVED", or "PENDING_TX"'
+        enum:
+        - DRAFT
+        - APPROVED
         type: string
     type: object
   UpdateModuleV2:
@@ -4208,7 +3249,8 @@ definitions:
           type: string
         type: array
       slt_hash:
-        description: Hex-encoded hash of the SLT (exactly 64 characters).
+        description: Hex-encoded hash of the module's SLT list, which is also its on-chain token name
+          (exactly 64 characters).
         type: string
     type: object
   UpdateProjectRequest:
@@ -4225,20 +3267,6 @@ definitions:
         type: string
       video_url:
         type: string
-    type: object
-  UpdateTaskCommitmentRequest:
-    properties:
-      evidence:
-        additionalProperties: true
-        type: object
-      evidence_hash:
-        example: ev_hash_456
-        type: string
-      task_hash:
-        example: hash_abc123
-        type: string
-    required:
-    - task_hash
     type: object
   UpdateTaskRequest:
     properties:
@@ -4270,41 +3298,6 @@ definitions:
     required:
     - contributor_state_id
     - index
-    type: object
-  UsageResponse:
-    properties:
-      daily_quota_consumed:
-        example: 50
-        type: integer
-      daily_quota_limit:
-        example: 1000
-        type: integer
-      expiration:
-        example: '2026-08-31T23:59:59Z'
-        type: string
-      monthly_quota_consumed:
-        example: 500
-        type: integer
-      monthly_quota_limit:
-        example: 10000
-        type: integer
-      rate_limit_windows:
-        example:
-        - '["100 req/min"'
-        - ' "1000 req/day"'
-        - ' "10000 req/month"]'
-        items:
-          type: string
-        type: array
-      remaining_daily:
-        example: 950
-        type: integer
-      remaining_monthly:
-        example: 9500
-        type: integer
-      subscription_tier:
-        example: Free
-        type: string
     type: object
   ValidTxTypesResponse:
     description: List of valid transaction types that can be registered with the TX State Machine.
@@ -4362,35 +3355,6 @@ definitions:
         description: "Verified is always false for failure responses.\n\t@example\tfalse"
         type: boolean
     type: object
-  VerifyEmailRequest:
-    properties:
-      token:
-        example: dGVzdC10b2tlbg==
-        type: string
-      token_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-    required:
-    - token
-    - token_id
-    type: object
-  VerifyEmailResponse:
-    properties:
-      alias:
-        example: johndoe
-        type: string
-      email_verified:
-        example: true
-        type: boolean
-      jwt:
-        $ref: '#/definitions/JWTResponse'
-      message:
-        example: Email verified successfully
-        type: string
-      user_id:
-        example: a1b2c3d4-e5f6-7890-1234-567890abcdef
-        type: string
-    type: object
 externalDocs:
   description: OpenAPI Specification
   url: https://swagger.io/resources/open-api/
@@ -4403,17 +3367,17 @@ info:
     of those credentials. This API is one way to interact with Andamio. You can also build your own. Use
     this as a reference to learn how Andamio works and as a starting point for your own integrations.
 
-    Pagination convention (ratified api#622): every paginated list response carries its state at `meta.pagination`.
-    Snapshot lists (finite, re-orderable) use `page`+`limit` query params and return `{page, page_size,
-    total}`. Append-only feeds (activity/audit streams that only grow) use `cursor`+`limit` and return
-    `{next_cursor, has_more}` — no `total`/`count`, since counting an open-ended feed isn''t a stable
-    operation. The `cursor` token is opaque: treat it as an opaque string, never parse or construct one
-    client-side.'
+    Pagination convention: every paginated list response carries its state at `meta.pagination`. Snapshot
+    lists (finite, re-orderable) use `page`+`limit` query params and return `{page, page_size, total}`.
+    Append-only feeds (activity/audit streams that only grow) use `cursor`+`limit` and return `{next_cursor,
+    has_more}` — no `total`/`count`, since counting an open-ended feed isn''t a stable operation. The
+    `cursor` token is opaque: treat it as an opaque string, never parse or construct one client-side.'
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: https://andamio.io/terms
   title: Andamio API Gateway
+  version: 0.0.0
 paths:
   /v2/auth/login/session:
     post:
@@ -4431,7 +3395,7 @@ paths:
           schema:
             $ref: '#/definitions/UnauthorizedErrorResponse'
         '502':
-          description: DB API request failed
+          description: Login could not be completed, please retry
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4469,7 +3433,7 @@ paths:
           schema:
             $ref: '#/definitions/UnauthorizedErrorResponse'
         '502':
-          description: DB API request failed
+          description: Login could not be completed, please retry
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4478,46 +3442,13 @@ paths:
       tags:
       - Auth/User
       x-access-level: public
-  /v2/course/owner/course/create:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new course in the database using V2 schema.
-      operationId: v2-course-owner-create
-      parameters:
-      - description: Course creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/CreateCourseRequest'
-      produces:
-      - application/json
-      responses:
-        '200':
-          description: Created course
-          schema:
-            $ref: '#/definitions/Course'
-        '400':
-          description: Invalid request body
-          schema:
-            $ref: '#/definitions/BadRequestResponse'
-        '502':
-          description: DB API request failed
-          schema:
-            $ref: '#/definitions/BadGatewayErrorResponse'
-      security:
-      - ApiKeyAuth: []
-        BearerAuth: []
-      summary: Create course
-      tags:
-      - Course/Owner
-      x-access-level: public
   /v2/course/owner/course/register:
     post:
       consumes:
       - application/json
-      description: Registers an existing on-chain course in the database using V2 schema.
+      description: Registers an existing on-chain course so it can carry off-chain content. Only the course's
+        on-chain owner may register it. Requires an end-user access token. A course not yet indexed answers
+        404.
       operationId: v2-course-owner-register
       parameters:
       - description: Course registration request
@@ -4537,8 +3468,20 @@ paths:
           description: Invalid request body
           schema:
             $ref: '#/definitions/BadRequestResponse'
+        '401':
+          description: Requires an end-user access token
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        '403':
+          description: The caller is not the course's on-chain owner
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        '404':
+          description: Course not found on chain
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
         '502':
-          description: DB API request failed
+          description: The chain read or the off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4552,7 +3495,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates an existing course using V2 schema.
+      description: Updates an existing course.
       operationId: v2-course-owner-update
       parameters:
       - description: Course update request
@@ -4573,11 +3516,11 @@ paths:
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '409':
-          description: Course was modified concurrently; retry with a fresh read (db-api#244)
+          description: Course was modified concurrently; retry with a fresh read
           schema:
             $ref: '#/definitions/ConflictErrorResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4589,7 +3532,7 @@ paths:
       x-access-level: public
   /v2/course/owner/courses/list:
     post:
-      description: Returns courses owned by the authenticated user (from Andamioscan, enriched with DB
+      description: Returns courses owned by the authenticated user (from chain, enriched with off-chain
         content)
       operationId: v2-merged-course-owner-list
       produces:
@@ -4600,7 +3543,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedCoursesResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/MergedCoursesResponse'
         '401':
@@ -4608,7 +3551,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -4622,7 +3565,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns a single assignment commitment with on-chain status
+      description: Returns one of the caller's assignment commitments. commitment_status is derived from
+        the learner's submission on chain; a saved commitment with no submission on chain is AWAITING_SUBMISSION.
+        When the on-chain value is not a hash, Andamio returns the learner's newest saved evidence for
+        that assignment, which may not be the version that was anchored. When it is a hash with no evidence
+        saved under it, no evidence is returned.
       operationId: v2-merged-course-student-commitment-get
       parameters:
       - description: Course ID and Module Code
@@ -4639,11 +3586,13 @@ paths:
           schema:
             $ref: '#/definitions/StudentAssignmentCommitmentResponse'
         '206':
-          description: Partial content (Andamioscan unavailable)
+          description: 'Partial content: the on-chain progress (on_chain_status) or the saved evidence
+            could not be read, or the chain status is not recognised and commitment_status is left out;
+            meta.warning says which'
           schema:
             $ref: '#/definitions/StudentAssignmentCommitmentResponse'
         '400':
-          description: Bad request
+          description: Invalid request body, or course_id or slt_hash missing
           schema:
             $ref: '#/definitions/ErrorResponse'
         '401':
@@ -4655,7 +3604,8 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: DB API unavailable
+          description: The on-chain submission, or the saved commitment when there is none on chain, could
+            not be read
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -4669,8 +3619,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns assignment commitments for the authenticated student with on-chain status.
-        Optionally filter by course_id.
+      description: Returns the caller's assignment commitments, optionally for one course. commitment_status
+        is derived from the learner's submissions on chain; a saved commitment with no submission on chain
+        is AWAITING_SUBMISSION. When the on-chain value is not a hash, Andamio returns the learner's newest
+        saved evidence for that assignment, which may not be the version that was anchored. When it is
+        a hash with no evidence saved under it, no evidence is returned.
       operationId: v2-merged-course-student-commitments-list
       parameters:
       - description: Optional course_id to filter commitments
@@ -4686,15 +3639,23 @@ paths:
           schema:
             $ref: '#/definitions/StudentAssignmentCommitmentsResponse'
         '206':
-          description: Partial content (Andamioscan unavailable)
+          description: 'Partial content: some data is missing, and meta.warning says what. One or more
+            of these applies: the saved commitments could not be read, so only the commitments on chain
+            are listed (without drafts, module codes or evidence); the on-chain progress (on_chain_status)
+            of a course could not be read; a commitment''s chain status was not recognised, so its commitment_status
+            is left out.'
           schema:
             $ref: '#/definitions/StudentAssignmentCommitmentsResponse'
+        '400':
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: DB API unavailable
+          description: The on-chain submissions could not be read
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -4708,7 +3669,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: Submits an assignment commitment for teacher review using V2 schema.
+      description: 'Saves the caller''s evidence (required) for teacher review. Andamio computes the evidence
+        hash from `evidence` (andamio-core commitment-hash canonical-v1) and returns it in the response
+        as assignment_evidence_hash; the caller does not send a hash. Creates it (201), or answers the
+        evidence already saved under the same hash (200; saved evidence is never replaced). Earlier saves
+        are kept: the evidence shown with a submission is the one saved under the hash on chain. The submission
+        itself is the commit transaction. commitment_status and assignment_outcome are read from chain;
+        when that read fails the write still succeeds and both fields are absent, meaning unknown: read
+        the commitment again.'
       operationId: v2-course-student-submit-commitment
       parameters:
       - description: Commitment submit request
@@ -4721,15 +3689,32 @@ paths:
       - application/json
       responses:
         '200':
-          description: Submitted commitment
+          description: Evidence already saved
           schema:
-            $ref: '#/definitions/AssignmentCommitment'
+            $ref: '#/definitions/AssignmentCommitmentRecord'
+        '201':
+          description: Evidence saved
+          schema:
+            $ref: '#/definitions/AssignmentCommitmentRecord'
         '400':
-          description: Invalid request body
+          description: Invalid request body, a missing required field (evidence is required), or evidence
+            containing invalid UTF-8 or a lone UTF-16 surrogate
           schema:
             $ref: '#/definitions/BadRequestResponse'
+        '401':
+          description: Requires a learner's login
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        '404':
+          description: Module or assignment not found
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        '500':
+          description: The commitment could not be saved
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
         '502':
-          description: DB API request failed
+          description: The commitment could not be saved
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4743,7 +3728,13 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates an assignment commitment's evidence using V2 schema.
+      description: 'Saves the caller''s evidence (required) for the module''s assignment. Andamio computes
+        the evidence hash from `evidence` (andamio-core commitment-hash canonical-v1) and returns it in
+        the response as assignment_evidence_hash; the caller does not send a hash. Creates it (201), or
+        answers the evidence already saved under the same hash (200; saved evidence is never replaced).
+        Earlier saves are kept: the evidence shown with a submission is the one saved under the hash on
+        chain. commitment_status and assignment_outcome are read from chain; when that read fails the
+        update still succeeds and both fields are absent, meaning unknown: read the commitment again.'
       operationId: v2-course-student-update-commitment
       parameters:
       - description: Commitment update request
@@ -4756,15 +3747,32 @@ paths:
       - application/json
       responses:
         '200':
-          description: Updated commitment
+          description: Evidence already saved
           schema:
-            $ref: '#/definitions/AssignmentCommitment'
+            $ref: '#/definitions/AssignmentCommitmentRecord'
+        '201':
+          description: Evidence saved
+          schema:
+            $ref: '#/definitions/AssignmentCommitmentRecord'
         '400':
-          description: Invalid request body
+          description: Invalid request body, a missing required field (evidence is required), or evidence
+            containing invalid UTF-8 or a lone UTF-16 surrogate
           schema:
             $ref: '#/definitions/BadRequestResponse'
+        '401':
+          description: Requires a learner's login
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        '404':
+          description: Module or assignment not found
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
+        '500':
+          description: The commitment could not be saved
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
         '502':
-          description: DB API request failed
+          description: The commitment could not be saved
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4786,7 +3794,7 @@ paths:
           schema:
             $ref: '#/definitions/StudentCoursesResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/StudentCoursesResponse'
         '401':
@@ -4794,7 +3802,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -4807,7 +3815,7 @@ paths:
   /v2/course/student/credentials/list:
     post:
       description: 'Returns the authenticated student''s full credential record: enrolled courses, completed
-        courses with claimed credential hashes, and module metadata from the DB.'
+        courses with claimed credential hashes, and module metadata.'
       operationId: v2-merged-course-student-credentials-list
       produces:
       - application/json
@@ -4817,7 +3825,7 @@ paths:
           schema:
             $ref: '#/definitions/StudentCredentialsResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/StudentCredentialsResponse'
         '401':
@@ -4825,7 +3833,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -4839,7 +3847,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Accepts or refuses a student's assignment submission using V2 schema.
+      description: 'Checks a review of a learner''s assignment submission and answers with the commitment.
+        Records nothing: the decision that counts is the assess transaction, and commitment_status is
+        read from chain. Only a current teacher of the course may call it; an owner who is not also a
+        teacher may not.'
       operationId: v2-course-teacher-review-commitment
       parameters:
       - description: Review commitment request
@@ -4852,15 +3863,29 @@ paths:
       - application/json
       responses:
         '200':
-          description: Reviewed commitment
+          description: The commitment, its status read from chain. commitment_status and assignment_outcome
+            are absent when the module has no slt_hash
           schema:
-            $ref: '#/definitions/AssignmentCommitment'
+            $ref: '#/definitions/AssignmentCommitmentRecord'
         '400':
-          description: Invalid request body
+          description: Invalid request body, missing field, or decision not accept or refuse
           schema:
             $ref: '#/definitions/BadRequestResponse'
+        '401':
+          description: Requires a learner's login (end-user JWT); an API key alone or a developer JWT
+            is not enough
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        '403':
+          description: Caller is not a current teacher of the course (owners only when also a teacher)
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        '404':
+          description: No commitment by this learner for this module
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
         '502':
-          description: DB API request failed
+          description: The teacher role, the commitments or the on-chain status could not be read
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4874,9 +3899,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns assignment commitments for a teacher. When course_id is provided, returns full
-        merged history (on-chain + DB). When omitted, returns a lightweight on-chain-only summary of pending
-        commitments across all courses.
+      description: 'Returns assignment commitments for a teacher. With course_id: one row per learner
+        submission on chain in that course (the latest per credential and learner), commitment_status
+        derived from chain; saved commitments with no submission on chain are not listed. Per row, the
+        evidence shown follows this rule: When the on-chain value is not a hash, Andamio returns the learner''s
+        newest saved evidence for that assignment, which may not be the version that was anchored. When
+        it is a hash with no evidence saved under it, no evidence is returned. The caller must currently
+        teach the course. Without course_id: the submissions awaiting assessment across the caller''s
+        courses, from chain only.'
       operationId: v2-merged-course-teacher-commitments-list
       parameters:
       - description: Optional course_id to filter commitments
@@ -4892,15 +3922,25 @@ paths:
           schema:
             $ref: '#/definitions/TeacherAssignmentCommitmentsResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: 'Partial content: the saved evidence or the learners'' on-chain state could not
+            be read, or some chain status is not recognised and its commitment_status is left out; meta.warning
+            says which'
           schema:
             $ref: '#/definitions/TeacherAssignmentCommitmentsResponse'
+        '400':
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         '401':
           description: Unauthorized
           schema:
             $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: Caller does not currently teach the course
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Failed to fetch assignment commitments
+          description: The teacher role or the on-chain submissions could not be read
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -4914,7 +3954,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new module using V2 schema.
+      description: Creates a new module. module_status and is_live in the response are read from chain
+        (ON_CHAIN and live when the module is on chain); both are absent when the on-chain state could
+        not be read.
       operationId: v2-course-teacher-create-module
       parameters:
       - description: Module creation request
@@ -4935,7 +3977,7 @@ paths:
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4949,7 +3991,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Deletes a DRAFT module using V2 schema. Cascades to SLTs, lessons, assignment, introduction.
+      description: Deletes a DRAFT module. Cascades to SLTs, lessons, assignment, introduction.
       operationId: v2-course-teacher-delete-module
       parameters:
       - description: Module deletion request
@@ -4970,7 +4012,7 @@ paths:
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -4984,7 +4026,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Sets isLive=true on module and all child content using V2 schema.
+      description: 'Accepted and changes nothing: a module is live when it is on chain, and that is read
+        from chain. The response is the module as it is. module_status and is_live in the response are
+        read from chain (ON_CHAIN and live when the module is on chain); both are absent when the on-chain
+        state could not be read.'
       operationId: v2-course-teacher-publish-module
       parameters:
       - description: Module publish request
@@ -4997,15 +4042,19 @@ paths:
       - application/json
       responses:
         '200':
-          description: Published module
+          description: The module, unchanged
           schema:
             $ref: '#/definitions/CourseModuleEntity'
         '400':
-          description: Invalid request body
+          description: Invalid request body or missing course_id / course_module_code
           schema:
             $ref: '#/definitions/BadRequestResponse'
+        '404':
+          description: Module not found
+          schema:
+            $ref: '#/definitions/NotFoundErrorResponse'
         '502':
-          description: DB API request failed
+          description: The module could not be read
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -5019,8 +4068,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Registers an on-chain module in the database, enabling teachers to assign a course_module_code
-        to modules that exist on-chain but not in the DB.
+      description: Registers an on-chain module off-chain, enabling teachers to assign a course_module_code
+        to modules that exist on-chain but have no off-chain record.
       operationId: v2-merged-course-teacher-module-register
       parameters:
       - description: Module registration data
@@ -5049,7 +4098,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Backend service error
+          description: The module could not be read on chain or registered off-chain
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5065,7 +4114,9 @@ paths:
       - application/json
       description: Updates a module and all its children (SLTs, lessons, assignment, introduction) atomically.
         Omitted fields = unchanged. SLTs can only be modified when status is DRAFT. Lessons, assignments,
-        and introductions are editable in any status.
+        and introductions are editable in any status. module_status and is_live in the response are read
+        from chain (ON_CHAIN and live when the module is on chain); both are absent when the on-chain
+        state could not be read.
       operationId: v2-course-teacher-update-module
       parameters:
       - description: Module update request
@@ -5090,7 +4141,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -5104,8 +4155,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates module status. Allows DRAFT ↔ APPROVED (requires slt_hash) and APPROVED → PENDING_TX
-        (before modules_manage TX).
+      description: Updates module status. Allows DRAFT ↔ APPROVED (requires slt_hash). A module on chain
+        cannot return to DRAFT; whether it is on chain is read from chain, and when that cannot be read
+        the move to DRAFT is refused. module_status and is_live in the response are read from chain (ON_CHAIN
+        and live when the module is on chain); both are absent when the on-chain state could not be read.
       operationId: v2-course-teacher-update-module-status
       parameters:
       - description: Module status update request
@@ -5122,7 +4175,8 @@ paths:
           schema:
             $ref: '#/definitions/CourseModuleEntity'
         '400':
-          description: Invalid request body or missing slt_hash
+          description: Invalid request body, missing slt_hash, invalid transition, or the module is on
+            chain (no return to DRAFT)
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '404':
@@ -5130,7 +4184,7 @@ paths:
           schema:
             $ref: '#/definitions/NotFoundErrorResponse'
         '502':
-          description: DB API request failed
+          description: The module or its on-chain state could not be read, or the update failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -5144,8 +4198,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns a UNION of on-chain and DB modules for a course. Includes chain_only (created
-        elsewhere), db_only (drafts), and merged modules.
+      description: Returns a UNION of on-chain and off-chain modules for a course. Includes chain_only
+        (created elsewhere), db_only (drafts), and merged modules.
       operationId: v2-merged-course-teacher-modules-list
       parameters:
       - description: Course ID to list modules for
@@ -5162,7 +4216,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedCourseModulesResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/MergedCourseModulesResponse'
         '400':
@@ -5174,7 +4228,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5186,7 +4240,7 @@ paths:
       x-access-level: public
   /v2/course/teacher/courses/list:
     post:
-      description: Returns courses the authenticated user teaches (from Andamioscan, enriched with DB
+      description: Returns courses the authenticated user teaches (from chain, enriched with off-chain
         content)
       operationId: v2-merged-course-teacher-list
       produces:
@@ -5197,7 +4251,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedCoursesResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedCoursesResponse'
         '401':
@@ -5205,7 +4259,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5218,7 +4272,7 @@ paths:
   /v2/course/user/assignment/{course_id}/{course_module_code}:
     get:
       description: Returns assignment content for a module if the module exists on-chain. Uses on-chain
-        status as source of truth for visibility, ignoring DB is_live flag.
+        status as source of truth for visibility, ignoring the off-chain is_live flag.
       operationId: v2-merged-course-assignment-get
       parameters:
       - description: Course ID (policy ID)
@@ -5239,7 +4293,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedAssignmentResponseWrapper'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedAssignmentResponseWrapper'
         '400':
@@ -5251,7 +4305,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5262,7 +4316,7 @@ paths:
       x-access-level: public
   /v2/course/user/course/get/{course_id}:
     get:
-      description: Returns detailed course info with both off-chain (DB) and on-chain (Andamioscan) data
+      description: Returns detailed course info with both off-chain and on-chain data
       operationId: v2-merged-course-get
       parameters:
       - description: Course ID (policy ID)
@@ -5278,7 +4332,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedCourseDetailResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/MergedCourseDetailResponse'
         '404':
@@ -5286,7 +4340,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5297,7 +4351,7 @@ paths:
       x-access-level: public
   /v2/course/user/courses/list:
     get:
-      description: Returns all published courses with both off-chain (DB) and on-chain (Andamioscan) data
+      description: Returns all published courses with both off-chain and on-chain data
       operationId: v2-merged-course-list
       produces:
       - application/json
@@ -5307,11 +4361,11 @@ paths:
           schema:
             $ref: '#/definitions/MergedCoursesResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/MergedCoursesResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5323,7 +4377,7 @@ paths:
   /v2/course/user/introduction/{course_id}/{course_module_code}:
     get:
       description: Returns introduction content for a module if the module exists on-chain. Uses on-chain
-        status as source of truth for visibility, ignoring DB is_live flag.
+        status as source of truth for visibility, ignoring the off-chain is_live flag.
       operationId: v2-merged-course-introduction-get
       parameters:
       - description: Course ID (policy ID)
@@ -5344,7 +4398,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedIntroductionResponseWrapper'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedIntroductionResponseWrapper'
         '400':
@@ -5356,7 +4410,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5368,7 +4422,7 @@ paths:
   /v2/course/user/lesson/{course_id}/{course_module_code}/{slt_index}:
     get:
       description: Returns lesson content for an SLT if the module exists on-chain. Uses on-chain status
-        as source of truth for visibility, ignoring DB is_live flag.
+        as source of truth for visibility, ignoring the off-chain is_live flag.
       operationId: v2-merged-course-lesson-get
       parameters:
       - description: Course ID (policy ID)
@@ -5394,7 +4448,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedLessonResponseWrapper'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedLessonResponseWrapper'
         '400':
@@ -5406,7 +4460,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5417,8 +4471,10 @@ paths:
       x-access-level: public
   /v2/course/user/modules/{course_id}:
     get:
-      description: Returns all published modules for a course with both off-chain (DB) and on-chain (Andamioscan)
-        data. Only returns modules that exist on-chain AND have content in the DB.
+      description: 'Returns every module of the course that is on chain (published), with its off-chain
+        content when it has any ("source": "merged") and its on-chain SLTs only when not ("source": "chain_only").
+        A course that is not on chain has none. 206: off-chain content could not be read; on-chain data
+        only. 404: the course is neither on chain nor off-chain.'
       operationId: v2-merged-course-modules-list
       parameters:
       - description: Course ID (policy ID)
@@ -5434,15 +4490,19 @@ paths:
           schema:
             $ref: '#/definitions/MergedCourseModulesPublicResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedCourseModulesPublicResponse'
         '400':
           description: course_id is required
           schema:
             $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Course not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5454,7 +4514,7 @@ paths:
   /v2/course/user/slts/{course_id}/{course_module_code}:
     get:
       description: Returns SLTs for a module if the module exists on-chain. Uses on-chain status as source
-        of truth for visibility, ignoring DB is_live flag.
+        of truth for visibility, ignoring the off-chain is_live flag.
       operationId: v2-merged-course-slts-list
       parameters:
       - description: Course ID (policy ID)
@@ -5475,7 +4535,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedSltsResponseWrapper'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedSltsResponseWrapper'
         '400':
@@ -5487,7 +4547,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5495,174 +4555,6 @@ paths:
       summary: List SLTs
       tags:
       - Course/User
-      x-access-level: public
-  /v2/keys:
-    get:
-      description: Returns the unified list of the developer's active API keys across both environments.
-        Mainnet keys come from the local api_keys table; Preprod keys come from cross_env_key_metadata
-        cached at create time. Sorted DESC by created_at. Mainnet entries do not carry last4 (the legacy
-        table stores only the bcrypt hash + key_prefix shard); Preprod entries do.
-      operationId: v2-keys-list
-      produces:
-      - application/json
-      responses:
-        '200':
-          description: Unified list of keys
-          schema:
-            $ref: '#/definitions/ListKeysResponse'
-        '401':
-          description: Missing or invalid authentication
-          schema:
-            $ref: '#/definitions/UnauthorizedErrorResponse'
-        '500':
-          description: Internal error
-          schema:
-            $ref: '#/definitions/InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List API keys
-      tags:
-      - Keys
-      x-access-level: public
-    post:
-      consumes:
-      - application/json
-      description: Creates a developer API key in the requested environment. env=mainnet creates locally;
-        env=preprod proxies to the Preprod gateway via the cross-env channel. Tier-cap (union of mainnet
-        + preprod active keys) applies to both envs. The raw key value is returned exactly once.
-      operationId: v2-keys-create
-      parameters:
-      - description: Key creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/CreateKeyRequest'
-      produces:
-      - application/json
-      responses:
-        '200':
-          description: Key created
-          schema:
-            $ref: '#/definitions/CreateKeyResponse'
-        '400':
-          description: Malformed request body
-          schema:
-            $ref: '#/definitions/BadRequestErrorResponse'
-        '401':
-          description: Missing or invalid authentication
-          schema:
-            $ref: '#/definitions/UnauthorizedErrorResponse'
-        '403':
-          description: Email not verified, or subscription expired (env=mainnet legacy path)
-          schema:
-            $ref: '#/definitions/ForbiddenErrorResponse'
-        '409':
-          description: Direct-user collision on cross-env path
-          schema:
-            $ref: '#/definitions/ConflictErrorResponse'
-        '422':
-          description: Validation failed (invalid environment, name)
-          schema:
-            $ref: '#/definitions/UnprocessableEntityErrorResponse'
-        '429':
-          description: Tier API-key limit reached
-          schema:
-            $ref: '#/definitions/TooManyRequestsErrorResponse'
-        '500':
-          description: Internal error
-          schema:
-            $ref: '#/definitions/InternalServerErrorResponse'
-        '503':
-          description: Preprod routing disabled or upstream unavailable
-          schema:
-            $ref: '#/definitions/ServiceUnavailableErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Create API key
-      tags:
-      - Keys
-      x-access-level: public
-  /v2/keys/{id}:
-    delete:
-      description: Revokes the developer's API key with the given local id. If the id matches a cross_env_key_metadata
-        row, the revoke is proxied to the Preprod gateway and the local row is marked revoked on success;
-        a Preprod 404 is treated as success (already gone). Otherwise falls back to the legacy api_keys
-        row. A stranger's id returns 404 indistinguishable from non-existence.
-      operationId: v2-keys-delete
-      parameters:
-      - description: Local key id (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        '204':
-          description: Key revoked
-        '400':
-          description: Malformed UUID
-          schema:
-            $ref: '#/definitions/BadRequestErrorResponse'
-        '401':
-          description: Missing or invalid authentication
-          schema:
-            $ref: '#/definitions/UnauthorizedErrorResponse'
-        '403':
-          description: Access blocked (IP allowlist or abuse blacklist)
-          schema:
-            $ref: '#/definitions/ForbiddenErrorResponse'
-        '404':
-          description: Key not found (or owned by another user)
-          schema:
-            $ref: '#/definitions/NotFoundErrorResponse'
-        '500':
-          description: Internal error
-          schema:
-            $ref: '#/definitions/InternalServerErrorResponse'
-        '503':
-          description: Preprod routing disabled or upstream unavailable
-          schema:
-            $ref: '#/definitions/ServiceUnavailableErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete API key
-      tags:
-      - Keys
-      x-access-level: public
-  /v2/project/contributor/commitment/delete:
-    post:
-      consumes:
-      - application/json
-      description: Deletes a DRAFT commitment.
-      operationId: v2-db-contributor-delete-commitment
-      parameters:
-      - description: Commitment deletion request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/PostProjectContributorCommitmentDeleteJSONRequestBody'
-      produces:
-      - application/json
-      responses:
-        '200':
-          description: Deletion result
-          schema:
-            $ref: '#/definitions/SuccessResponse'
-        '400':
-          description: Invalid request body
-          schema:
-            $ref: '#/definitions/BadRequestResponse'
-        '502':
-          description: DB API request failed
-          schema:
-            $ref: '#/definitions/BadGatewayErrorResponse'
-      security:
-      - ApiKeyAuth: []
-        BearerAuth: []
-      summary: Delete commitment
-      tags:
-      - Project/Contributor
       x-access-level: public
   /v2/project/contributor/commitment/get:
     post:
@@ -5685,7 +4577,7 @@ paths:
           schema:
             $ref: '#/definitions/ContributorCommitmentResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/ContributorCommitmentResponse'
         '400':
@@ -5701,7 +4593,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5715,7 +4607,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: Submits a DRAFT commitment with evidence for project manager review.
+      description: Submits work with evidence for project manager review. The caller sends `evidence`
+        (required); Andamio computes the evidence hash from it (andamio-core commitment-hash canonical-v1)
+        and returns it in the response as task_evidence_hash. The caller does not send a hash. Creates
+        the commitment when the contributor has none for the task yet. An existing commitment is submitted
+        only from COMMITTED or REFUSED (a resubmission); one already being submitted answers 409, and
+        any other status answers 400.
       operationId: v2-db-contributor-submit-commitment
       parameters:
       - description: Commitment submission request
@@ -5732,52 +4629,19 @@ paths:
           schema:
             $ref: '#/definitions/TaskCommitment'
         '400':
-          description: Invalid request body
+          description: Invalid request body, a missing task_hash, pending_tx_hash or evidence, evidence
+            containing invalid UTF-8 or a lone UTF-16 surrogate, or the commitment's status does not allow
+            a submission
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
       - ApiKeyAuth: []
         BearerAuth: []
       summary: Submit commitment
-      tags:
-      - Project/Contributor
-      x-access-level: public
-  /v2/project/contributor/commitment/update:
-    post:
-      consumes:
-      - application/json
-      description: Updates an existing DRAFT commitment.
-      operationId: v2-db-contributor-update-commitment
-      parameters:
-      - description: Commitment update request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/UpdateTaskCommitmentRequest'
-      produces:
-      - application/json
-      responses:
-        '200':
-          description: Updated commitment
-          schema:
-            $ref: '#/definitions/TaskCommitment'
-        '400':
-          description: Invalid request body
-          schema:
-            $ref: '#/definitions/BadRequestResponse'
-        '502':
-          description: DB API request failed
-          schema:
-            $ref: '#/definitions/BadGatewayErrorResponse'
-      security:
-      - ApiKeyAuth: []
-        BearerAuth: []
-      summary: Update commitment
       tags:
       - Project/Contributor
       x-access-level: public
@@ -5801,7 +4665,7 @@ paths:
           schema:
             $ref: '#/definitions/ContributorCommitmentsResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/ContributorCommitmentsResponse'
         '400':
@@ -5813,7 +4677,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5825,8 +4689,8 @@ paths:
       x-access-level: public
   /v2/project/contributor/projects/list:
     post:
-      description: Returns projects the authenticated user contributes to with both off-chain (DB) and
-        on-chain (Andamioscan) data
+      description: Returns projects the authenticated user contributes to with both off-chain and on-chain
+        data
       operationId: v2-merged-project-contributor-projects-list
       produces:
       - application/json
@@ -5836,7 +4700,7 @@ paths:
           schema:
             $ref: '#/definitions/ContributorProjectsResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/ContributorProjectsResponse'
         '401':
@@ -5844,7 +4708,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5876,7 +4740,7 @@ paths:
           schema:
             $ref: '#/definitions/ManagerCommitmentsResponse'
         '206':
-          description: Partial content (DB or chain unavailable)
+          description: Partial content (off-chain content or on-chain state not available)
           schema:
             $ref: '#/definitions/ManagerCommitmentsResponse'
         '400':
@@ -5888,7 +4752,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Upstream unavailable
+          description: On-chain or off-chain data could not be read
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5903,8 +4767,8 @@ paths:
       description: Returns the aliases eligible to commit to a managed project's tasks. An alias is qualified
         iff it holds every (course_id, slt_hash) pair required by the project's current on-chain state
         prerequisites. Both API-key-only and API-key+JWT auth paths are accepted; caller must appear in
-        the project's managers list. Returns 404 for unknown projects, 403 for non-managers, 502 on any
-        downstream failure.
+        the project's managers list. Returns 404 for unknown projects, 403 for non-managers, 502 when
+        on-chain or off-chain data could not be read.
       operationId: v2-merged-project-manager-qualified-contributors
       parameters:
       - description: Project ID
@@ -5936,7 +4800,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Downstream scan or dbapi failure
+          description: On-chain or off-chain data could not be read
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -5948,8 +4812,7 @@ paths:
       x-access-level: public
   /v2/project/manager/projects/list:
     post:
-      description: Returns projects the authenticated user manages with both off-chain (DB) and on-chain
-        (Andamioscan) data
+      description: Returns projects the authenticated user manages with both off-chain and on-chain data
       operationId: v2-merged-project-manager-projects-list
       produces:
       - application/json
@@ -5959,7 +4822,7 @@ paths:
           schema:
             $ref: '#/definitions/ManagerProjectsResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/ManagerProjectsResponse'
         '401':
@@ -5967,7 +4830,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -6006,7 +4869,7 @@ paths:
           schema:
             $ref: '#/definitions/ForbiddenErrorResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
         '503':
@@ -6045,7 +4908,7 @@ paths:
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -6084,7 +4947,7 @@ paths:
           schema:
             $ref: '#/definitions/ForbiddenErrorResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
         '503':
@@ -6119,7 +4982,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedTasksResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedTasksResponse'
         '400':
@@ -6131,7 +4994,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -6145,7 +5008,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new project in the database.
+      description: Creates a new project's off-chain content.
       operationId: v2-db-owner-create-project
       parameters:
       - description: Project creation request
@@ -6166,7 +5029,7 @@ paths:
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -6180,7 +5043,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Registers an existing on-chain project in the database.
+      description: Registers an existing on-chain project so it can carry off-chain content.
       operationId: v2-db-owner-register-project
       parameters:
       - description: Project registration request
@@ -6201,7 +5064,7 @@ paths:
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -6215,7 +5078,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates an existing project in the database.
+      description: Updates an existing project's off-chain content.
       operationId: v2-db-owner-update-project
       parameters:
       - description: Project update request
@@ -6236,7 +5099,7 @@ paths:
           schema:
             $ref: '#/definitions/BadRequestResponse'
         '502':
-          description: DB API request failed
+          description: Off-chain content request failed
           schema:
             $ref: '#/definitions/BadGatewayErrorResponse'
       security:
@@ -6248,7 +5111,7 @@ paths:
       x-access-level: public
   /v2/project/owner/projects/list:
     post:
-      description: Returns projects owned by the authenticated user (from Andamioscan, enriched with DB
+      description: Returns projects owned by the authenticated user (from chain, enriched with off-chain
         content)
       operationId: v2-merged-project-owner-projects-list
       produces:
@@ -6259,7 +5122,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedProjectsResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/MergedProjectsResponse'
         '401':
@@ -6267,7 +5130,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -6279,7 +5142,7 @@ paths:
       x-access-level: public
   /v2/project/user/project/{project_id}:
     get:
-      description: Returns detailed project info with both off-chain (DB) and on-chain (Andamioscan) data
+      description: Returns detailed project info with both off-chain and on-chain data
       operationId: v2-merged-project-get
       parameters:
       - description: Project ID
@@ -6295,7 +5158,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedProjectDetailResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/MergedProjectDetailResponse'
         '404':
@@ -6303,7 +5166,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -6314,8 +5177,7 @@ paths:
       x-access-level: public
   /v2/project/user/projects/list:
     get:
-      description: Returns all published projects with both off-chain (DB) and on-chain (Andamioscan)
-        data
+      description: Returns all published projects with both off-chain and on-chain data
       operationId: v2-merged-project-list
       produces:
       - application/json
@@ -6325,11 +5187,11 @@ paths:
           schema:
             $ref: '#/definitions/MergedProjectsResponse'
         '206':
-          description: Partial content (one backend unavailable)
+          description: Partial content (on-chain or off-chain data not available)
           schema:
             $ref: '#/definitions/MergedProjectsResponse'
         '502':
-          description: Both backends unavailable
+          description: Neither on-chain nor off-chain data available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -6342,8 +5204,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns all tasks for a project with both off-chain (DB) and on-chain (Andamioscan)
-        data
+      description: Returns all tasks for a project with both off-chain and on-chain data
       operationId: v2-merged-project-tasks-list
       parameters:
       - description: Project ID
@@ -6360,7 +5221,7 @@ paths:
           schema:
             $ref: '#/definitions/MergedTasksResponse'
         '206':
-          description: Partial content (DB unavailable)
+          description: Partial content (off-chain content not available)
           schema:
             $ref: '#/definitions/MergedTasksResponse'
         '400':
@@ -6368,12 +5229,34 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: List tasks
+      tags:
+      - Project/User
+      x-access-level: public
+  /v2/project/user/token-registry/list:
+    get:
+      description: 'Returns the native asset token registry: every token a project task can name as a
+        reward. The registry is shared by all projects, not scoped to the caller.'
+      operationId: v2-token-list
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: List of registered tokens
+          schema:
+            $ref: '#/definitions/TokenListResponse'
+        '502':
+          description: The token registry could not be read
+          schema:
+            $ref: '#/definitions/ErrorEnvelope'
+      security:
+      - ApiKeyAuth: []
+      summary: List registered tokens
       tags:
       - Project/User
       x-access-level: public
@@ -6606,6 +5489,40 @@ paths:
       tags:
       - Tx/Course
       x-access-level: public
+  /v2/tx/global/user/access-token/claim:
+    post:
+      consumes:
+      - application/json
+      description: Build an unsigned transaction to claim a V2 access token. Any holder of a V1 access
+        token can use this endpoint to claim their V2 token. No authentication required — the on-chain
+        V1 token proves ownership.
+      operationId: v2-tx-claim-v2-access-token
+      parameters:
+      - description: Claim V2 access token request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ClaimV2AccessTokenTxRequest'
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Unsigned transaction CBOR
+          schema:
+            $ref: '#/definitions/UnsignedTxResponse'
+        '400':
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/BadRequestErrorResponse'
+        '500':
+          description: Failed to build transaction
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+      summary: Claim v2 access token
+      tags:
+      - Tx/Migration
+      x-access-level: public
   /v2/tx/global/user/access-token/mint:
     post:
       consumes:
@@ -6761,8 +5678,8 @@ paths:
       consumes:
       - application/json
       description: Build an unsigned transaction to claim project credentials. The gateway looks up the
-        project's authoritative commission rate from the DB API (cached in Redis for 5 minutes) and injects
-        it as fee_rate — the client cannot supply or override this value.
+        project's authoritative commission rate on every request and injects it as fee_rate — the client
+        cannot supply or override this value.
       operationId: v2-tx-claim-project-credential
       parameters:
       - description: Claim credential request
@@ -6791,7 +5708,7 @@ paths:
           schema:
             $ref: '#/definitions/InternalServerErrorResponse'
         '503':
-          description: DB API unreachable — commission rate lookup failed
+          description: Commission rate not available
           schema:
             $ref: '#/definitions/ServiceUnavailableErrorResponse'
       security:
@@ -6843,8 +5760,8 @@ paths:
       consumes:
       - application/json
       description: Build an unsigned transaction to commit to a project task. The gateway looks up the
-        project's authoritative commission rate from the DB API (cached in Redis for 5 minutes) and injects
-        it as fee_rate — the client cannot supply or override this value.
+        project's authoritative commission rate on every request and injects it as fee_rate — the client
+        cannot supply or override this value.
       operationId: v2-tx-commit-task
       parameters:
       - description: Commit task request
@@ -6873,7 +5790,7 @@ paths:
           schema:
             $ref: '#/definitions/InternalServerErrorResponse'
         '503':
-          description: DB API unreachable — commission rate lookup failed
+          description: Commission rate not available
           schema:
             $ref: '#/definitions/ServiceUnavailableErrorResponse'
       security:
@@ -7082,9 +5999,9 @@ paths:
 
         call this endpoint with the tx_hash to register it with the TX State Machine.
 
-        The Gateway will automatically poll Andamioscan for confirmation and update the
+        The Gateway will automatically watch the chain for confirmation and update the
 
-        database when the transaction is confirmed on-chain.
+        off-chain record when the transaction is confirmed on-chain.
 
 
         **Transaction Flow:**
@@ -7145,11 +6062,11 @@ paths:
 
         - `pending` → Transaction registered, waiting for on-chain confirmation
 
-        - `confirmed` → Andamioscan confirmed the transaction on-chain
+        - `confirmed` → The transaction is confirmed on-chain
 
-        - `updated` → Database has been updated (final success state)
+        - `updated` → The off-chain record has been updated (final success state)
 
-        - `failed` → Error during confirmation or DB update
+        - `failed` → Error during confirmation or the off-chain update
 
         - `expired` → Transaction not confirmed within timeout (2 hours)
 
@@ -7276,6 +6193,54 @@ paths:
       tags:
       - Tx/State
       x-access-level: public
+  /v2/user/access-token-alias:
+    post:
+      consumes:
+      - application/json
+      description: Associates an Andamio access token alias with the authenticated user's session.
+      operationId: v2-db-user-update-access-token-alias
+      parameters:
+      - description: Access token alias request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/PostUserAccessTokenAliasJSONRequestBody'
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Alias updated — {access_token_alias}
+          schema:
+            $ref: '#/definitions/UpdateAccessTokenAliasResponse'
+        '400':
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/BadRequestResponse'
+        '401':
+          description: Missing or invalid authorization
+          schema:
+            $ref: '#/definitions/UnauthorizedErrorResponse'
+        '403':
+          description: ALIAS_NOT_HELD — wallet does not hold the claimed alias on-chain. Expected and
+            retryable immediately after a mint, while the chain provider catches up.
+          schema:
+            $ref: '#/definitions/ForbiddenErrorResponse'
+        '502':
+          description: Alias could not be updated, please retry
+          schema:
+            $ref: '#/definitions/BadGatewayErrorResponse'
+        '503':
+          description: Unable to verify alias ownership against the chain provider; try again later
+          schema:
+            $ref: '#/definitions/ServiceUnavailableErrorResponse'
+      security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+      summary: Update access token alias
+      tags:
+      - User
+      x-access-level: public
   /v2/user/dashboard:
     post:
       consumes:
@@ -7299,7 +6264,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
         '502':
-          description: Backend unavailable
+          description: On-chain or off-chain data could not be read
           schema:
             $ref: '#/definitions/ErrorResponse'
       security:
@@ -7423,7 +6388,7 @@ paths:
           schema:
             $ref: '#/definitions/UnprocessableEntityErrorResponse'
         '503':
-          description: Andamioscan unavailable
+          description: On-chain state not available
           schema:
             $ref: '#/definitions/ServiceUnavailableErrorResponse'
       security:
@@ -7434,14 +6399,13 @@ paths:
       x-access-level: public
 securityDefinitions:
   ApiKeyAuth:
-    description: Your developer API key. Get one at /api/v1/apikey
+    description: Your developer API key. Get one in the developer portal at https://app.andamio.io/api-setup.
     in: header
     name: X-API-Key
     type: apiKey
   BearerAuth:
-    description: 'JWT bearer token. Accepts either an HS256 DB-API end-user JWT (issued at wallet login;
-      alias = accessTokenAlias claim) or an RS256 gateway developer JWT (issued by /v2/auth/developer/login;
-      alias = X-API-Key user). Dispatched by the JWT header''s alg. Malformed, expired, or wrong-algorithm
+    description: 'JWT bearer token: an end-user JWT issued at wallet login (POST /v2/auth/login/session,
+      then POST /v2/auth/login/validate); alias = accessTokenAlias claim. Malformed, expired, or wrong-algorithm
       tokens return HTTP 401. Format: "Bearer <jwt>".'
     in: header
     name: Authorization
@@ -7496,13 +6460,14 @@ tags:
 - description: Project transactions - on-chain project creation, task commits, and reward distribution.
   name: Tx/Project
   x-displayName: Project TX
+- description: Migration transactions - v1 to v2 access token claims and data migration.
+  name: Tx/Migration
+  x-displayName: Tx Migration
 - description: Public user lookup - search and view public user profiles.
   name: Users
   x-displayName: User Lookup
-- name: Keys
 - name: Verify
 x-api-id: andamio-api-gateway
-x-build-commit: unknown
 x-tagGroups:
 - description: Andamio platform user authentication
   name: Platform Auth
@@ -7531,6 +6496,7 @@ x-tagGroups:
   - Tx/Instance
   - Tx/Course
   - Tx/Project
+  - Tx/Migration
 - description: Unauthenticated public endpoints
   name: Public
   tags:

@@ -193,9 +193,8 @@ SLT_HASH=$(andamio course create-module \
   --output json | jq -r '.slt_hash')
 echo "Module 100 approved (slt_hash: $SLT_HASH)."
 
-# The modules_manage confirmation only matches modules in PENDING_TX.
-andamio course teacher update-module-status \
-  --course-id "$COURSE_ID" --module-code 100 --status PENDING_TX >/dev/null
+# Mint straight from APPROVED. There is no PENDING_TX step: the API reads the
+# module as ON_CHAIN once the token is on chain.
 
 # The module manage TX mints the module token on-chain.
 # modules_to_add, modules_to_update and modules_to_remove are ALL required

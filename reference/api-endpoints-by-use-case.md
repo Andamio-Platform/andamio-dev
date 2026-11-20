@@ -6,7 +6,7 @@
 
 > "I want to ___" → endpoint. Generated from the public contract in `specs/andamio-api.yaml`, so it cannot drift from it.
 
-**78 operations across 77 paths.** All paths are relative to `/api`. This is the public surface only — administrative and internal operations are not part of the contract and do not appear here.
+**75 operations across 75 paths.** All paths are relative to `/api`. This is the public surface only — administrative and internal operations are not part of the contract and do not appear here.
 
 For full request and response schemas, read the spec directly or use the `/explore-api` skill.
 
@@ -27,6 +27,7 @@ User profile and account management - view profile, usage stats, and account set
 
 | I want to... | Endpoint | Auth |
 |---|---|---|
+| Update access token alias | `POST /v2/user/access-token-alias` | API key + JWT |
 | Get dashboard | `POST /v2/user/dashboard` | API key + JWT |
 
 ## Courses
@@ -81,7 +82,6 @@ Course owner operations - create courses, manage content, configure settings, an
 
 | I want to... | Endpoint | Auth |
 |---|---|---|
-| Create course | `POST /v2/course/owner/course/create` | API key + JWT |
 | Register course | `POST /v2/course/owner/course/register` | API key + JWT |
 | Update course | `POST /v2/course/owner/course/update` | API key + JWT |
 | List my courses | `POST /v2/course/owner/courses/list` | API key + JWT |
@@ -97,6 +97,7 @@ Project discovery and membership - browse projects, view details, and check memb
 | Get project detail | `GET /v2/project/user/project/{project_id}` | API key |
 | List projects | `GET /v2/project/user/projects/list` | API key |
 | List tasks | `POST /v2/project/user/tasks/list` | API key |
+| List registered tokens | `GET /v2/project/user/token-registry/list` | API key |
 
 ### Contributor Actions
 
@@ -104,10 +105,8 @@ Contributor project actions - commit to tasks, submit work, and claim rewards.
 
 | I want to... | Endpoint | Auth |
 |---|---|---|
-| Delete commitment | `POST /v2/project/contributor/commitment/delete` | API key + JWT |
 | Get commitment | `POST /v2/project/contributor/commitment/get` | API key + JWT |
 | Submit commitment | `POST /v2/project/contributor/commitment/submit` | API key + JWT |
-| Update commitment | `POST /v2/project/contributor/commitment/update` | API key + JWT |
 | List my commitments | `POST /v2/project/contributor/commitments/list` | API key + JWT |
 | List my projects | `POST /v2/project/contributor/projects/list` | API key + JWT |
 
@@ -195,6 +194,14 @@ Project transactions - on-chain project creation, task commits, and reward distr
 | Manage managers | `POST /v2/tx/project/owner/managers/manage` | API key |
 | Add funds to treasury | `POST /v2/tx/project/user/treasury/add-funds` | API key |
 
+### Tx Migration
+
+Migration transactions - v1 to v2 access token claims and data migration.
+
+| I want to... | Endpoint | Auth |
+|---|---|---|
+| Claim v2 access token | `POST /v2/tx/global/user/access-token/claim` | None |
+
 ## Public
 
 ### User Lookup
@@ -206,14 +213,6 @@ Public user lookup - search and view public user profiles.
 | Check alias exists | `GET /v2/user/exists/{alias}` | API key |
 
 ## Other
-
-### Keys
-
-| I want to... | Endpoint | Auth |
-|---|---|---|
-| List API keys | `GET /v2/keys` | JWT |
-| Create API key | `POST /v2/keys` | JWT |
-| Delete API key | `DELETE /v2/keys/{id}` | JWT |
 
 ### Verify
 

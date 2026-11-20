@@ -89,16 +89,16 @@ A module published on a course. Lives in `course_modules_v2`.
 | Value | Meaning | Driven by |
 |-------|---------|-----------|
 | `DRAFT` | Teacher is drafting the module | Teacher |
-| `APPROVED` | Approved; not yet on-chain | Teacher |
-| `PENDING_TX` | Awaiting confirmation of `modules_manage` TX | TX state machine |
-| `ON_CHAIN` | Module is live and accepting enrollments | — |
-| `ARCHIVED` | Module retired from active enrollment | Teacher |
-| `DEPRECATED` | Module superseded but kept for historical records | Teacher |
+| `APPROVED` | Approved; ready to mint | Teacher |
+| `ON_CHAIN` | Module token is on chain; the module is live | Read from the chain |
+
+These three are the values in the public contract (`CourseModuleStatusV2`, API 2.6+). `PENDING_TX`, `ARCHIVED` and `DEPRECATED` are gone.
 
 State transition rules (from API request validators):
-- `DRAFT ↔ APPROVED` is bidirectional (manager can revise an approved draft).
-- `APPROVED → PENDING_TX` requires an `slt_hash` in the update request.
-- Only `ON_CHAIN` is a valid post-confirmation target.
+- A teacher can set only `DRAFT` or `APPROVED`; anything else answers 400.
+- `DRAFT → APPROVED` requires an `slt_hash` in the update request.
+- `APPROVED → DRAFT` is refused for a module that is on chain.
+- `ON_CHAIN` is never set by hand: mint with `modules_manage` from `APPROVED`, and the API reads it from the chain.
 
 ---
 
