@@ -104,7 +104,7 @@
       "amount": 10000000,
       "ada": "10 ADA per manager added",
       "recipient": "serviceFeeRecipient",
-      "note": "Charged for each manager added. Removing a manager charges nothing. (Atlas calls this 'addProjectCreators'.)",
+      "note": "Charged for each manager added. Removing a manager charges nothing.",
       "evidence": {
         "add": "ad25d9e9885df8400389085f9c2d2751fc8002b246c31c8ff2b8520d4a8e4c62",
         "remove": "bd90c1483aa48bb422d7c392e0839697a09dbbaed398b1c8d7dff5fc990dfa7a"
@@ -156,10 +156,10 @@
     "appliesTo": ["project-credential-claim"],
     "powerUpFlow": {
       "status": "v2.3 backlog",
-      "note": "Upgrade tier by paying an ADA TX to serviceFeeRecipient with metadata { type: 'power_up', project_id, target_tier }. Verified by gateway via andamioscan."
+      "note": "Upgrade tier by paying an ADA TX to serviceFeeRecipient with metadata { type: 'power_up', project_id, target_tier }. Verified by the gateway on-chain."
     },
     "apiInjection": {
-      "note": "Gateway intercepts /v2/tx/project/contributor/task/commit and /v2/tx/project/contributor/credential/claim, looks up commission_rate from db-api, and injects fee_rate into the Atlas request. Caller-supplied fee_rate is stripped.",
+      "note": "On /v2/tx/project/contributor/task/commit and /v2/tx/project/contributor/credential/claim the gateway applies the project's commission_rate itself. Caller-supplied fee_rate is stripped.",
       "shippedIn": "live in the gateway"
     }
   },

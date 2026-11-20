@@ -110,7 +110,7 @@ Read and execute the target skill's instructions inline.
 
 ### 5. App Template Detection
 
-If the developer mentions they're working with the Andamio App Template, or if you detect `andamio-app-template` or `andamio-app-v2` in the current project:
+If the developer mentions they're working with the Andamio App Template, or if you detect `andamio-app-template` in the current project:
 
 > "The App Template includes built-in Agent Skills for template-specific workflows (`/getting-started`, `/auth`, `/transactions`). This plugin covers the protocol and API layer. Use both together."
 

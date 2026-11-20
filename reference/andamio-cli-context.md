@@ -525,7 +525,7 @@ Learner steps happen in the Andamio app. The CLI has no learner commands as of 1
 2. **Teacher reviews and assesses on-chain** → `teacher assignments list --course <id>`, then `teacher assessment build` + `tx sign` + `tx submit`, or `tx run /v2/tx/course/teacher/assignments/assess`
 3. **Learner claims credential on-chain** → app, or `tx run /v2/tx/course/student/credential/claim`
 
-Task commits to a project require the contributor to hold a credential (step 3). Without it, Atlas returns 422.
+Task commits to a project require the contributor to hold a credential (step 3). Without it, the API returns 422.
 
 ### Project setup (owner + manager)
 

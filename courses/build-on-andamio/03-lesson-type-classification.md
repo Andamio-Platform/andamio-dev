@@ -92,7 +92,7 @@
 #### SLT 300.4: "I can map each Andamio `tx_type` to its build endpoint."
 - **Lesson Type:** Developer Documentation
 - **Key Factors:** API reference work; the artifact is a lookup table.
-- **Inputs Needed:** `andamio tx types` output + the mapping table from SYSTEM_REFERENCE.md §5.
+- **Inputs Needed:** `andamio tx types` output + the mapping table from the system reference.
 
 ### Module 400 — The Transaction State Machine
 

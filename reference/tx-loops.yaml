@@ -48,7 +48,7 @@ last_updated: 2026-11-19
 #          ├──→ (11) course.modules.ongoing    [variant of 1]
 #          └──→ (12) course.teachers.rotate    [variant of 1]
 #          (2) project.setup
-#          ├──→ (8) project.credential.refused ←── (3) [BLOCKED: indexer]
+#          ├──→ (8) project.credential.refused ←── (3) [BLOCKED: refuse not confirmed]
 #          ├──→ (9) project.credential.denied  ←── (3) [stubbed]
 #          └──→ (10) project.tasks.replace     [variant of 2]
 #   (16) general.auth.headless  [prerequisite for all loops]
@@ -228,7 +228,7 @@ loops:
     validated_date: 2026-09-23
     known_gotchas:
       - "Treasury is NOT funded at project creation — explicit treasury_fund TX required"
-      - "contributor_state_id must be discovered via project get response (not documented in SYSTEM_REFERENCE §6.2)"
+      - "contributor_state_id must be discovered via project get response"
       - "project_create pays a flat 100 ADA service fee. Adding a manager after creation pays 10 ADA each, so name every initial manager in the create body."
 
   # ===========================================================================
@@ -295,8 +295,8 @@ loops:
     status: validated
     validated_date: 2026-09-23
     known_gotchas:
-      - "Module MUST be published on-chain with assignment content — the confirm handler
-         treats a 404 from the DB API as a permanent module-not-found failure and gives up
+      - "Module MUST be published on-chain with assignment content — TX confirmation
+         treats a 404 for the module as a permanent module-not-found failure and gives up
          on the TX. This is now the only hard prerequisite for the loop."
       - "There is no off-chain commitment to pre-create — confirmation of assignment_submit
          creates it. A 404 at confirm means the module is missing, not the commitment."
@@ -332,7 +332,7 @@ loops:
             }
 
           CLI auto-injects task_hash into registration metadata from the request body.
-          Requires contributor to hold prerequisite course credential — Atlas returns 422 without it.
+          Requires contributor to hold prerequisite course credential — the API returns 422 without it.
       - action: submit_task_evidence
         role: contributor
         note: >
@@ -518,7 +518,7 @@ loops:
     validated_date: 2026-04-07
     known_gotchas:
       - "Resubmission uses the same endpoint and slt_hash as initial submit — it's another assignment_submit TX, not an update"
-      - "After REFUSE, DB shows commitment_status: REFUSED, source: db_only (indexer may lag on-chain status)"
+      - "After REFUSE, DB shows commitment_status: REFUSED, source: db_only (on-chain status may lag)"
       - "No need to re-create the off-chain commitment — the original one is reused for resubmission"
 
   - id: 8
@@ -564,29 +564,29 @@ loops:
         endpoint: /v2/tx/project/contributor/credential/claim
         note: "BLOCKED — depends on successful assessment"
     protocol_note: >
-      KNOWN ISSUE (2026-04-07): The project refuse → recommit flow is blocked by an andamioscan
-      indexer gap. After manager refuses (task_assess refuse), the on-chain state transitions correctly
-      but the indexer does not process the refuse outcome (only Accept is indexed as of 2026-04-07).
+      KNOWN ISSUE (2026-04-07): The project refuse → recommit flow is blocked by a chain
+      confirmation gap. After manager refuses (task_assess refuse), the on-chain state transitions correctly
+      but the refuse outcome is not picked up from the chain (only Accept is, as of 2026-04-07).
       This causes the gateway confirm to fail, leaving the contributor in an inconsistent state.
-      Fix is incoming in andamioscan. Re-test after indexer update lands.
+      Fix is incoming. Re-test after it lands.
       Symptoms observed during testing:
         1. project_join after refuse → STATE_ERROR "Contributor has wrong state"
-        2. task/action (task_submit) after refuse → TX lands on-chain but indexer never confirms (not_indexed_count climbs)
+        2. task/action (task_submit) after refuse → TX lands on-chain but is never confirmed (not_indexed_count climbs)
         3. task_assess after task/action → STATE_ERROR "Contributor is not committed"
-    cost_estimate: "TBD — flow blocked, re-test after andamioscan fix"
+    cost_estimate: "TBD — flow blocked, re-test after the fix"
     validated_fees:
       project_join: { fee_ada: 0.56, paid_by: contributor }
       task_assess_refuse: { fee_ada: 0.36, paid_by: manager }
-      task_action_recommit: { fee_ada: 0.36, paid_by: contributor, note: "TX lands on-chain but indexer can't confirm" }
+      task_action_recommit: { fee_ada: 0.36, paid_by: contributor, note: "TX lands on-chain but is never confirmed" }
     script: null
     status: blocked
-    blocked_by: "andamioscan indexer — refuse outcome (constructor 1) not indexed"
+    blocked_by: "chain confirmation — refuse outcome (constructor 1) not picked up"
     validated_date: 2026-04-07
     known_gotchas:
-      - "Blocked by andamioscan indexer gap — refuse outcome not indexed, fix incoming"
-      - "task/action endpoint (task_submit) creates a valid on-chain TX but the indexer never confirms it"
+      - "Blocked by chain confirmation gap — refuse outcome not picked up, fix incoming"
+      - "task/action endpoint (task_submit) creates a valid on-chain TX but it is never confirmed"
       - "After task/action, DB shows ACCEPTED but on-chain state is not assessable — data inconsistency"
-      - "Course refuse flow works cleanly because course indexer handles refuse; project indexer does not yet"
+      - "Course refuse flow works cleanly because course confirmation handles refuse; project confirmation does not yet"
 
   - id: 9
     name: project.credential.denied
@@ -616,15 +616,15 @@ loops:
     protocol_note: >
       NOT TESTED (2026-04-07): Could not validate deny flow in isolation.
       The test project's contributor state was corrupted by loop 8 testing
-      (task_action TX put contributor in non-assessable state, Atlas returned 500).
+      (task_action TX put contributor in non-assessable state, the API returned 500).
       Needs clean-room test on a fresh project with a contributor that has only done project_join.
-      Also blocked by same andamioscan indexer gap as loop 8 — deny (constructor 2) is not indexed.
+      Also blocked by same chain confirmation gap as loop 8 — deny (constructor 2) is not picked up.
     cost_estimate: "TBD — not tested"
     script: null
     status: stubbed
     known_gotchas:
-      - "Indexer gap: andamioscan only indexes Accept (constructor 0). Refuse (constructor 1) and Deny (constructor 2) land on-chain but are not indexed."
-      - "MUST test on a fresh contributor state — will likely be unblocked when andamioscan refuse/deny indexing lands"
+      - "Confirmation gap: only Accept (constructor 0) is picked up from the chain. Refuse (constructor 1) and Deny (constructor 2) land on-chain but are not picked up."
+      - "MUST test on a fresh contributor state — will likely be unblocked when refuse/deny confirmation lands"
       - "Requires a fresh project or second contributor wallet to test in isolation"
 
   # ===========================================================================
@@ -672,7 +672,7 @@ loops:
     known_gotchas:
       - "tasks_to_remove needs FULL TaskData objects matching on-chain datum — NOT task hashes or strings"
       - "All TaskData fields required: project_content, expiration_posix, lovelace_amount, native_assets"
-      - "If task data doesn't exactly match on-chain datum, Atlas returns STATE_ERROR 'Task to delete does not exist'"
+      - "If task data doesn't exactly match on-chain datum, the API returns STATE_ERROR 'Task to delete does not exist'"
       - "Cannot remove tasks that have active contributor commitments"
       - "Tasks created via tasks_manage may show as chain_only if no matching DB draft exists"
 

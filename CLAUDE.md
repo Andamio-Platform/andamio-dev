@@ -29,7 +29,7 @@ There is no build step, no test suite, no linter. "Testing" means invoking skill
 
 **Compiled artifacts**: `compiled/` is a gitignored build output produced by the `coach:compile` skill for `andamio course import-all`. Treat it as ephemeral — never edit compiled files, never commit them. Source always wins.
 
-**Reference data**: `reference/tx-loops.yaml` is the canonical source for all Andamio transaction workflows. Each loop has named steps (off-chain and on-chain), exact CLI commands, roles, prerequisites, validated fees, and known gotchas. **Read this file first when running or testing transactions** — it is more complete than the tx-flow docs in devkit or the individual course lessons. For acceptance testing setup, also read `reference/acceptance-test-prerequisites.md`.
+**Reference data**: `reference/tx-loops.yaml` is the canonical source for all Andamio transaction workflows. Each loop has named steps (off-chain and on-chain), exact CLI commands, roles, prerequisites, validated fees, and known gotchas. **Read this file first when running or testing transactions** — it is more complete than the individual course lessons. For acceptance testing setup, also read `reference/acceptance-test-prerequisites.md`.
 
 **Knowledge base**: `knowledge/*.yaml` — append-only YAML files. Always increment counts, never overwrite. Update `knowledge/index.yaml` after extraction.
 

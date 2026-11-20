@@ -142,7 +142,7 @@ Contributors join projects, commit to tasks, submit work, and claim credentials:
    - `"refuse"` — "try again"; evidence is cleared; contributor resubmits via a new commit TX.
    - `"deny"` — **permanent expulsion**. Contributor state reverts to uncommitted and treasury assets are clawed back. Terminal.
 
-   > ⚠ **DenyProject indexer gap (as of 2026-04-04):** andamioscan only indexes Accept (constructor 0) and Refuse (constructor 1). A `deny` outcome lands on-chain but is silently ignored by the indexer, so it will not currently show up in platform views. Confirm the indexer handles Deny before relying on it in production.
+   > ⚠ **DenyProject gap (as of 2026-04-04):** only Accept (constructor 0) and Refuse (constructor 1) outcomes are picked up from the chain. A `deny` outcome lands on-chain but is silently ignored, so it will not currently show up in platform views. Confirm Deny is handled before relying on it in production.
 
 4. **Claim credential** (net gain — +5.64 ADA for a 5 ADA reward at the default rate):
    ```

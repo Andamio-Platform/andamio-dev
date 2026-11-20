@@ -3,14 +3,14 @@
 > **Note (2026-04-05):** This document reflects the pre-combine SLT numbering. After this research pass was produced, M200.1 (exploration) and M200.2 (dev doc) were merged into a single "Mint your access token" lesson, and M200.3–M200.5 were renumbered to M200.2–M200.4. Current authoritative SLT list is in `01-slts.md`.
 
 **Date:** 2026-04-05
-**Method:** Three parallel Explore agents across local Andamio repos (`andamio-cli`, `andamio-app-template`, `andamio-app-v2`, `andamio-api`, `andamio-ai-context`)
-**Goal:** Collect tangible examples that help a learner understand each SLT, and cross-check source code against SYSTEM_REFERENCE.md
+**Method:** Three parallel Explore agents across local Andamio repos (`andamio-cli`, `andamio-app-template`, and team-internal sources)
+**Goal:** Collect tangible examples that help a learner understand each SLT, and cross-check source code against the system reference
 
 ## Summary
 
 | # | SLT | Previous | After research |
 |---|---|---|---|
-| 100.1 | explain contribution-centered learning | Needs Context | **Ready** — unblocked 2026-04-05 by `andamio-ai-context/02-strategy/contribution-centered-learning.md` |
+| 100.1 | explain contribution-centered learning | Needs Context | **Ready** — unblocked 2026-04-05 by the team's contribution-centered-learning pedagogy brief |
 | 200.2 | mint an access token | Needs Context | **Ready** |
 | 200.4 | log in headlessly with `.skey` | Needs Context | **Ready** |
 | 200.5 | verify Attestation JWT offline | Needs Context | **Ready** |
@@ -25,13 +25,13 @@
 
 **New readiness totals:** 32 Ready · 0 Blocked · 0 Needs Human *(updated 2026-04-05 after pedagogy brief landed)*
 
-**Drift against SYSTEM_REFERENCE.md:** Zero real inconsistencies. The CLI, the gateway API, and the production app's TX handling all align with SYSTEM_REFERENCE.md as of 2026-04-04. The only pending-release observation is stalled confirmed-state handling (GitHub issue #449) where the app's polling is defensively more graceful than the spec currently requires — expected to resolve with Monday's backend deployment.
+**Drift against the system reference:** Zero real inconsistencies. The CLI, the gateway API, and the production app's TX handling all align with the system reference as of 2026-04-04. The only pending-release observation is stalled confirmed-state handling, where the app's polling is defensively more graceful than the spec currently requires — expected to resolve with Monday's backend deployment.
 
 ## SLT 100.1 — resolved 2026-04-05
 
 **Status:** Ready. Unblocked by a pedagogy brief authored directly into the team's shared AI context repo.
 
-**Source:** `andamio-ai-context/02-strategy/contribution-centered-learning.md` (full path on James's machine: `$REPOS/andamio-ai-context/02-strategy/contribution-centered-learning.md`)
+**Source:** the team's contribution-centered-learning pedagogy brief (internal, not public)
 
 **What the brief covers:**
 
@@ -93,7 +93,7 @@ State: updated
 **Source:** `andamio-cli/cmd/andamio/tx_build.go:32`, `andamio-cli/cmd/andamio/tx_register.go:25`
 
 **Key teaching points:**
-- `initiator_data` is required before an alias exists (SYSTEM_REFERENCE.md §4.1 exception). After minting, the alias is established and subsequent TXs use `alias` instead.
+- `initiator_data` is required before an alias exists (an exception in the system reference). After minting, the alias is established and subsequent TXs use `alias` instead.
 - 5 ADA fee goes to the protocol treasury.
 - Once the TX reaches `updated`, the learner can run `andamio user me --output json` to see their on-chain alias.
 
@@ -185,10 +185,7 @@ type AccessTokenAttestationClaims struct {
 3. Exchange signature for attestation JWT via `POST /api/v2/verify/complete`
 4. Verify the JWT offline using the public key fetched from `/.well-known/jwks.json`
 
-**Source:**
-- `andamio-api/internal/auth/jwt.go:23–29` (claim struct), `:120` (10-min TTL), `:124–154` (signing)
-- `andamio-api/internal/handlers/v2/gateway_handlers/jwks_handlers.go:14–97`
-- `andamio-api/internal/viewmodels/auth_viewmodels/access_token_verification_viewmodels.go:62–79`
+**Source:** Andamio API behaviour (`/api/v2/verify/*`, `/.well-known/jwks.json`)
 
 **Teaching takeaway:** The 10-min window is intentional — attestation JWTs are meant to be used immediately (e.g., prove alias ownership to join a Discord, claim a quest reward), not stored and reused. Third-party apps should refuse tokens older than a few minutes even within the TTL.
 
@@ -251,10 +248,7 @@ type AccessTokenAttestationClaims struct {
 }
 ```
 
-**Source:**
-- Handler: `andamio-api/internal/handlers/v2/merged_handlers/merged_handlers.go:579–625`
-- Orchestration: `andamio-api/internal/orchestration/course_orchestrator.go` (ListStudentCredentials)
-- Types: `andamio-api/internal/orchestration/types.go` (StudentCourseCredential)
+**Source:** Andamio API behaviour (`POST /v2/course/student/credentials/list`)
 
 **Teaching takeaway:** The `source` field on each course row is the learner's window into Andamio's merge layer — it tells them whether the gateway had both off-chain and on-chain data (`merged`) or only on-chain data (`chain_only`). `claimed_credentials` is an array of `slt_hash` values representing modules the learner has fully completed and claimed credentials for.
 
@@ -318,7 +312,7 @@ andamio tx run /v2/tx/course/teacher/modules/manage \
 
 **The five failure modes, with real response shapes:**
 
-#### 1. Build error (Atlas rejects the body)
+#### 1. Build error (the API rejects the body)
 
 ```bash
 $ andamio tx build /v2/tx/course/teacher/modules/manage --body '{"invalid": "data"}'
@@ -326,7 +320,7 @@ Error: failed to build transaction: 400 Bad Request: {"error": "alias field requ
 # exit code: 1
 ```
 
-Atlas errors pass through the gateway unchanged — not structured gateway responses. The lesson should teach learners to parse HTTP 4xx + error body.
+Build errors are passed through unchanged — not structured gateway responses. The lesson should teach learners to parse HTTP 4xx + error body.
 
 #### 2. Sign error (client-side)
 
@@ -395,12 +389,11 @@ Terminal state. Safe to retry the whole operation with a new TX.
 The `failure_reason` field is enum-like: `MODULE_NOT_FOUND`, `TASK_NOT_FOUND`, etc. The on-chain TX succeeded; only the DB mirror failed. Recovery is operational (create the missing DB record, gateway retries automatically).
 
 **Source:**
-- Status handler: `andamio-api/internal/handlers/v2/tx_state_handlers/tx_state_handlers.go:52–82, 224–268`
 - Lifecycle error handling: `andamio-cli/cmd/andamio/tx_lifecycle.go:36–237`
 
 **HTTP codes for `tx status`:**
 - `200` — TX found (any state)
-- `404` — TX not in Redis (expired from TTL, or never registered)
+- `404` — TX not tracked (expired from TTL, or never registered)
 - `400` — bad `tx_hash` format
 - `500` — service error
 
@@ -545,7 +538,7 @@ andamio project task verify-hash <project-id>
 
 ### SLT 700.3 — Handle TX failure modes gracefully in code
 
-**All five failure modes have real code examples in the template and production app:**
+**All five failure modes have real code examples or patterns from the template and production app:**
 
 #### Build error
 
@@ -599,78 +592,34 @@ function humanizeTxError(message: string): string {
 
 #### Submit rejection
 
-From `andamio-app-v2/src/lib/tx-error-messages.ts`:
+The production app maps error codes to messages:
 
-```typescript
-const TX_ERROR_PATTERNS: Record<string, string> = {
-  "ACCESS_TOKEN_ERROR": "You don't have a valid access token",
-  "SCRIPT_FAILURE": "Transaction validation failed on-chain",
-  "INSUFFICIENT_FUNDS": "Insufficient funds (UTxO or fees)",
-  "INVALID_OUTPUT": "Invalid output state (datum/value mismatch)",
-};
-```
+| Code | Message |
+|---|---|
+| `ACCESS_TOKEN_ERROR` | You don't have a valid access token |
+| `SCRIPT_FAILURE` | Transaction validation failed on-chain |
+| `INSUFFICIENT_FUNDS` | Insufficient funds (UTxO or fees) |
+| `INVALID_OUTPUT` | Invalid output state (datum/value mismatch) |
 
 **Pattern:** Map Cardano script error codes to user language before surfacing.
 
 #### Chain expiry
 
-From `andamio-app-v2/src/lib/tx-polling-fallback.ts:65–165`:
-
-```typescript
-export async function pollUntilTerminal(
-  txHash: string,
-  authenticatedFetch: (url: string) => Promise<Response>,
-  callbacks: PollCallbacks = {},
-  options: PollOptions = {},
-  signal?: AbortSignal
-): Promise<TxStatus | null> {
-  const { interval = 6_000, maxPolls = 150 } = options;
-
-  for (let i = 0; i < maxPolls; i++) {
-    if (signal?.aborted) return null;
-    if (i > 0) await new Promise((r) => setTimeout(r, interval));
-
-    const response = await authenticatedFetch(`${GATEWAY_API_BASE}/tx/status/${txHash}`);
-    const status = (await response.json()) as TxStatus;
-    callbacks.onStatus?.(status);
-
-    if (TERMINAL_STATES.includes(status.state)) {
-      callbacks.onComplete?.(status);
-      return status;
-    }
-  }
-}
-```
+The production app polls `/tx/status/{txHash}` until the state is terminal, reporting each status as it arrives.
 
 **Pattern:** 6s polling interval, max 150 polls (~15 min). `expired` is terminal — surface a retry button.
 
 #### DB sync failure
 
-From `andamio-app-v2/src/lib/tx-polling-fallback.ts:118–134`:
-
-```typescript
-if (status.state === "confirmed" && status.last_error) {
-  stalledCount++;
-  if (stalledCount >= STALLED_THRESHOLD) {
-    callbacks.onComplete?.(status);
-    return status;
-  }
-} else {
-  stalledCount = 0;
-}
-```
-
-Where `STALLED_THRESHOLD = 5` (30 seconds at 6s intervals).
+The production app counts consecutive polls where `state` is `confirmed` and `last_error` is set, and treats the TX as complete once the count reaches 5 (30 seconds at 6s intervals). Any other poll resets the count.
 
 **Pattern:** Detect confirmed-with-error stuck state, treat as success for UX purposes. The on-chain TX succeeded; the DB mirror can be healed operationally.
 
-**Pending-release note:** This stalled-state detection is currently the app being defensively ahead of the spec (GitHub issue #449). SYSTEM_REFERENCE.md will document the stalled-state handling after Monday's deployment. This is pending-release, not drift.
+**Pending-release note:** This stalled-state detection is currently the app being defensively ahead of the spec. The system reference will document the stalled-state handling after Monday's deployment. This is pending-release, not drift.
 
 **Source:**
 - `andamio-app-template/src/hooks/tx/use-transaction.ts`
-- `andamio-app-v2/src/lib/tx-polling-fallback.ts`
-- `andamio-app-v2/src/lib/tx-error-messages.ts`
-- `andamio-app-v2/src/lib/api-error-messages.ts`
+- Production app behaviour (not public source)
 
 ---
 
@@ -762,17 +711,17 @@ Types auto-generated from the OpenAPI spec. No API client boilerplate.
 
 ## Pending-release observations (not drift)
 
-1. **Stalled confirmed-state handling (GitHub issue #449)** — `andamio-app-v2/src/lib/tx-polling-fallback.ts:118–134` treats `state: confirmed` + `last_error` present for 5+ polls as a terminal success state. SYSTEM_REFERENCE.md currently says `confirmed` is not terminal (wait for `updated`/`failed`/`expired`). The app is being defensively more graceful than the spec requires, anticipating a Monday deployment that will add explicit guidance on stalled-state handling to the gateway.
+1. **Stalled confirmed-state handling** — the production app treats `state: confirmed` + `last_error` present for 5+ polls as a terminal success state. The system reference currently says `confirmed` is not terminal (wait for `updated`/`failed`/`expired`). The app is being defensively more graceful than the spec requires, anticipating a Monday deployment that will add explicit guidance on stalled-state handling to the gateway.
 
 Nothing else pending-release identified in the repos I searched.
 
 ## Drift inventory
 
-**Zero real drift** between source code and SYSTEM_REFERENCE.md across the 11 unlocked SLTs.
+**Zero real drift** between source code and the system reference across the 11 unlocked SLTs.
 
 ## Open documentation gaps (feed back to team)
 
-1. ~~**Contribution-centered learning pedagogy brief**~~ — **resolved 2026-04-05**. Brief now exists at `andamio-ai-context/02-strategy/contribution-centered-learning.md`.
+1. ~~**Contribution-centered learning pedagogy brief**~~ — **resolved 2026-04-05**. Brief now exists in the team's internal strategy notes.
 2. **Attestation JWT key rotation policy** — implementation uses a single static RSA key pair loaded at startup. No rotation policy is documented. Worth flagging for the team: if keys leak, there's no documented rotation process. Low urgency for the course, but a real protocol gap.
 
 ## Updated readiness totals
@@ -783,4 +732,4 @@ Nothing else pending-release identified in the repos I searched.
 | Needs Context | 0 | −12 |
 | Needs Human | 0 | 0 |
 
-**All 32 SLTs are ready for lesson drafting.** SLT 100.1 was unblocked 2026-04-05 when the team authored the contribution-centered-learning pedagogy brief directly into `andamio-ai-context`.
+**All 32 SLTs are ready for lesson drafting.** SLT 100.1 was unblocked 2026-04-05 when the team authored the contribution-centered-learning pedagogy brief directly into the team's internal strategy notes.
