@@ -29,8 +29,7 @@ Never use these in course content. If you find yourself reaching for one of them
 |---|---|---|
 | **gateway** (and "gateway API", "the gateway", "Andamio gateway") | An internal service name for the public-facing API. Exposing the name leaks internal architecture and confuses learners who don't need to know about it. | **Andamio API** |
 | **andamioscan** | Internal indexer service. Not a subject of this course. | *(no direct substitute — rephrase to describe the behavior without naming the indexer)* |
-| **tx api**, **tx-api**, **txapi**, **Atlas**, **atlas** | Internal transaction-building service. Not a subject of this course. | *(no direct substitute — describe what happens without naming the service)* |
-| **db api**, **db-api**, **dbapi** | Internal database service. Not a subject of this course. | *(no direct substitute — rephrase to describe the behavior)* |
+| **The name of any service behind the API** (the services that build transactions or store data) | Internal services. Not a subject of this course. | *(no direct substitute — describe what happens without naming the service)* |
 
 ## Edge cases and context rules
 

@@ -31,12 +31,12 @@ files:
 # Sync discipline
 #
 # The reference/ and specs/ surfaces in this repo drift from their sources
-# (andamio-api code, andamio-cli releases, andamio-app-template README) if
+# (the Andamio API, andamio-cli releases, andamio-app-template README) if
 # not refreshed. Run a sync check periodically:
 #
-#   1. Refresh specs/andamio-api.yaml against andamio-api OpenAPI output.
-#   2. Diff reference/status-enums.md against API enum source (paths listed
-#      in that doc's Provenance section).
+#   1. Refresh specs/andamio-api.yaml against the published API spec.
+#   2. Diff reference/status-enums.md against the status values the API
+#      returns.
 #   3. Diff reference/andamio-cli-context.md command list against
 #      `andamio --help` and the cli release notes.
 #   4. Re-run /cost-estimator against preprod and update specs/cost-registry.json.
@@ -47,7 +47,7 @@ files:
 # Sync log — append a new entry, never edit an existing one.
 #
 # Last sync: 2026-07-28 (spec replacement — the vendored specs/andamio-api.yaml
-#            was swapped for the generated PUBLIC contract from andamio-api:
+#            was swapped for the generated PUBLIC contract of the API:
 #            123 paths -> 79 paths / 80 operations. Developer-portal routes
 #            (registration, API-key lifecycle, billing) and all administrative
 #            and internal operations are now absent by design, so skills no
@@ -59,5 +59,4 @@ files:
 # 2026-05-14 (reference/ pass — status-enums, integration-paths,
 #            api-endpoints-by-use-case added; cli-context header de-hardcoded;
 #            cost-registry.json bumped to v0.4.0 — service fees synced from
-#            devkit/configs/andamio-atlas/preprod/fee-config.json, commission
-#            tier model added from devkit/plans/PricingV3Plan.md).
+#            the preprod fee configuration, commission tier model added).

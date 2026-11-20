@@ -43,7 +43,7 @@ examples/                 # Runnable scripts demonstrating full tx state machine
   project-lifecycle.sh    # Project: create → task → commit → assess → claim
 specs/                    # Bundled API specifications (read-only reference)
   andamio-api.yaml        # Andamio Gateway API — the PUBLIC contract (Swagger 2.0, 75 paths).
-                          # Synced from the generated public artifact in andamio-api; the header
+                          # Synced from the generated public API artifact; the header
                           # records the source commit and sync date. Administrative and internal
                           # operations are not in it, by design. Do not hand-edit.
   cost-registry.json      # Transaction cost data (fees, min UTXO, execution units)

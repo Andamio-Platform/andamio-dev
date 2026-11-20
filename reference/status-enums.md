@@ -2,7 +2,7 @@
 
 > The canonical status vocabulary emitted by the Andamio API. CLI, app, and custom integrations align to these values.
 
-**Source of truth**: `andamio-api` Go code (paths in [Provenance](#provenance)). This doc is hand-curated against that source. If you see drift, the API code wins — file an issue.
+**Source of truth**: the values the Andamio API returns. This doc is hand-curated against the API. If you see drift, the API wins — file an issue.
 
 **Last synced from API**: 2026-05-14
 
@@ -25,7 +25,7 @@ A student's commitment to a course assignment. Lives in `assignment_commitments_
 | `PENDING_TX_COMMIT` | Awaiting on-chain confirmation of initial commit | `AWAITING_SUBMISSION` | — | no | TX state machine |
 | `PENDING_TX_LEAVE` | Awaiting on-chain confirmation of leave | `LEFT` | — | no | TX state machine |
 
-**State machine** (forward-only, from `commitment_state_healer.go`):
+**State machine** (forward-only):
 
 ```
 AWAITING_SUBMISSION ──submit──> SUBMITTED ──accept──> ACCEPTED ──claim──> CREDENTIAL_CLAIMED
@@ -57,7 +57,7 @@ A contributor's commitment to a project task. Lives in `task_commitments`.
 
 `PENDING_TX_*` variants: `PENDING_TX_ASSESS`, `PENDING_TX_CLAIM`, `PENDING_TX_COMMIT`, `PENDING_TX_LEAVE`, `PENDING_TX_SUBMIT`.
 
-**Key distinctions** (from `task_commitment_state_healer.go`):
+**Key distinctions**:
 
 - `REFUSED` is **not terminal** — resubmission re-enters the lifecycle (back to `COMMITTED`).
 - `DENIED` is post-expiration terminal. Funds return to treasury.
@@ -104,19 +104,19 @@ State transition rules (from API request validators):
 
 ## TX lifecycle status
 
-Transaction state machine — **not** a commitment status. Tracks pending Cardano TXs through Redis. Lives in `tx:state:*` Redis keys.
+Transaction state machine — **not** a commitment status. Tracks pending Cardano TXs.
 
 | Value | Meaning |
 |-------|---------|
-| `pending` | TX submitted; awaiting Andamioscan confirmation |
-| `confirmed` | Confirmed on-chain by Andamioscan |
-| `updated` | DB API updated with TX data (terminal happy path) |
+| `pending` | TX submitted; awaiting on-chain confirmation |
+| `confirmed` | Confirmed on-chain |
+| `updated` | API data updated with the TX (terminal happy path) |
 | `failed` | TX failed (exceeded retries, or submission error) |
 | `expired` | TX exceeded TTL (2h confirmation timeout) without confirmation |
 
 Note: These are **lowercase**, distinct from the `UPPERCASE` commitment/module/task statuses.
 
-**Timing constants** (from `tx_state_machine.go`):
+**Timing constants**:
 - Pending TTL: 24 hours
 - Confirmation timeout: 2 hours
 - Poll interval: 5 seconds
@@ -137,19 +137,9 @@ A single commitment may cycle through many TXs (commit, submit, assess, claim) �
 
 ## Provenance
 
-Enums originate in `andamio-api` Go code:
+Enums are the values the Andamio API returns.
 
-| Enum | Source path |
-|------|-------------|
-| Assignment commitment | `internal/internal_api/andamio_db_client/client.go:162-174` |
-| Task commitment | `internal/internal_api/andamio_db_client/client.go:546-560` |
-| Project task | `internal/internal_api/andamio_db_client/client.go:498-506` |
-| Course module | `internal/internal_api/andamio_db_client/client.go:232-239` |
-| TX lifecycle | `internal/common/constants/tx_state_machine.go:8-19` |
-| Assignment transitions | `internal/service/commitment_state_healer.go:55-92` |
-| Task transitions | `internal/service/task_commitment_state_healer.go:70-100` |
-
-**Drift mitigation**: This doc is hand-curated. v2 work to either auto-generate from API source at build time, or add a periodic sync check, is tracked separately.
+**Drift mitigation**: This doc is hand-curated. v2 work to either auto-generate from the API at build time, or add a periodic sync check, is tracked separately.
 
 ## Cross-links
 
