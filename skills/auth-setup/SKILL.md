@@ -180,7 +180,7 @@ andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/su
 andamio config set-submit-header project_id <blockfrost-project-id>
 ```
 
-Use the full URL, ending in `/api/v0/tx/submit`. Blockfrost redirects a wrong path (the base URL, or one missing `/v0`) to its homepage, and CLI versions up to 1.3.x take that as a successful submit: the transaction never reaches the chain and `tx run` waits until it times out (andamio-cli#218 makes this an error). Have the developer run the header command themselves, since the project ID is a secret. Any Cardano submit API that takes raw CBOR works too.
+Use the full URL, ending in `/api/v0/tx/submit`. Blockfrost redirects a wrong path (the base URL, or one missing `/v0`) to its homepage, and CLI versions up to 1.3.0 take that as a successful submit: the transaction never reaches the chain and `tx run` waits until it times out (andamio-cli#218 makes this an error). Have the developer run the header command themselves, since the project ID is a secret. Any Cardano submit API that takes raw CBOR works too.
 
 4. **Log in with the signing key:**
 
