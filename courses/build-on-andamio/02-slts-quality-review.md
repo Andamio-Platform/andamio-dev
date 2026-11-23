@@ -22,7 +22,7 @@
 
 ## SLTs removed during scope narrowing
 
-Three SLTs were removed because the course scope was narrowed to gateway API + CLI + App Template only (Andamioscan, andamio-db-api, and andamio-atlas-api are out of scope as subjects).
+Three SLTs were removed because the course scope was narrowed to gateway API + CLI + App Template only (Andamioscan and the services behind the API are out of scope as subjects).
 
 | # | Original | Reason |
 |---|---|---|

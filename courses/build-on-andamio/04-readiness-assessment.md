@@ -4,7 +4,7 @@
 
 **Date:** 2026-04-04 (initial) · updated 2026-04-05 (research pass) · updated 2026-04-05 (pedagogy brief landed)
 **Assessed by:** `/coach:teacher` → `self-assess-readiness`
-**Context:** Assessment performed immediately after a full SYSTEM_REFERENCE.md drift audit against `andamio-dev`, so protocol-mechanics knowledge is maximally fresh and verified.
+**Context:** Assessment performed immediately after a full system-reference drift audit against `andamio-dev`, so protocol-mechanics knowledge is maximally fresh and verified.
 
 ## Summary
 
@@ -12,7 +12,7 @@
 - **Current distribution:** **32 Ready · 0 Needs Context · 0 Needs Human**
 - **Initial distribution:** 20 Ready · 12 Needs Context · 0 Needs Human
 - **After research pass:** 31 Ready · 1 Needs Context (100.1) · 0 Needs Human
-- **After pedagogy brief:** 32 Ready (100.1 unblocked by `andamio-ai-context/02-strategy/contribution-centered-learning.md`)
+- **After pedagogy brief:** 32 Ready (100.1 unblocked by the team's contribution-centered-learning pedagogy brief)
 - **Overview:** Strong on protocol mechanics, FSMs, and body shapes (just audited). Weaker on specific CLI flag syntax and app template internals at first pass — closed during research. Zero SLTs require human expert review.
 
 ## Honesty calibration results
@@ -20,11 +20,11 @@
 | Check | Result |
 |---|---|
 | API Signature Test | **Strong** for gateway TX body shapes (17 endpoints just verified); **Partial** for CLI flag specifics |
-| Version Test | **Current** — SYSTEM_REFERENCE.md dated 2026-04-04, CLI v0.10.2, knowledge is fresh |
+| Version Test | **Current** — the system reference dated 2026-04-04, CLI v0.10.2, knowledge is fresh |
 | Niche Library Test | **Flag applied** — Andamio is small-user-base; defaulting Code Demo to Partial unless explicit evidence from this session |
 | Confabulation Test | **Low risk** for body shapes (verified); **moderate risk** for CLI flags; **higher risk** for attestation JWT claim schema |
 | Assessment Test | **Strong** for body-shape drift (just did that work); **Partial** for Cardano-specific subtleties (CBOR edges, slot math) |
-| Explanation Depth Test | **Three-deep** on Andamio protocol (SYSTEM_REFERENCE.md provides rationale); thinning on underlying Cardano design decisions |
+| Explanation Depth Test | **Three-deep** on Andamio protocol (the system reference provides rationale); thinning on underlying Cardano design decisions |
 
 ## Readiness by module
 
@@ -146,20 +146,20 @@
 | 100.2 | install the Andamio CLI | M100 | Pure procedural, well-documented |
 | 100.3 | fund a preprod wallet from faucet | M100 | External UI, stable process |
 | 100.4 | distinguish Learning vs Ops mode | M100 | Plugin design I just defined |
-| 200.1 | explain why writes need access token | M200 | SYSTEM_REFERENCE.md §2 covers this |
+| 200.1 | explain why writes need access token | M200 | the system reference covers this |
 | 200.3 | distinguish API key from JWT | M200 | AUTH.md covers this |
 | 300.1 | interpret `source` field | M300 | Just verified in drift audit |
 | 300.2 | navigate OpenAPI spec | M300 | Literally did this in drift audit |
-| 300.4 | map tx_types to endpoints | M300 | SYSTEM_REFERENCE.md §5 memorized |
-| 400.1 | describe TX state machine steps | M400 | SYSTEM_REFERENCE.md §4 fully documented |
-| 400.2 | explain why `updated` is safe | M400 | SYSTEM_REFERENCE.md §4.4/4.5 |
-| 400.5 | explain expiry revert rules | M400 | SYSTEM_REFERENCE.md §7.3/8.3 |
+| 300.4 | map tx_types to endpoints | M300 | the system reference memorized |
+| 400.1 | describe TX state machine steps | M400 | the system reference fully documented |
+| 400.2 | explain why `updated` is safe | M400 | the system reference |
+| 400.5 | explain expiry revert rules | M400 | the system reference |
 | 500.1 | explain how courses are structured | M500 | Matches proven `andamio-for-contributors` classification |
 | 500.3 | publish a course module on-chain | M500 | Body shape just fixed in drift audit |
-| 500.4 | explain assignment commitment FSM | M500 | SYSTEM_REFERENCE.md §7 |
+| 500.4 | explain assignment commitment FSM | M500 | the system reference |
 | 500.5 | run full course lifecycle | M500 | `course-lifecycle.sh` (post-fix) is the reference |
-| 600.1 | explain projects vs courses | M600 | SYSTEM_REFERENCE.md §8/§10/§11 |
-| 600.3 | explain task commitment FSM | M600 | SYSTEM_REFERENCE.md §8 |
+| 600.1 | explain projects vs courses | M600 | the system reference |
+| 600.3 | explain task commitment FSM | M600 | the system reference |
 | 600.4 | run full project lifecycle | M600 | `project-lifecycle.sh` (post-fix) is the reference |
 | 700.2 | estimate ADA cost | M700 | `cost-registry.json` just verified |
 | 700.5 | critique Andamio DX | M700 | I have opinions from this session's work |
@@ -178,7 +178,7 @@ None.
 |---|---|---|---|---|
 | 1 | **Andamio CLI command reference** — verified flags for `user login --skey`, `course credential compute-hash`, `tx build/sign/submit/register/status`, `project task list`, `tx run` | CLI reference | 200.2, 200.4, 400.3, 500.2, 600.2 | **HIGH** (5 SLTs) |
 | 2 | **Andamio app template read-through** — `andamio-app-template` repo (alias `template` from global CLAUDE.md): scaffold, routes, auth wiring, integration points | Code read | 700.1, 700.4 | **HIGH** (2 SLTs) |
-| 3 | **TX error response captures** — real gateway/Atlas error payloads for each of the 5 failure modes | API captures | 400.4, 700.3 | **MEDIUM** (2 SLTs) |
+| 3 | **TX error response captures** — real API error payloads for each of the 5 failure modes | API captures | 400.4, 700.3 | **MEDIUM** (2 SLTs) |
 | 4 | **User credentials endpoint response** — exact path + field-by-field example | API reference | 300.3 | MEDIUM (1 SLT) |
 | 5 | **Attestation JWT claim schema** — structure + example token | Spec + sample | 200.5 | LOW (1 SLT) |
 | 6 | **Contribution-centered pedagogy framing** — brief content distinguishing from credential-centered | Conceptual content | 100.1 | LOW (1 SLT) |
@@ -186,8 +186,8 @@ None.
 
 ## Set-level observations
 
-- **Strength cluster:** Modules 500 and 600 — directly mirrored in SYSTEM_REFERENCE.md, which I just audited. Every body shape, FSM, and invariant is fresh and verified. These modules could be built immediately.
-- **Weakness cluster:** Modules 200 and 700. Both depend on artifacts outside SYSTEM_REFERENCE.md — CLI syntax lives in CLI help/docs, and app template internals live in a separate repo (`andamio-app-template`).
+- **Strength cluster:** Modules 500 and 600 — directly mirrored in the system reference, which I just audited. Every body shape, FSM, and invariant is fresh and verified. These modules could be built immediately.
+- **Weakness cluster:** Modules 200 and 700. Both depend on artifacts outside the system reference — CLI syntax lives in CLI help/docs, and app template internals live in a separate repo (`andamio-app-template`).
 - **Critical path:** Shopping list item #1 (CLI command reference) unlocks 5 SLTs across 4 modules. It's a single focused research task — reading `andamio --help` for each relevant subcommand, or re-reading `reference/andamio-cli-context.md` with fresh eyes (I edited this file in the drift audit).
 - **Sequencing implication:** Module readiness does not suggest reordering — the pedagogical order (auth → read → write → domain → integrate) is required even though M300 is more Ready than M200.
 - **Confabulation risk zones:** CLI flag names, TX error response shapes, app template internals, attestation JWT claims. All are one focused research session away from being resolved — none require a human expert.

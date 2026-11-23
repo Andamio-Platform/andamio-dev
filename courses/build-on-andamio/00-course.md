@@ -23,7 +23,7 @@ In scope:
 
 Out of scope:
 
-- Andamioscan, andamio-db-api, andamio-atlas-api — learners meet these implicitly through gateway responses, but they are not subjects of the course. The internal architecture is not taught; the surface is.
+- Andamioscan and the services behind the API — learners meet these implicitly through gateway responses, but they are not subjects of the course. The internal architecture is not taught; the surface is.
 
 ## Modules
 
@@ -75,13 +75,13 @@ Canonical references the course author should cite when drafting lessons:
 
 | Source                           | Location                                                           | Feeds                                                                                                 |
 | -------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Andamio System Reference         | `andamio-dev-kit-internal/docs/SYSTEM_REFERENCE.md`                | M200, M300, M400, M500, M600 technical content                                                        |
-| Andamio Authentication           | `andamio-dev-kit-internal/docs/AUTH.md`                            | M200 auth flows, attestation JWT                                                                      |
-| Contribution-centered learning   | `andamio-ai-context/02-strategy/contribution-centered-learning.md` | M100.1 + pedagogy framing across all modules                                                          |
+| Andamio System Reference         | internal team document (not public)                                | M200, M300, M400, M500, M600 technical content                                                        |
+| Andamio Authentication           | internal team document (not public)                                | M200 auth flows, attestation JWT                                                                      |
+| Contribution-centered learning   | internal team document (not public)                                | M100.1 + pedagogy framing across all modules                                                          |
 | Andamio CLI source               | `andamio-cli/`                                                     | M100, M200, M400, M500, M600 CLI command examples                                                     |
-| Andamio gateway source           | `andamio-api/`                                                     | M300, M400 gateway behavior, error shapes                                                             |
+| Andamio gateway source           | not public                                                         | M300, M400 gateway behavior, error shapes                                                             |
 | Andamio App Template             | `andamio-platform/andamio-app-template/`                           | M700 integration strategy and scaffold                                                                |
-| Andamio App V2                   | `andamio-platform/andamio-app-v2/`                                 | M700 idiomatic failure handling patterns                                                              |
+| Andamio App V2                   | not public                                                         | M700 idiomatic failure handling patterns                                                              |
 | Gateway OpenAPI spec             | `andamio-dev/specs/andamio-api.yaml`                               | M300, M400 endpoint references                                                                        |
 | Cost registry                    | `andamio-dev/specs/cost-registry.json`                             | M700 cost estimation                                                                                  |
 | **TX loops reference** (pending) | `andamio-dev/reference/tx-loops.yaml`                              | M400, M500, M600, M700 — names each runnable loop and its cost model. See Pending dependencies below. |

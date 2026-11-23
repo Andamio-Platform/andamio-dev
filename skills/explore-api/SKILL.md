@@ -13,7 +13,7 @@ metadata:
 
 Natural-language search across the Andamio Gateway API spec. Developers ask questions like "How do I list courses?" and get matching endpoints with params, auth requirements, and example responses.
 
-The Gateway API is the single entry point for all Andamio operations. It proxies to backend services (DB API, Atlas TX builder, Andamioscan indexer) and merges their data into unified responses. Developers never call backend services directly.
+The Gateway API is the single entry point for all Andamio operations. It merges on-chain and off-chain data into unified responses. Developers never call the services behind it directly.
 
 ## Instructions
 
