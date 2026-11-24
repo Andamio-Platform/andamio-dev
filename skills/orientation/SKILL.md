@@ -80,7 +80,7 @@ brew install andamio-platform/tap/andamio
 ```
 
 **If no API key:** Walk through setup:
-> You'll need an API key for read access. Go to https://preprod.app.andamio.io/api-setup, connect your wallet, register, verify your email, and generate a key. Then:
+> You'll need an API key for read access. Keys for every network come from the developer portal on the mainnet app: go to https://app.andamio.io/api-setup, connect a wallet that holds a mainnet Access Token, register, verify your email, and generate a preprod key (it starts with `ant_pp_`). Then:
 > ```bash
 > andamio auth login --api-key <your-key>
 > ```

@@ -45,7 +45,11 @@ Auth: API Key + JWT
 Body: { alias, teachers: [alias1, alias2], ... }
 ```
 
+`alias` is the owner's Access Token alias (the logged-in user), not the course name. The create transaction takes no name: the title is set after it confirms.
+
 The API returns an unsigned transaction. The developer must sign and submit it (see Transaction Flow below).
+
+**After create:** `tx run --tx-type course_create` registers the course itself, so don't run `course owner register` afterwards (it answers 409, already registered). Set the title and other metadata with `andamio course owner update --course-id <id> --title "..."` (add `--public` to make it public). A new course shows up in `andamio course owner list`, not in `course list`.
 
 **Planning tip:** Set all initial teachers at creation — adding teachers later costs ~10.3 ADA each.
 
@@ -67,9 +71,15 @@ andamio course create-module --course-id <course-id> \
 - **APPROVED** — SLTs are locked, can only update lesson content
 - **ON_CHAIN** — Fully locked, content hashes committed on-chain
 
+**SLT length:** each SLT is limited to 140 characters on-chain. The CLI doesn't check this before the mint (`create-module`, `import` and `mint-modules --dry-run` all accept longer SLTs; only the mint build refuses), so check the length while drafting.
+
+**Adding an SLT to a module that already has SLTs:** `course import` drops the new SLT and still reports success, and the lesson for it is skipped (andamio-cli bug: existing SLTs are sent with an `slt_index`, see gotcha-005). While the module is DRAFT, delete it with `andamio course teacher delete-module --course-id <id> --module-code <code>`, recreate it with all its SLTs, then import.
+
 #### 3. Import Content
 
 The CLI handles Markdown-to-Tiptap conversion automatically.
+
+**Offer a review first:** when you draft the content, write the module files locally, let the owner read and edit them, and import only once they're happy. SLTs lock at APPROVED, so it's cheaper to fix them before.
 
 **Export existing module (to edit):**
 ```bash
@@ -93,12 +103,14 @@ andamio course import-all <course-id>
 - `introduction.md`: `# H1` becomes intro title
 - `assignment.md`: `# H1` becomes assignment title
 
-**SLT hash workflow:** As of v0.10.2, `course import` automatically computes the SLT hash (Blake2b-256) and includes it in the API payload. This means the recommended workflow is:
+**SLT hash workflow:** `course import` (v0.10.2+) computes the SLT hash (Blake2b-256) and sends it, but a DRAFT module doesn't reliably store it, and the gateway matches the minted module to the DB record by that stored hash. Setting APPROVED with the hash stores it, so approve before you mint:
 
-1. Import content with `--create` flag (creates DRAFT module with SLTs and computed hash)
-2. Mint modules on-chain via `tx run` (gateway matches DB record by hash)
-3. Register module if needed: `andamio course teacher register-module --course-id <id> --module-code <code> --slt-hash <hash>`
+1. Import content with `--create` (creates a DRAFT module with its SLTs)
+2. Approve with the hash (this locks the SLTs): `andamio course teacher update-module-status --course-id <id> --module-code <code> --status APPROVED --slt-hash <hash>`
+3. Mint on-chain: `andamio course teacher mint-modules --course-id <id> --alias <teacher-alias> --module-code <code>` (CLI 1.3.1+). On 1.3.0, `tx run /v2/tx/course/teacher/modules/manage --tx-type modules_manage`
 4. Publish module: `andamio course teacher publish-module --course-id <id> --module-code <code>`
+
+**Minted from DRAFT by mistake?** The module gets stuck as two records: a `chain_only` one and the DRAFT with an empty `slt_hash`. Run the step 2 command with the module's hash: it merges them and the module shows ON_CHAIN. `register-module` doesn't fix this case (it fails with "slt_hash field is missing or empty"). See gotcha-012.
 
 You can pre-compute the hash without importing:
 ```bash
@@ -153,7 +165,7 @@ Course operations that modify on-chain state require Cardano transactions:
 ```bash
 # 1. Build (returns unsigned tx hex)
 UNSIGNED=$(andamio tx build /v2/tx/instance/owner/course/create \
-  --body '{"alias":"my-alias","teachers":["teacher1"]}' \
+  --body '{"alias":"<owner-alias>","teachers":["teacher1"]}' \
   --output json | jq -r '.unsigned_tx')
 
 # 2. Sign (returns signed_tx and tx_hash)
