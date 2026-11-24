@@ -103,7 +103,7 @@ andamio course import-all <course-id>
 - `introduction.md`: `# H1` becomes intro title
 - `assignment.md`: `# H1` becomes assignment title
 
-**SLT hash workflow:** `course import` (v0.10.2+) computes the SLT hash (Blake2b-256) and sends it, but a DRAFT module doesn't reliably store it, and the gateway matches the minted module to the DB record by that stored hash. Setting APPROVED with the hash stores it, so approve before you mint:
+**SLT hash workflow:** `course import` (v0.10.2+) computes the SLT hash (Blake2b-256), but a DRAFT module doesn't store one: the API stores the hash only when the module is set to APPROVED, since a draft's SLTs can still change. The minted module is matched to its record by that stored hash, so approve before you mint:
 
 1. Import content with `--create` (creates a DRAFT module with its SLTs)
 2. Approve with the hash (this locks the SLTs): `andamio course teacher update-module-status --course-id <id> --module-code <code> --status APPROVED --slt-hash <hash>`

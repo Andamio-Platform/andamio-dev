@@ -105,9 +105,9 @@ To be clear, these were drafted with an agent from the log above, as in October.
 ### andamio-cli, issues to raise
 
 1. `course teacher mint-modules` mints a module that is still DRAFT. It should set APPROVED with the hash first, or refuse. Its hash guard compares a locally computed hash, so it doesn't notice an empty stored one.
-2. `course import` can't add an SLT to a module that already has SLTs, and reports success. It also didn't persist the `slt_hash` it sent.
+2. `course import` can't add an SLT to a module that already has SLTs, and reports success. (An earlier version of this report also listed the draft not storing the `slt_hash` the import sent. That's by design: the API stores the hash only when a module is approved.)
 3. No check of the 140-character SLT limit before the mint build.
-4. `course teacher register-module` can't recover an existing module ("slt_hash field is missing or empty").
+4. `course teacher register-module` can't recover a module minted from DRAFT ("slt_hash field is missing or empty"). A draft that was never approved has no stored hash, and the command's lookup treats that as an error, so its DRAFT → APPROVED step is never reached.
 5. `user login` and `user status` show the `--alias` flag as the user when the API attached no alias.
 6. Dry-run JSON lists images to be uploaded under `failed_images`.
 7. Smaller:

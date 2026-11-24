@@ -96,7 +96,7 @@ entries:
 
   - id: gotcha-012
     error_pattern: "Module minted but stuck in DRAFT; two records for it (a chain_only one and a DRAFT with empty slt_hash)"
-    root_cause: "The module was minted while DRAFT. The draft never stored its SLT hash, so the gateway couldn't match the minted module to it. `course teacher mint-modules` doesn't refuse a DRAFT module (as merged in andamio-cli#216)."
+    root_cause: "The module was minted while DRAFT. The API stores a module's SLT hash only when it's set to APPROVED, so the draft had none, so the gateway couldn't match the minted module to it. `course teacher mint-modules` doesn't refuse a DRAFT module (as merged in andamio-cli#216)."
     fix: "Set APPROVED with the hash: `andamio course teacher update-module-status --course-id <id> --module-code <code> --status APPROVED --slt-hash <hash>`. The records merge and the module shows ON_CHAIN. `register-module` fails here (\"slt_hash field is missing or empty\"). To avoid it, approve with the hash before minting."
     category: transactions
     frequency: 1
