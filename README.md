@@ -106,7 +106,7 @@ Required for everything (course and ops skills):
 - The [Andamio CLI](https://github.com/Andamio-Platform/andamio-cli)
 - Free test ADA from the Cardano preprod faucet
 
-New to Cardano? Start with `/orientation` or `/learn` — both walk you through CLI install and faucet funding. No real money needed; everything runs on preprod testnet.
+New to Cardano? Start with `/orientation` or `/learn` — both walk you through CLI install and faucet funding. You work on the preprod testnet with free test ADA; the one exception is noted under [Environments](#environments).
 
 ## Examples
 
@@ -147,7 +147,9 @@ Each transaction follows the same 5-step pattern: build → sign → submit → 
 | Preprod (default) | preprod.api.andamio.io | Cardano testnet (free test ADA) |
 | Mainnet           | mainnet.api.andamio.io | Cardano mainnet (real ADA)      |
 
-Always start on preprod.
+Always start on preprod. When you're ready for mainnet, the same skills and commands work there: switch with `andamio config set-url https://mainnet.api.andamio.io` and fund the wallet with real ADA. `/auth-setup` walks you through either network.
+
+One step needs mainnet even today: a developer API key, for either network, comes from the developer portal at app.andamio.io and needs a mainnet Access Token, minted with real ADA.
 
 ## Compatibility
 

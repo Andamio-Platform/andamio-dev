@@ -199,7 +199,7 @@ Stable error codes preserved verbatim in error messages: `tier_limit_exceeded` (
 |---------|------|-------------|
 | `course owner list` | jwt | List courses you own |
 | `course owner create --course-id <id> --pending-tx-hash <hash>` | jwt | Create off-chain record (fallback — normally `tx run` auto-registers) |
-| `course owner register --course-id <id> --title <t>` | jwt | Register on-chain course with off-chain metadata. Optional: `--tx-hash`, `--description`, `--image-url`, `--video-url`, `--category`, `--public` |
+| `course owner register --course-id <id> --title <t>` | jwt | Register on-chain course with off-chain metadata. Not needed after `tx run --tx-type course_create`, which registers the course (409 if run again): use `course owner update`. Optional: `--description`, `--image-url`, `--video-url`, `--category`, `--public` |
 | `course owner update --course-id <id>` | jwt | Update course metadata. Only changed flags sent. Flags: `--title`, `--description`, `--image-url`, `--video-url`, `--public`, `--live` |
 | `course owner teachers --course-id <id> --alias <owner-alias> --skey <path>` | jwt | Add/remove teachers with `--add` / `--remove` (both repeatable). **Breaking in 1.0**: this is an on-chain transaction (`teachers_update`) and runs build → sign → submit → register → poll, so `--alias`, `--skey` and a configured submit URL are required. Pass-throughs match `tx run`: `--no-wait`, `--timeout`, `--submit-url`, `--submit-header`, `--metadata`. `--output json` emits the `tx run` result envelope |
 

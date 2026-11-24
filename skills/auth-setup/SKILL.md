@@ -24,7 +24,7 @@ Bundled paths in this skill (`reference/`) are relative to the **package root**:
 
 ### Secrets
 
-API keys, JWTs, `.skey` contents, `mnemonic.txt` and submit-service project IDs are secrets. Never print them in full, in your own text or in a command you show or run: show the first and last 4 characters only. When a key needs storing, offer the developer the command to run themselves so the key never enters the chat. Never `cat` the CLI config file or a `.env` file. Use `andamio config show`, which masks the key, and check `.env` values without echoing them (for example `grep -c '^ANDAMIO_API_KEY=.\+' .env`).
+API keys, JWTs, `.skey` contents, `mnemonic.txt` and submit-service project IDs are secrets. Never print them in full, in your own text or in a command you show or run: show the first and last 4 characters only. When a key needs storing, offer the developer the command to run themselves so the key never enters the chat. Say where to run it: in a separate terminal, not in this chat (a `!` command lands in the transcript too). Start the command with a space so the shell keeps it out of its history. Never `cat` the CLI config file or a `.env` file. Use `andamio config show`, which masks the key, and check `.env` values without echoing them (for example `grep -c '^ANDAMIO_API_KEY=.\+' .env`).
 
 ### Pre-Execution Check
 
@@ -38,7 +38,8 @@ andamio --version 2>/dev/null
 # CLI state (these mask secrets)
 andamio config show                 # base URL (= network), API key set or not, submit URL
 andamio auth status 2>/dev/null
-andamio user status 2>/dev/null     # alias, JWT expiry
+andamio user status 2>/dev/null     # JWT expiry (its "User:" can be the --alias flag, not proof of a token)
+andamio user me --output json 2>/dev/null | jq -r '.data.user.alias // "none"'   # alias the API attaches
 
 # JWT injected from the environment? (the CLI reads ANDAMIO_JWT; it does not read ANDAMIO_API_KEY)
 [ -n "$ANDAMIO_JWT" ] && echo "ANDAMIO_JWT: set" || echo "ANDAMIO_JWT: not set"
@@ -59,7 +60,7 @@ grep -c '^ANDAMIO_API_KEY=.\+' .env 2>/dev/null    # 1 = set; never print the va
 | Nothing set up | Step 1 |
 | API key works, no signing wallet or no submit URL | Step 3b |
 | Wallet and submit URL set, JWT missing or expired | Step 3b.4 only. An expired JWT just needs the headless `user login` again |
-| JWT works but `andamio user status` shows no alias | Step 3b.5 (mint the Access Token), then log in again |
+| JWT works but `user me` shows no alias | Step 3b.5 (mint the Access Token), then log in again |
 | API key and JWT (with alias) both work | Report status (Step 4). Offer Step 3d if they're in a template project and its `.env` isn't filled in |
 | CLI base URL and template `.env` point at different networks | Flag it before anything else (Step 1) |
 | A template `.env` with `your-api-key-here` or no key | Step 3d. The CLI's key works there too, so there's no need to make a new one |
@@ -166,7 +167,7 @@ cat ~/.andamio/wallet/default/address.txt
 
 The address is public and fine to show. The wallet folder also holds `payment.skey` and `mnemonic.txt`: tell the developer to back up the mnemonic somewhere safe, and never read either file aloud. `tx sign` and `tx run` use this wallet when `--skey` is omitted.
 
-2. **Fund it.** On preprod, send test ADA to the address from the faucet: `https://docs.cardano.org/cardano-testnets/tools/faucet` (choose Preprod). Wait for it to arrive before minting.
+2. **Fund it.** On preprod, send test ADA to the address from the faucet: `https://docs.cardano.org/cardano-testnets/tools/faucet`. The page has several dropdowns: set **Environment** to **Preprod**. Wait for it to arrive before minting. The CLI has no balance command: the developer can check the address on `https://preprod.cardanoscan.io/address/<address>`, or go on and let the mint tell you (it fails without funds). Setting up the submit endpoint (next) while the faucet ADA arrives saves time.
 
 3. **Submit endpoint.** The Andamio API never submits transactions for you, by design: the CLI signs with the `.skey` and sends the transaction to a Cardano submit service you configure. Blockfrost is the default. It's a signup in the browser that an agent can't do for the developer, so walk them through it:
    - Sign up at `https://blockfrost.io` (the free plan is enough)
@@ -189,26 +190,33 @@ andamio user login --skey ~/.andamio/wallet/default/payment.skey \
   --alias <alias> --address $(cat ~/.andamio/wallet/default/address.txt)
 ```
 
-The login itself doesn't need an Access Token: any wallet that signs gets a session. The alias is only attached if the wallet holds that alias's Access Token on this network; otherwise it is dropped without an error. So for a new wallet, pass the alias the developer wants, and expect `andamio user status` to show no alias yet.
+The login itself doesn't need an Access Token: any wallet that signs gets a session. The alias is only attached if the wallet holds that alias's Access Token on this network; otherwise the API drops it without an error. So for a new wallet, pass the alias the developer wants. Don't go by the CLI's own output here: `user login` prints "Authenticated as: <alias>" and `user status` shows "User: <alias>" even when the API dropped it, because the CLI falls back to the `--alias` flag. Ask the API instead:
 
-5. **Mint the Access Token** (skip if `andamio user status` already shows the alias). Check the alias is free, then mint it onto the wallet:
+```bash
+andamio user me --output json | jq -r '.data.user.alias // "none"'
+```
+
+"none" for a new wallet is expected. Don't print the whole `user me` response: it can run to over 100 KB.
+
+5. **Mint the Access Token** (skip if `user me` already shows the alias). Check the alias is free, then mint it onto the wallet:
 
 ```bash
 andamio user exists <alias>
 andamio tx run /v2/tx/global/user/access-token/mint \
   --body '{"alias":"<alias>","initiator_data":"<bech32 address>"}' \
-  --tx-type access_token_mint
+  --tx-type access_token_mint \
+  --skey ~/.andamio/wallet/default/payment.skey
 ```
 
 `initiator_data` is the wallet's address as a plain string, not an object. Report the mint only when `tx run` reports it confirmed.
 
-6. **Log in again** with the same command as step 4. Now `andamio user status` should show the alias.
+6. **Log in again** with the same command as step 4. Now `user me` should show the alias.
 
 7. **Check the session:**
 
 ```bash
-andamio user status
-andamio user me --output json
+andamio user status                                   # JWT valid, expiry
+andamio user me --output json | jq -c '.data.user'    # alias attached by the API
 ```
 
 This confirms the JWT is valid and carries the alias. `user me` is a read, so don't report write access as verified from it; the confirmed mint in step 5 is the proof that signing and submitting work.
@@ -285,7 +293,7 @@ If the developer says "I don't have an Access Token":
 - For the API key: today a **mainnet** token is needed, minted at `https://app.andamio.io` with real ADA. A preprod token can't register a developer account
 - For preprod work: the CLI mints one onto the signing wallet in Step 3b.5, paid with faucet ADA
 
-If the developer is waiting on faucet ADA: the mint fails without funds, so pause at Step 3b.2 and check the address has a balance before going on.
+If the developer is waiting on faucet ADA: the mint fails without funds, so pause at Step 3b.2 and check the address has a balance on `https://preprod.cardanoscan.io/address/<address>` before going on.
 
 ### Guidelines
 

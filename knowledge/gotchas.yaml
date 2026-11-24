@@ -3,7 +3,7 @@
 # Schema: id, error_pattern, root_cause, fix, category, frequency, confirmed
 
 version: 1
-last_updated: "2026-09-23"
+last_updated: "2026-11-24"
 
 entries:
   - id: gotcha-001
@@ -81,7 +81,7 @@ entries:
   - id: gotcha-010
     error_pattern: "tx run reports a tx_hash, then times out in 'pending'; tx status shows not_indexed_count climbing"
     root_cause: "The configured submit URL is not the full submit route (e.g. it ends in /api/v0 instead of /api/v0/tx/submit). The endpoint answers 200 with its own banner, the CLI treats any 200 as a successful submit, and the transaction never reaches the chain."
-    fix: "Set the full route: `andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/submit`. A tx that never landed spent nothing — rebuild and resubmit (or `andamio tx submit --tx-file <signed.hex> --submit-url <full-route>`)."
+    fix: "Set the full route: `andamio config set-submit-url https://cardano-preprod.blockfrost.io/api/v0/tx/submit`. A tx that never landed spent nothing — rebuild and resubmit (or `andamio tx submit --tx-file <signed.hex> --submit-url <full-route>`). Doesn't apply once `tx status` shows `confirmed_at`: the tx is on chain, so don't resubmit it; a growing not_indexed_count there is a DB sync problem (see gotcha-012 for modules)."
     category: transactions
     frequency: 1
     confirmed: true
@@ -91,5 +91,21 @@ entries:
     root_cause: "create-module's positional argument is an optional outline path, not the course ID"
     fix: "Pass the course with the flag: `andamio course create-module --course-id <course-id> --code 100 --title \"...\" --slt \"...\" --approve`"
     category: cli
+    frequency: 1
+    confirmed: true
+
+  - id: gotcha-012
+    error_pattern: "Module minted but stuck in DRAFT; two records for it (a chain_only one and a DRAFT with empty slt_hash)"
+    root_cause: "The module was minted while DRAFT. The API stores a module's SLT hash only when it's set to APPROVED, so the draft had none, so the gateway couldn't match the minted module to it. `course teacher mint-modules` doesn't refuse a DRAFT module (as merged in andamio-cli#216)."
+    fix: "Set APPROVED with the hash: `andamio course teacher update-module-status --course-id <id> --module-code <code> --status APPROVED --slt-hash <hash>`. The records merge and the module shows ON_CHAIN. `register-module` fails here (\"slt_hash field is missing or empty\"). To avoid it, approve with the hash before minting."
+    category: transactions
+    frequency: 1
+    confirmed: true
+
+  - id: gotcha-013
+    error_pattern: "Mint build fails on SLT length, after create-module / import / mint-modules --dry-run all succeeded"
+    root_cause: "SLTs are limited to 140 characters on-chain, and the CLI only finds out at the mint build"
+    fix: "Shorten the SLTs to 140 characters or less. While the module is DRAFT, update or recreate it and re-import, then mint again. Check the length while drafting."
+    category: content
     frequency: 1
     confirmed: true
